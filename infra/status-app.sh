@@ -10,7 +10,7 @@ set -uo pipefail
 
 APP_DIR="${APP_DIR:-/opt/boilerplate/app/infra/app}"
 API_LOCAL="${API_LOCAL:-http://127.0.0.1:3333}"
-API_PUBLIC="${API_PUBLIC:-https://api.boilerplate.digital}"
+API_PUBLIC="${API_PUBLIC:-https://api.your-domain.tld}"
 
 c_ok() { printf '  \033[32m✓\033[0m %s\n' "$1"; }
 c_no() { printf '  \033[31m✗\033[0m %s\n' "$1"; }

@@ -203,6 +203,20 @@ function head(name, target, dot, label, meta) {
 async function main() {
   log(c.bold("\n📊  Boilerplate — status de produção"));
 
+  // No targets configured → nothing to monitor. The boilerplate ships EMPTY on
+  // purpose so it never probes/SSHes into an unrelated host. Configure and retry.
+  if (!API_URL && !WEB_URL && !SITE_URL && !DATA_HOST) {
+    log("");
+    log(`  ${c.yellow("!")} Monitoring not configured.`);
+    log(
+      c.dim(
+        "    Set API_URL / WEB_URL / SITE_URL / DATA_HOST (env or infra/deploy.env) — see infra/README.md.",
+      ),
+    );
+    log("");
+    process.exit(0);
+  }
+
   const t0 = performance.now();
   // Última versão publicada (tags locais, sem rede) — pra sinalizar drift no
   // Backend. Best-effort: se não houver tags, simplesmente não mostra o aviso.

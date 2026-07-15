@@ -15,13 +15,18 @@
 # Requisitos:  gh (GitHub CLI autenticado: `gh auth login`) · ssh nas VPS · (opcional) jq
 # Guia enxuto: DEPLOY.md · runbook/arquitetura completa: .claude/knowledge/devops.md
 
-# ── Config (sobrescreva inline: `make deploy-direct TAG=v1.5`) ────────────────
+# ── Config — SET THESE FOR YOUR OWN INFRASTRUCTURE ────────────────────────────
+# The boilerplate ships PLACEHOLDERS on purpose: nothing here points at a real
+# host until you set it. Override inline (`make deploy-direct APP_HOST=1.2.3.4
+# TAG=v1.5`), export as env vars, or edit the defaults below. The unresolved
+# placeholders below intentionally fail (DNS error) instead of touching a host.
 TAG       ?= latest
-IMAGE     ?= ghcr.io/natanrotta/boilerplate-api   # imagem da API no GHCR
-APP_HOST  ?= 72.62.104.41          # VPS-APP (api) — origin atrás do Cloudflare
-DATA_HOST ?= 187.77.52.132         # VPS-DATA (banco) — nunca público
+IMAGE     ?=                       # e.g. ghcr.io/you/your-api  (container registry image)
+APP_HOST  ?=                       # APP host (API origin) — your host or IP
+DATA_HOST ?=                       # DATA host (database) — your host or IP
 SSH_USER  ?= root
-API_URL   ?= https://api.boilerplate.digital
+API_URL   ?=                       # e.g. https://api.your-domain.tld
+GH_REPO   ?=                       # e.g. you/your-repo (for the self-hosted runner)
 APP_DIR   ?= /opt/boilerplate/app/infra/app
 
 # As linhas acima trazem espaço antes do comentário inline, que entra no valor.
@@ -57,7 +62,7 @@ deploy-direct: ## Plano B sem Actions: cutover DIRETO via SSH da sua máquina (T
 .PHONY: runner-setup
 runner-setup: ## Instala/registra o runner self-hosted do deploy na VPS-APP (1x; token via gh).
 	@echo "🤖 Registrando o runner self-hosted (label boilerplate-app) na VPS-APP…"
-	@TOKEN=$$(gh api -X POST repos/natanrotta/boilerplate/actions/runners/registration-token -q .token) && \
+	@TOKEN=$$(gh api -X POST repos/$(GH_REPO)/actions/runners/registration-token -q .token) && \
 	  ssh $(SSH_USER)@$(APP_HOST) "bash -s -- $$TOKEN" < infra/app/setup-github-runner.sh
 
 # ── Status nas VPS (SSH — visão profunda; o `yarn monitor-status` é a visão rápida) ──

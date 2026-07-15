@@ -1,6 +1,6 @@
 # infra/app/Caddyfile — reverse proxy + TLS da VPS-APP
 #
-# api.boilerplate.digital → container da API (localhost:3333). Ver Step 5 do plano.
+# {$API_DOMAIN} → container da API (localhost:3333). Ver Step 5 do plano.
 #
 # ── Streaming / raw-body notes ───────────────────────────────────────────────
 # `flush_interval -1` disables response buffering, so any Server-Sent Events /
@@ -19,7 +19,7 @@
 #       religar o proxy laranja depois.
 # Ver infra/README.md › "TLS + Cloudflare".
 
-api.boilerplate.digital {
+{$API_DOMAIN} {
 	reverse_proxy localhost:3333 {
 		# Disable buffering so SSE / streaming endpoints flush chunk by chunk.
 		flush_interval -1
@@ -36,7 +36,7 @@ api.boilerplate.digital {
 	tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
 
 	log {
-		output file /var/log/caddy/api.boilerplate.digital.log
+		output file /var/log/caddy/caddy-api.log
 		format json
 	}
 }

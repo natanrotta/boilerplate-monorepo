@@ -12,6 +12,7 @@
 import {
   requireInteractive,
   requireGh,
+  requireDeployTarget,
   prodVersion,
   fetchTags,
   tagExists,
@@ -94,6 +95,7 @@ function runBootSmoke(image, owner) {
 
 async function main() {
   requireInteractive();
+  requireDeployTarget();
   const repo = requireGh();
 
   log(c.bold("\n🚀 Deploy da API em produção\n"));

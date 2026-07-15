@@ -11,8 +11,8 @@
 # Uso (da SUA máquina, 1x):
 #   make runner-setup
 # que equivale a:
-#   TOKEN=$(gh api -X POST repos/natanrotta/boilerplate/actions/runners/registration-token -q .token)
-#   ssh root@72.62.104.41 "bash -s -- $TOKEN" < infra/app/setup-github-runner.sh
+#   TOKEN=$(gh api -X POST repos/OWNER/REPO/actions/runners/registration-token -q .token)
+#   ssh root@<APP_HOST> "bash -s -- $TOKEN" < infra/app/setup-github-runner.sh
 #
 # O que faz (idempotente — re-rodar mantém um registro existente):
 #   1. cria o usuário de serviço `ghrunner` e o coloca no grupo docker
@@ -21,11 +21,11 @@
 #   4. instala como serviço systemd (sobe sozinho no boot da VPS)
 #   5. garante que o ghrunner consegue LER o .env.prod (env_file do compose)
 #
-# Conferir depois: https://github.com/natanrotta/boilerplate/settings/actions/runners
+# Conferir depois: https://github.com/OWNER/REPO/settings/actions/runners
 set -euo pipefail
 
 TOKEN="${1:?uso: setup-github-runner.sh <registration-token> [repo-url]}"
-REPO_URL="${2:-https://github.com/natanrotta/boilerplate}"
+REPO_URL="${2:?pass the repo URL as arg 2, e.g. https://github.com/you/your-repo}"
 RUNNER_DIR="/opt/boilerplate/gh-runner"
 RUNNER_USER="ghrunner"
 ENV_PROD="${ENV_PROD:-/opt/boilerplate/app/infra/.env.prod}"
