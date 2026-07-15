@@ -1,7 +1,7 @@
 # Deploy — Cloudflare Pages
 
 Este pacote é deployado como SPA estático no **Cloudflare Pages** (projeto `boilerplate-site`
-→ `boilerplate.digital`). Migrado do AWS Amplify em 2026-06. Arquitetura geral de deploy do Boilerplate:
+→ `your-domain.tld`). Migrado do AWS Amplify em 2026-06. Arquitetura geral de deploy do Boilerplate:
 [`.claude/knowledge/devops.md`](../../.claude/knowledge/devops.md) › Frontends (Cloudflare Pages).
 
 ## O site é standalone (FORA do Yarn workspace)
@@ -19,7 +19,7 @@ Ao adicionar uma dependência: `yarn install` dentro de `apps/site/`, commita o 
 
 ## Configuração no Cloudflare Pages (uma vez)
 
-**Workers & Pages → Create → Pages → conectar `natanrotta/boilerplate`:**
+**Workers & Pages → Create → Pages → conectar `OWNER/REPO`:**
 
 | Campo             | Valor                                       |
 | ----------------- | ------------------------------------------- |
@@ -28,7 +28,7 @@ Ao adicionar uma dependência: `yarn install` dentro de `apps/site/`, commita o 
 | Build command     | `yarn build`                                |
 | Output directory  | `dist`                                      |
 | Env var           | `NODE_VERSION=22.16.0`                      |
-| Custom domain     | `boilerplate.digital` (+ `www → apex`, pendente) |
+| Custom domain     | `your-domain.tld` (+ `www → apex`, pendente) |
 
 ## SPA rewrite + headers (no repo, **não** no console)
 
@@ -50,7 +50,7 @@ Cada push na branch `main` dispara um build no Pages. Mais nada.
 ## Variáveis de ambiente
 
 O site não faz chamadas de API em runtime. A única referência externa é `PLATFORM_URL` em
-`src/content/navigation.ts` (= `https://app.boilerplate.digital`, o app real ✓). Para apontar um build
+`src/content/navigation.ts` (= `https://app.your-domain.tld`, o app real ✓). Para apontar um build
 de staging a outra URL, exponha uma env var do Vite (`VITE_PLATFORM_URL`).
 
 ## Validando localmente

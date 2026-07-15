@@ -20,7 +20,7 @@ name: boilerplate-app
 services:
   api:
     # Tag fixada pelo CI (:<sha>) ou :latest. Sobrescreva via API_IMAGE.
-    image: ${API_IMAGE:-ghcr.io/natanrotta/boilerplate-api:latest}
+    image: ${API_IMAGE:?set API_IMAGE to your published API image}
     container_name: boilerplate-api
     restart: unless-stopped
     env_file:

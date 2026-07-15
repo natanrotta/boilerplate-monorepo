@@ -48,7 +48,7 @@ services:
   api:
     # The image UNDER TEST. CI sets API_IMAGE=<freshly built, not-yet-published
     # temp tag>; local uses the requested tag.
-    image: ${API_IMAGE:-ghcr.io/natanrotta/boilerplate-api:latest}
+    image: ${API_IMAGE:?set API_IMAGE to your published API image}
     depends_on:
       postgres-smoke:
         condition: service_healthy

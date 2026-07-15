@@ -3,7 +3,7 @@ import "reflect-metadata";
 vi.mock("../../config", () => ({
   env: {
     GITHUB_ACTIONS_TOKEN: "tok-123",
-    GITHUB_REPO: "natanrotta/boilerplate",
+    GITHUB_REPO: "OWNER/REPO",
   },
 }));
 
@@ -35,7 +35,7 @@ function rawRun(over: Record<string, unknown> = {}) {
     event: "push",
     created_at: "2026-06-19T10:00:00Z",
     updated_at: "2026-06-19T10:05:00Z",
-    html_url: "https://github.com/natanrotta/boilerplate/actions/runs/10",
+    html_url: "https://github.com/OWNER/REPO/actions/runs/10",
     actor: { login: "natan" },
     ...over,
   };
@@ -56,7 +56,7 @@ describe("normalizeWorkflowRuns", () => {
       runNumber: 7,
       createdAt: "2026-06-19T10:00:00Z",
       updatedAt: "2026-06-19T10:05:00Z",
-      url: "https://github.com/natanrotta/boilerplate/actions/runs/10",
+      url: "https://github.com/OWNER/REPO/actions/runs/10",
     });
   });
 

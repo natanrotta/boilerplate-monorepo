@@ -13,6 +13,7 @@
 import {
   requireInteractive,
   requireGh,
+  requireDeployTarget,
   prodVersion,
   fetchTags,
   recentTags,
@@ -39,6 +40,7 @@ import {
 
 async function main() {
   requireInteractive();
+  requireDeployTarget();
   const repo = requireGh();
 
   log(c.bold("\n↩️  Rollback da API (reenviar uma versão anterior)\n"));

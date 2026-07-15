@@ -11,24 +11,40 @@ import readline from "node:readline/promises";
 import { emitKeypressEvents } from "node:readline";
 import { stdin, stdout } from "node:process";
 
-// ── Constants (kept in sync with the Makefile) ──────────────────────────────
-export const API_URL = process.env.API_URL || "https://api.boilerplate.digital";
-export const HEALTH_URL = `${API_URL}/api/health`;
-export const BUILD_WF = "build-api.yml";
-export const DEPLOY_WF = "deploy-api.yml";
-/** The production branch the workflows live on / dispatch from (mirrors the
- *  Makefile DEPLOY_REF and the API provider's `ref: main`). */
-export const DEPLOY_REF = "main";
+// ── Deploy target (configure via env — NO real hosts ship with the boilerplate) ──
+// This boilerplate intentionally ships with EMPTY targets so a stray command can
+// never touch someone else's infrastructure. Set these before deploying — export
+// them in your shell, a CI secret, or an untracked `infra/deploy.env` you source:
+//   API_URL   e.g. https://api.your-domain.tld   (the deployed API base)
+//   WEB_URL   e.g. https://app.your-domain.tld   (web frontend, for monitor)
+//   SITE_URL  e.g. https://your-domain.tld        (marketing site, for monitor)
+//   DATA_HOST the DB host reachable over SSH       (never public)
+//   SSH_USER  defaults to "root"
+export const API_URL = process.env.API_URL || "";
+export const HEALTH_URL = API_URL ? `${API_URL}/api/health` : "";
+export const BUILD_WF = process.env.BUILD_WF || "build-api.yml";
+export const DEPLOY_WF = process.env.DEPLOY_WF || "deploy-api.yml";
+/** The branch the CI workflows dispatch from. Override via env if needed. */
+export const DEPLOY_REF = process.env.DEPLOY_REF || "main";
 
-// Public frontends (Cloudflare Pages) + the VPS-DATA host — used by
-// `yarn monitor-status`. Mirror the Makefile hosts and the devops runbook; each
-// is env-overridable so the command follows a staging/renamed setup.
-export const WEB_URL = process.env.WEB_URL || "https://app.boilerplate.digital";
-export const SITE_URL = process.env.SITE_URL || "https://boilerplate.digital";
-/** VPS-DATA (Postgres) — reached over SSH for the DB/migrations snapshot, the
- *  same tokenless path as `make db-status`. Never public. */
-export const DATA_HOST = (process.env.DATA_HOST || "187.77.52.132").trim();
+export const WEB_URL = process.env.WEB_URL || "";
+export const SITE_URL = process.env.SITE_URL || "";
+/** DB host reached over SSH for the DB/migrations snapshot. Empty by default. */
+export const DATA_HOST = (process.env.DATA_HOST || "").trim();
 export const SSH_USER = process.env.SSH_USER || "root";
+
+/** Fail fast unless the deploy target is configured. Keeps deploy/rollback from
+ *  ever running against an unset (or someone else's) host. */
+export function requireDeployTarget() {
+  if (!API_URL) {
+    fail(
+      "Deploy target not configured.\n" +
+        "  Set API_URL (e.g. https://api.your-domain.tld) — and, for monitoring,\n" +
+        "  WEB_URL / SITE_URL / DATA_HOST — before running this command.\n" +
+        "  Export them in your shell or source an untracked infra/deploy.env. See infra/README.md.",
+    );
+  }
+}
 
 // ── Colors (auto-off when not a TTY or NO_COLOR is set) ──────────────────────
 const useColor = stdout.isTTY && !process.env.NO_COLOR;
