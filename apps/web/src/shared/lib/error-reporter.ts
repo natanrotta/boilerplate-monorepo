@@ -32,31 +32,21 @@ export function initErrorReporter(): void {
   Bugsnag.start({
     apiKey,
     releaseStage: import.meta.env.MODE,
-    // PHI hardening: the healthcare UI renders patient names, diagnoses and
-    // transcripts. Anything leaving the browser toward Bugsnag must be
-    // explicitly scrubbed — never rely on the default PII capture.
+    // Sensitive-data hardening: anything leaving the browser toward Bugsnag
+    // must be explicitly scrubbed — never rely on the default PII capture.
     collectUserIp: false,
-    // redactedKeys applies across event metadata AND breadcrumbs. Beyond the
-    // auth keys, redact free-text / identifying PHI keys; opaque structural ids
-    // are kept for triage (same posture as retaining the opaque user id).
+    // redactedKeys applies across event metadata AND breadcrumbs. Redact
+    // credentials and identifying fields; opaque structural ids are kept for
+    // triage (same posture as retaining the opaque user id).
     redactedKeys: [
       /^authorization$/i,
       /^cookie$/i,
       "password",
+      "token",
+      "secret",
+      "apiKey",
       "email",
-      "patientName",
-      "cpf",
       "phone",
-      "notes",
-      "transcript",
-      "content",
-      // Clinical keys mirrored from the backend pino redact list — a
-      // metadata payload keyed like the API's would otherwise slip through.
-      "transcription",
-      "summary",
-      "fieldValues",
-      "message",
-      "text",
     ],
     onError: (event: Event) => {
       // Defense-in-depth on top of redactedKeys: physically drop auth headers.
@@ -65,15 +55,15 @@ export function initErrorReporter(): void {
         delete event.request.headers["Cookie"];
       }
 
-      // Keep only the opaque user id. Dropping email/name prevents patient
-      // names (a legitimate value for a display name) from reaching Bugsnag.
+      // Keep only the opaque user id. Dropping email/name prevents
+      // identifying user data from reaching Bugsnag.
       const user = event.getUser();
       if (user?.id) {
         event.setUser(user.id);
       }
 
-      // Query strings can carry PHI via search boxes or filter params
-      // (e.g. `?search=<patient-name>`). Strip them while keeping the
+      // Query strings can carry sensitive data via search boxes or filter
+      // params (e.g. `?search=<user-input>`). Strip them while keeping the
       // pathname so issues remain groupable by route.
       if (typeof event.request.url === "string") {
         event.request.url = stripQueryString(event.request.url);
@@ -93,8 +83,8 @@ export function initErrorReporter(): void {
       return true;
     },
     onBreadcrumb: (breadcrumb) => {
-      // Strip PHI-bearing query strings when the breadcrumb is recorded, not
-      // only when an event is sent — so a `?search=<patient-name>` URL never
+      // Strip sensitive query strings when the breadcrumb is recorded, not
+      // only when an event is sent — so a `?search=<user-input>` URL never
       // lingers unscrubbed in Bugsnag's in-memory breadcrumb buffer.
       const url = breadcrumb.metadata["url"];
       if (typeof url === "string") {
@@ -105,9 +95,9 @@ export function initErrorReporter(): void {
   });
 
   // Performance monitoring (Core Web Vitals, full page loads, route changes,
-  // resource/network spans). Same project apiKey as error reporting. PHI:
-  // network spans capture request URLs, so strip query strings the same way
-  // the error path does — a `?search=<patient-name>` must never be recorded.
+  // resource/network spans). Same project apiKey as error reporting. Network
+  // spans capture request URLs, so strip query strings the same way the error
+  // path does — a `?search=<user-input>` must never be recorded.
   BugsnagPerformance.start({
     apiKey,
     releaseStage: import.meta.env.MODE,

@@ -50,26 +50,10 @@
     "pending": "Pendiente"
   },
   "entities": {
-    "patient": "paciente",
-    "patients": "pacientes",
-    "contact": "contacto",
-    "contacts": "contactos",
+    "item": "elemento",
+    "items": "elementos",
     "tag": "etiqueta",
     "tags": "etiquetas",
-    "template": "plantilla",
-    "templates": "plantillas",
-    "consultation": "consulta",
-    "consultations": "consultas",
-    "recording": "grabación",
-    "recordings": "grabaciones",
-    "record": "historia clínica",
-    "records": "historias clínicas",
-    "hospital": "lugar de trabajo",
-    "hospitals": "lugares de trabajo",
-    "shift": "turno",
-    "shifts": "turnos",
-    "schedule": "horario",
-    "schedules": "horarios",
     "member": "miembro",
     "members": "miembros",
     "field": "campo",
@@ -117,16 +101,6 @@
   "roles": {
     "ADMIN": "Administrador",
     "SECRETARY": "Secretario(a)"
-  },
-  "gender": {
-    "MALE": "Masculino",
-    "FEMALE": "Femenino",
-    "OTHER": "Otro"
-  },
-  "patientStatus": {
-    "ACTIVE": "Activo",
-    "INACTIVE": "Inactivo",
-    "DISCHARGED": "Alta"
   },
   "memberStatus": {
     "ACTIVE": "Activo",
@@ -199,17 +173,6 @@
     "selected_one": "{{count}} seleccionado",
     "selected_other": "{{count}} seleccionados",
     "maxSelectionReached": "Límite de {{max}} elementos a la vez"
-  },
-  "recording": {
-    "paused": "Consulta pausada",
-    "active": "Grabando consulta"
-  },
-  "transcription": {
-    "softCap": {
-      "title": "Grabación muy larga",
-      "body": "Esta consulta lleva bastante tiempo grabándose. Las grabaciones largas aumentan el costo de procesamiento por IA. Puedes finalizar la consulta cuando quieras: la grabación continúa con normalidad hasta entonces.",
-      "dismiss": "Entendido"
-    }
   },
   "tags": {
     "removeTag": "Eliminar etiqueta {{name}}"

@@ -1,4 +1,4 @@
-import { Award, LayoutGrid, Zap } from "lucide-react";
+import { Building2, Rocket, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 // Generic 3-tier demo pricing. Copy lives in the locale files under
@@ -20,7 +20,7 @@ export const PLANS: Plan[] = [
   {
     id: "0000001",
     kind: "starter",
-    icon: LayoutGrid,
+    icon: Rocket,
     currency: "$",
     subtotal: 9,
     total: 9,
@@ -37,7 +37,7 @@ export const PLANS: Plan[] = [
   {
     id: "0000003",
     kind: "enterprise",
-    icon: Award,
+    icon: Building2,
     currency: "$",
     subtotal: 99,
     total: 99,

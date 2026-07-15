@@ -50,26 +50,10 @@
     "pending": "Pending"
   },
   "entities": {
-    "patient": "patient",
-    "patients": "patients",
-    "contact": "contact",
-    "contacts": "contacts",
+    "item": "item",
+    "items": "items",
     "tag": "tag",
     "tags": "tags",
-    "template": "template",
-    "templates": "templates",
-    "consultation": "consultation",
-    "consultations": "consultations",
-    "recording": "recording",
-    "recordings": "recordings",
-    "record": "record",
-    "records": "records",
-    "hospital": "workplace",
-    "hospitals": "workplaces",
-    "shift": "shift",
-    "shifts": "shifts",
-    "schedule": "schedule",
-    "schedules": "schedules",
     "member": "member",
     "members": "members",
     "field": "field",
@@ -117,16 +101,6 @@
   "roles": {
     "ADMIN": "Administrator",
     "SECRETARY": "Secretary"
-  },
-  "gender": {
-    "MALE": "Male",
-    "FEMALE": "Female",
-    "OTHER": "Other"
-  },
-  "patientStatus": {
-    "ACTIVE": "Active",
-    "INACTIVE": "Inactive",
-    "DISCHARGED": "Discharged"
   },
   "memberStatus": {
     "ACTIVE": "Active",
@@ -199,17 +173,6 @@
     "selected_one": "{{count}} selected",
     "selected_other": "{{count}} selected",
     "maxSelectionReached": "Limit of {{max}} items at a time"
-  },
-  "recording": {
-    "paused": "Consultation paused",
-    "active": "Recording consultation"
-  },
-  "transcription": {
-    "softCap": {
-      "title": "Recording is very long",
-      "body": "This consultation has been recording for quite a while. Long recordings increase the AI processing cost. You can finish the consultation whenever you're ready — recording keeps going until then.",
-      "dismiss": "Got it"
-    }
   },
   "tags": {
     "removeTag": "Remove tag {{name}}"

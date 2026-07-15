@@ -10,7 +10,7 @@
   },
   "account": {
     "title": "Datos de la Cuenta",
-    "clinicName": "Nombre de la Clínica",
+    "accountName": "Nombre de la Cuenta",
     "saved": "Configuración guardada"
   },
   "team": {
@@ -85,12 +85,6 @@
     "document": "Documento",
     "documentPlaceholder": "Solo dígitos",
     "documentLengthError": "Documento inválido — ingresa un CPF (11 dígitos) o CNPJ (14 dígitos).",
-    "councilNumber": "Número de registro",
-    "councilNumberPlaceholder": "Ej: CRM 123456/SP",
-    "councilNumberHelp": "Su número de registro en el consejo profesional (CRM, CRO, CRP, CREFITO, etc). Aparece en recetas y resúmenes de consulta.",
-    "specialization": "Especialización",
-    "specializationPlaceholder": "Ej: Ortopedista, Nutricionista deportiva",
-    "specializationHelp": "Su área de actuación. Texto libre — escríbalo como prefiera ser identificado.",
     "profileUpdated": "Perfil actualizado",
     "profileUpdateError": "Error al actualizar perfil",
     "avatarUpdated": "Foto actualizada",

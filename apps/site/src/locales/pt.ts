@@ -1,90 +1,90 @@
 export const pt = {
   nav: {
-    topo: "Voltar para o início",
+    topo: "Voltar ao topo",
     problema: "Por quê",
-    modulos: "Recursos",
-    planos: "Planos",
+    modulos: "Plataforma",
+    planos: "Preços",
     acessar: "Entrar",
-    plataforma: "App",
+    plataforma: "Abrir app",
     abrirMenu: "Abrir menu",
     fecharMenu: "Fechar menu",
     tema: "Alternar tema",
-    sectionPlanos: "PLANOS",
+    sectionPlanos: "PREÇOS",
   },
 
   hero: {
-    eyebrow: "O boilerplate de produto pronto para lançar",
-    line1: "Construa mais rápido.",
-    line2Lead: "Comece com o",
-    line2Highlight: "boilerplate.",
+    eyebrow: "A plataforma para construir e lançar mais rápido",
+    line1: "Do commit ao deploy",
+    line2Lead: "na velocidade do",
+    line2Highlight: "seu produto.",
     subtitle:
-      "Um ponto de partida limpo e moderno para o seu próximo produto. Tema, animações, internacionalização e modo claro/escuro já configurados — é só trocar a marca e enviar.",
-    ctaPrimary: "Começar agora",
-    ctaSecondary: "Ver recursos",
+      "Boilerplate é a plataforma de desenvolvimento que reúne workflows, automações, analytics e APIs em um só lugar. Menos infraestrutura para montar, mais tempo para enviar código que importa.",
+    ctaPrimary: "Começar de graça",
+    ctaSecondary: "Explorar a plataforma",
     scrollHint: "role para descobrir",
   },
 
   problem: {
-    eyebrow: "Por que este boilerplate",
-    headlineLead: "Menos configuração, ",
-    headlineHighlight: "mais produto.",
+    eyebrow: "Por que Boilerplate",
+    headlineLead: "Menos glue code, ",
+    headlineHighlight: "mais produto no ar.",
     subtitle:
-      "Você não deveria gastar as primeiras semanas montando tema, i18n e infraestrutura. Este boilerplate entrega uma base sólida para você focar no que torna o seu produto único.",
-    answerLabel: "A base",
+      "Toda equipe perde as primeiras semanas montando pipeline, autenticação, painéis e integrações antes de escrever uma linha do produto. Boilerplate entrega essa base pronta — testada, tipada e escalável — para você focar no que diferencia o seu produto.",
+    answerLabel: "A plataforma",
     items: {
       time: {
-        title: "Comece em minutos",
-        body: "Clone, instale e rode. Uma estrutura organizada e opinativa, pronta para você adicionar as suas telas.",
+        title: "Do zero ao deploy em minutos",
+        body: "CLI, ambiente e pipeline prontos. Clone, conecte o repositório e o primeiro build sobe antes do café esfriar.",
       },
       energy: {
-        title: "Design consistente",
-        body: "Sistema de design com tokens, tipografia e componentes reutilizáveis — coeso do primeiro clique ao último.",
+        title: "Developer experience de verdade",
+        body: "Tipagem de ponta a ponta, hot reload instantâneo e um SDK previsível. A DX que sua equipe merece, sem gambiarra.",
       },
       scatter: {
-        title: "Pronto para escalar",
-        body: "Padrões claros de componentes, conteúdo e traduções que crescem junto com o seu produto.",
+        title: "Escala sem reescrever",
+        body: "A arquitetura acompanha de um MVP a milhões de requisições. Sem migração dolorosa quando o tráfego chega.",
       },
       answer: {
-        title: "Feito para ser sua marca",
-        body: "Genérico de propósito. Troque nome, cores e textos e ele vira o seu — sem código legado no caminho.",
+        title: "Sua stack, sua marca",
+        body: "APIs abertas, temas e configuração flexível. Molde a plataforma ao seu produto — sem vendor lock-in.",
       },
     },
-    bridge: "Veja o que já vem incluído.",
+    bridge: "Veja tudo que já vem incluído.",
   },
 
   modules: {
-    eyebrow: "Os recursos",
-    titleLead: "Tudo que você precisa, ",
-    titleHighlight: "já configurado.",
-    subtitle: "Blocos genéricos e reutilizáveis, pensados para se combinarem entre si.",
+    eyebrow: "A plataforma",
+    titleLead: "Tudo para construir e operar, ",
+    titleHighlight: "em um só lugar.",
+    subtitle: "Blocos que conversam entre si — workflows, automações, dados e integrações prontos para produção.",
     counterSeparator: "/",
     a11yPrev: "Anterior",
     a11yNext: "Próximo",
     a11yGoTo: "Ir para",
     items: {
       workflows: {
-        title: "Fluxos de trabalho",
-        body: "Organize telas e etapas em fluxos claros que os seus usuários entendem na primeira vez.",
+        title: "Workflows",
+        body: "Orquestre etapas e estados em fluxos versionados e observáveis, do onboarding ao checkout.",
       },
       automation: {
-        title: "Automação",
-        body: "Automatize tarefas repetitivas e deixe o produto trabalhar por você em segundo plano.",
+        title: "Automações",
+        body: "Dispare jobs por evento, agenda ou webhook. Deixe o trabalho repetitivo rodar sozinho em segundo plano.",
       },
       analytics: {
-        title: "Análises",
-        body: "Painéis e métricas prontos para responder às perguntas que realmente importam.",
+        title: "Analytics",
+        body: "Eventos, dashboards e métricas em tempo real para responder às perguntas de produto que importam.",
       },
       collaboration: {
-        title: "Colaboração",
-        body: "Papéis, permissões e trabalho em equipe pensados para vários usuários desde o início.",
+        title: "Segurança",
+        body: "SSO, RBAC granular e logs de auditoria por padrão. Controle de acesso pronto desde o primeiro usuário.",
       },
       integrations: {
-        title: "Integrações",
-        body: "Conecte serviços externos com um ponto de extensão simples e previsível.",
+        title: "Integrações e API",
+        body: "REST, webhooks e SDKs para conectar qualquer serviço com um ponto de extensão simples e previsível.",
       },
       customization: {
-        title: "Personalização",
-        body: "Campos, temas e configurações que moldam o produto ao seu caso de uso.",
+        title: "Escala",
+        body: "Edge, cache e autoscaling embutidos. Baixa latência global sem você provisionar um único servidor.",
       },
     },
   },
@@ -92,46 +92,46 @@ export const pt = {
   trust: {
     eyebrow: "Confiança",
     titleLead: "Times de todos os tamanhos ",
-    titleHighlight: "constroem com a gente.",
+    titleHighlight: "constroem em cima da gente.",
     subtitle:
-      "Uma base testada, acessível e pronta para produção — para você entregar com confiança desde o primeiro dia.",
-    logosLabel: "Usado por equipes de",
+      "Uma plataforma testada em produção, com 99,99% de uptime e SLA de nível enterprise — para você lançar com confiança desde o primeiro deploy.",
+    logosLabel: "Usado por engenharias de",
     items: {
       privacidade: {
-        title: "Acessível por padrão",
-        body: "Componentes com foco, teclado e leitores de tela pensados desde o início — inclusão sem retrabalho.",
+        title: "Developer experience",
+        body: "Docs claras, SDKs tipados e uma CLI que resolve. Sua equipe embarca em minutos, não em sprints.",
       },
       seguranca: {
         title: "Seguro por padrão",
-        body: "Boas práticas de segurança embutidas na base, para você não começar do zero.",
+        body: "SOC 2, criptografia ponta a ponta e logs de auditoria embutidos — segurança de nível enterprise sem esforço.",
       },
       assinatura: {
         title: "Rápido de verdade",
-        body: "Otimizado para carregar rápido e responder na hora, em qualquer dispositivo.",
+        body: "Rede edge global e cache inteligente entregam respostas em milissegundos, em qualquer região.",
       },
-      saude: {
-        title: "Pronto para produção",
-        body: "Estrutura clara, tipada e documentada — fácil de manter conforme o time cresce.",
+      scale: {
+        title: "Escala infinita",
+        body: "De protótipo a milhões de requisições sem reescrever. O autoscaling acompanha cada pico de tráfego.",
       },
     },
     testimonials: {
       one: {
         quote:
-          "Trocamos a marca e lançamos a landing em uma tarde. A base já estava pronta para produção.",
+          "Migramos toda a stack em uma tarde e cortamos o tempo de deploy de horas para minutos. Uptime impecável desde então.",
         author: "Alex Costa",
         role: "CTO, Acme",
         initials: "AC",
       },
       two: {
         quote:
-          "O sistema de design e a internacionalização economizaram semanas. Focamos no produto, não no encanamento.",
+          "Os workflows e a API abriram integrações que antes levavam meses. Nosso time focou no produto, não na infraestrutura.",
         author: "Bruna Dias",
-        role: "Head de Produto, Globex",
+        role: "VP de Engenharia, Globex",
         initials: "BD",
       },
       three: {
         quote:
-          "Limpo, rápido e fácil de estender. Exatamente o ponto de partida que a gente queria.",
+          "Escalamos de mil para um milhão de usuários sem tocar na arquitetura. Exatamente a base que a gente queria.",
         author: "Carlos Melo",
         role: "Fundador, Initech",
         initials: "CM",
@@ -140,17 +140,17 @@ export const pt = {
   },
 
   pricing: {
-    eyebrow: "Planos",
+    eyebrow: "Preços",
     titleLead: "Um plano ",
     titleHighlight: "para cada",
-    titleTail: " fase.",
+    titleTail: " estágio.",
     subtitle:
-      "Preços de exemplo para você adaptar. Sem fidelidade, sem letras miúdas — só um ponto de partida claro.",
-    trialTitle: "14 dias grátis para experimentar",
-    trialSubtitle: "Use tudo, sem cartão. Só assine se quiser continuar.",
+      "Comece de graça e cresça no seu ritmo. Sem fidelidade, sem taxa de setup — só preço previsível conforme você escala.",
+    trialTitle: "14 dias grátis, sem cartão",
+    trialSubtitle: "Rode em produção com todos os recursos. Só faça upgrade quando o produto pedir.",
     closingPart1: "Todos os planos incluem ",
-    closingHighlight: "os recursos essenciais",
-    closingPart2: " — a diferença está na escala.",
+    closingHighlight: "a plataforma completa",
+    closingPart2: " — a diferença está no throughput e no suporte.",
     descLabel: "DESCRIÇÃO",
     subtotalLabel: "SUBTOTAL",
     totalLabel: "TOTAL",
@@ -158,23 +158,23 @@ export const pt = {
     plans: {
       starter: {
         name: "STARTER",
-        description: "Para projetos pessoais",
-        descriptionSubtitle: "Tudo que você precisa para começar. Cancele quando quiser.",
+        description: "Para indies e side projects",
+        descriptionSubtitle: "Tudo para colocar seu primeiro produto no ar. Cancele quando quiser.",
         totalSuffix: "/ mês",
-        cta: "Começar",
+        cta: "Começar de graça",
       },
       pro: {
         name: "PRO",
         description: "Para times em crescimento",
-        descriptionSubtitle: "Mais capacidade e recursos avançados para escalar.",
+        descriptionSubtitle: "Mais throughput, automações avançadas e ambientes de staging para escalar.",
         totalSuffix: "/ mês",
         installments: "por usuário",
-        cta: "Assinar Pro",
+        cta: "Assinar o Pro",
       },
       enterprise: {
         name: "ENTERPRISE",
-        description: "Para grandes operações",
-        descriptionSubtitle: "Suporte dedicado, SSO e controles avançados.",
+        description: "Para operações críticas",
+        descriptionSubtitle: "SSO, SLA garantido, suporte dedicado e controles de segurança avançados.",
         totalSuffix: "/ mês",
         cta: "Falar com vendas",
       },
@@ -183,17 +183,17 @@ export const pt = {
 
   footer: {
     tagline:
-      "Um boilerplate de produto limpo e sem marca. Tema, animações, internacionalização e modo claro/escuro prontos para você tornar seu.",
+      "A plataforma de desenvolvimento para construir, escalar e enviar seu próximo produto. Workflows, automações, analytics e APIs em um só lugar.",
     navHeader: "Navegar",
-    contatoHeader: "Contato",
+    contatoHeader: "Fale com a gente",
     contatoInvite:
-      "Dúvidas ou quer adaptar este boilerplate? Escreva pra gente — este é um texto de exemplo.",
+      "Dúvidas sobre a plataforma ou quer ver uma demo? Escreva para o nosso time de engenharia.",
     termos: "Termos de uso",
     privacidade: "Política de privacidade",
     acessar: "Abrir o app",
     whatsapp: "Falar no WhatsApp",
-    whatsappMessage: "Olá! Vim pelo site e gostaria de saber mais.",
-    copyright: "Um template de exemplo — substitua pela sua marca.",
+    whatsappMessage: "Olá! Vim pelo site e gostaria de saber mais sobre a plataforma.",
+    copyright: "A plataforma para construir e lançar mais rápido.",
   },
 
   legal: {

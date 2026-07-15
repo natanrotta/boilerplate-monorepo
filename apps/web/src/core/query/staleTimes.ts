@@ -2,11 +2,11 @@
  * Tiers de stale-time para TanStack Query.
  *
  * - `default` casa com o default do queryClient — entidades transacionais
- *   (patient, contact, consultation).
+ *   do dia a dia.
  * - `reference` é mais agressivo para dados que mudam raramente
- *   (tags, templates, field-definitions).
+ *   (tags, configurações, listas de referência).
  * - `volatile` é mais curto para dados muito dinâmicos
- *   (ai-usage stats, dashboards realtime).
+ *   (métricas, dashboards realtime).
  * - `subscription` documenta o contrato de "check periódico de status"
  *   (assinatura ativa / cancelada) — entre default e volatile.
  */

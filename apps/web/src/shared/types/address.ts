@@ -19,9 +19,9 @@ export interface Address {
 }
 
 /**
- * Shape sent on `PUT /patients/:id` and `PUT /contacts/:id` under the
- * `address` key. Every field is optional and clearable via `null`. The
- * full-replace contract means missing fields collapse to `null` server-side.
+ * Shape sent on `PUT /auth/profile` under the `address` key. Every field is
+ * optional and clearable via `null`. The full-replace contract means missing
+ * fields collapse to `null` server-side.
  *
  * The wrapping `address?` on the parent payload accepts:
  *  - `undefined` → don't touch the address row
