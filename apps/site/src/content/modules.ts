@@ -1,9 +1,9 @@
 import {
-  Activity,
-  Calendar,
+  BarChart3,
+  Gauge,
   Layers,
-  SlidersHorizontal,
-  Users,
+  Plug,
+  ShieldCheck,
   Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -27,8 +27,8 @@ export type FeatureSlide = {
 export const FEATURE_SLIDES: FeatureSlide[] = [
   { id: "workflows", icon: Layers },
   { id: "automation", icon: Zap },
-  { id: "analytics", icon: Activity },
-  { id: "collaboration", icon: Users },
-  { id: "integrations", icon: Calendar },
-  { id: "customization", icon: SlidersHorizontal },
+  { id: "analytics", icon: BarChart3 },
+  { id: "collaboration", icon: ShieldCheck },
+  { id: "integrations", icon: Plug },
+  { id: "customization", icon: Gauge },
 ];

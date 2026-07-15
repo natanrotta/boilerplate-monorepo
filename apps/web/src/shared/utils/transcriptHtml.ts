@@ -1,6 +1,6 @@
 // Mirrors `apps/api/src/shared/utils/transcript-html.ts` so the frontend can
-// optimistically merge the live transcript into the consultation cache while
-// the backend finishes persisting it. Keep the two implementations in sync.
+// optimistically merge incoming rich-text into the query cache while the
+// backend finishes persisting it. Keep the two implementations in sync.
 
 const HTML_TAG_PATTERN = /<(?:p|h[1-6]|ul|ol|li|blockquote|div)\b/i;
 

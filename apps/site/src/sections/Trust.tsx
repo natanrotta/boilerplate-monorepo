@@ -1,5 +1,5 @@
 import { Box, Flex, Heading, SimpleGrid, Stack, Text } from "@chakra-ui/react";
-import { Activity, Shield, UserCheck, Zap } from "lucide-react";
+import { Code2, Rocket, Shield, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { SiteContainer } from "@/components/Container";
 import { SectionEyebrow } from "@/components/SectionEyebrow";
@@ -7,7 +7,7 @@ import { useReveal } from "@/hooks/useReveal";
 import { useLocale } from "@/hooks/useLocale";
 
 type Pillar = {
-  id: "privacidade" | "seguranca" | "assinatura" | "saude";
+  id: "privacidade" | "seguranca" | "assinatura" | "scale";
   icon: LucideIcon;
 };
 
@@ -15,10 +15,10 @@ type Pillar = {
 // logos + a few neutral testimonials. Copy lives in the locale files under
 // `trust.*`. Swap the "Acme" testimonials and logo labels for your own.
 const PILLARS: Pillar[] = [
-  { id: "privacidade", icon: UserCheck },
+  { id: "privacidade", icon: Code2 },
   { id: "seguranca", icon: Shield },
   { id: "assinatura", icon: Zap },
-  { id: "saude", icon: Activity },
+  { id: "scale", icon: Rocket },
 ];
 
 const LOGOS = ["Acme", "Globex", "Umbrella", "Initech", "Hooli"] as const;

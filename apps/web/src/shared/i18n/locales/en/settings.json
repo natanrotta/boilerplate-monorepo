@@ -10,7 +10,7 @@
   },
   "account": {
     "title": "Account Details",
-    "clinicName": "Clinic Name",
+    "accountName": "Account Name",
     "saved": "Settings saved"
   },
   "team": {
@@ -85,12 +85,6 @@
     "document": "Document",
     "documentPlaceholder": "Digits only",
     "documentLengthError": "Invalid document — enter a CPF (11 digits) or CNPJ (14 digits).",
-    "councilNumber": "Council number",
-    "councilNumberPlaceholder": "e.g. CRM 123456/SP",
-    "councilNumberHelp": "Your professional council registration (CRM, CRO, CRP, CREFITO, etc). Appears on prescriptions and consultation summaries.",
-    "specialization": "Specialization",
-    "specializationPlaceholder": "e.g. Orthopedist, Sports nutritionist",
-    "specializationHelp": "Your area of practice. Free text — write it the way you want to be identified.",
     "profileUpdated": "Profile updated",
     "profileUpdateError": "Failed to update profile",
     "avatarUpdated": "Photo updated",

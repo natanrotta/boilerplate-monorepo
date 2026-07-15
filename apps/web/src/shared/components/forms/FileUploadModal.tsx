@@ -43,7 +43,7 @@ interface FileUploadModalProps {
 
 /**
  * Shared file-upload modal. Wraps `AppModal` + `FileUploadField` so every
- * upload surface (knowledge base, consultation attachments, future ones)
+ * upload surface (attachments, imports, future ones)
  * shares the same drag-drop UX, validation feedback, and submit/cancel
  * mechanics. Feature-specific constants (accepted extensions, size cap,
  * copy) stay at the call site because the backend whitelists differ per

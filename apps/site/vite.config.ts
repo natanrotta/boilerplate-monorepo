@@ -5,10 +5,14 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3002,
+    port: 3001,
+    strictPort: true,
+    // Auto-open the browser on `yarn dev`, same as the web app. HMR is on by
+    // default in Vite dev — edits to src hot-reload without a full refresh.
+    open: true,
   },
   preview: {
-    port: 3002,
+    port: 3001,
   },
   resolve: {
     alias: {
