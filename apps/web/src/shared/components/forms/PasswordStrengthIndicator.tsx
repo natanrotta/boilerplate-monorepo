@@ -52,8 +52,8 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
   if (!password) return null;
 
   return (
-    <VStack align="stretch" spacing={2} mt={1}>
-      <HStack spacing={1}>
+    <VStack align="stretch" gap={2} mt={1}>
+      <HStack gap={1}>
         {Array.from({ length: 5 }).map((_, i) => (
           <Box
             key={i}
@@ -72,11 +72,11 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
         </Text>
       </HStack>
 
-      <VStack align="stretch" spacing={0.5}>
+      <VStack align="stretch" gap={0.5}>
         {RULES.map((rule) => {
           const passed = rule.test(password);
           return (
-            <HStack key={rule.key} spacing={1.5}>
+            <HStack key={rule.key} gap={1.5}>
               <Box
                 as={passed ? FiCheck : FiX}
                 color={passed ? "green.500" : "gray.400"}

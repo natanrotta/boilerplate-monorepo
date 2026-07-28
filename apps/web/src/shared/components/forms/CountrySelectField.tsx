@@ -2,16 +2,11 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState, type KeyboardE
 import {
   Box,
   Button,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
+  Field,
   Popover,
-  PopoverBody,
-  PopoverContent,
-  PopoverTrigger,
+  Portal,
   Text,
   useDisclosure,
-  useOutsideClick,
 } from "@chakra-ui/react";
 import { FiChevronDown } from "@/shared/components/icons";
 import { useTranslation } from "react-i18next";
@@ -77,25 +72,14 @@ function CountrySelectFieldComponent({
   error,
 }: CountrySelectFieldProps) {
   const { i18n, t } = useTranslation("common");
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open, onOpen, onClose } = useDisclosure();
   const [search, setSearch] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  useOutsideClick({
-    ref: contentRef,
-    enabled: isOpen,
-    handler: (event) => {
-      if (triggerRef.current?.contains(event.target as Node)) return;
-      onClose();
-    },
-  });
-
   useEffect(() => {
-    if (!isOpen) return;
+    if (!open) return;
     let cancelled = false;
     const tryFocus = (attempt = 0) => {
       if (cancelled) return;
@@ -112,7 +96,7 @@ function CountrySelectFieldComponent({
     return () => {
       cancelled = true;
     };
-  }, [isOpen]);
+  }, [open]);
 
   const allOptions = useMemo<CountryOption[]>(() => {
     const names = buildLocalizedNames(i18n.language);
@@ -177,31 +161,39 @@ function CountrySelectFieldComponent({
   const triggerPlaceholder = placeholder ?? t("address.placeholder.countryCode");
 
   return (
-    <FormControl isInvalid={Boolean(error)}>
-      {label && <FormLabel>{label}</FormLabel>}
-      <Popover
-        isOpen={isOpen}
-        onOpen={handleOpen}
-        onClose={onClose}
-        placement="bottom-start"
-        matchWidth
+    <Field.Root invalid={Boolean(error)}>
+      {label && (
+        <Field.Label
+          fontSize="xs"
+          fontWeight="600"
+          color="text.secondary"
+          mb={1}
+          letterSpacing="0.01em"
+        >
+          {label}
+        </Field.Label>
+      )}
+      <Popover.Root
+        open={open}
+        onOpenChange={(e) => {
+          if (e.open) handleOpen();
+          else onClose();
+        }}
+        positioning={{ placement: "bottom-start", sameWidth: true }}
         autoFocus={false}
-        returnFocusOnClose={false}
-        isLazy
-        lazyBehavior="unmount"
+        lazyMount
+        unmountOnExit
       >
-        <PopoverTrigger>
+        <Popover.Trigger asChild>
           <Button
-            ref={triggerRef}
             type="button"
             variant="outline"
             justifyContent="space-between"
             w="100%"
-            rightIcon={<FiChevronDown />}
             fontWeight="normal"
             color={selected ? "text.primary" : "text.muted"}
             aria-haspopup="listbox"
-            aria-expanded={isOpen}
+            aria-expanded={open}
             aria-label={label ?? t("address.fields.countryCode")}
             onMouseDown={(event) => {
               event.preventDefault();
@@ -249,74 +241,88 @@ function CountrySelectFieldComponent({
                 </Box>
               )}
             </Box>
+            <FiChevronDown />
           </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          ref={contentRef}
-          w="100%"
-          maxW="100%"
-          borderColor="border.default"
-          boxShadow="card-hover"
-        >
-          <PopoverBody p={2}>
-            <Box mb={2}>
-              <SearchField
-                inputRef={searchInputRef}
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.target.value);
-                  setActiveIndex(0);
-                }}
-                onClear={() => {
-                  setSearch("");
-                  setActiveIndex(0);
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder={t("address.placeholder.countrySearch")}
-                autoFocus
-              />
-            </Box>
-            <Box ref={listRef} h="240px" overflowY="auto" role="listbox">
-              {filteredOptions.length === 0 ? (
-                <Text fontSize="sm" color="text.muted" p={3} textAlign="center">
-                  {t("address.noCountryResults")}
-                </Text>
-              ) : (
-                filteredOptions.map((option, index) => {
-                  const isSelected = option.code === value;
-                  const isActive = index === activeIndex;
-                  return (
-                    <Box
-                      key={option.code}
-                      role="option"
-                      aria-selected={isSelected}
-                      px={3}
-                      py={2}
-                      cursor="pointer"
-                      borderRadius="md"
-                      bg={isActive ? "bg.brand.subtle" : isSelected ? "bg.sunken" : "transparent"}
-                      color="text.primary"
-                      fontSize="sm"
-                      onClick={() => handleSelect(option.code)}
-                      onMouseEnter={() => setActiveIndex(index)}
-                    >
-                      <Box as="span" mr={2}>
-                        {option.flag}
-                      </Box>
-                      {option.name}
-                      <Box as="span" ml={2} color="text.muted" fontSize="xs">
-                        {option.code}
-                      </Box>
-                    </Box>
-                  );
-                })
-              )}
-            </Box>
-          </PopoverBody>
-        </PopoverContent>
-      </Popover>
-      {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
-    </FormControl>
+        </Popover.Trigger>
+        <Portal>
+          <Popover.Positioner>
+            <Popover.Content
+              w="100%"
+              maxW="100%"
+              borderColor="border.default"
+              boxShadow="shadow.cardHover"
+            >
+              <Popover.Body p={2}>
+                <Box mb={2}>
+                  <SearchField
+                    inputRef={searchInputRef}
+                    value={search}
+                    onChange={(event) => {
+                      setSearch(event.target.value);
+                      setActiveIndex(0);
+                    }}
+                    onClear={() => {
+                      setSearch("");
+                      setActiveIndex(0);
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder={t("address.placeholder.countrySearch")}
+                    autoFocus
+                  />
+                </Box>
+                <Box ref={listRef} h="240px" overflowY="auto" role="listbox">
+                  {filteredOptions.length === 0 ? (
+                    <Text fontSize="sm" color="text.muted" p={3} textAlign="center">
+                      {t("address.noCountryResults")}
+                    </Text>
+                  ) : (
+                    filteredOptions.map((option, index) => {
+                      const isSelected = option.code === value;
+                      const isActive = index === activeIndex;
+                      return (
+                        <Box
+                          key={option.code}
+                          role="option"
+                          aria-selected={isSelected}
+                          px={3}
+                          py={2}
+                          cursor="pointer"
+                          borderRadius="md"
+                          bg={
+                            isActive
+                              ? "bg.brand.subtle"
+                              : isSelected
+                                ? "bg.sunken"
+                                : "transparent"
+                          }
+                          color="text.primary"
+                          fontSize="sm"
+                          onClick={() => handleSelect(option.code)}
+                          onMouseEnter={() => setActiveIndex(index)}
+                        >
+                          <Box as="span" mr={2}>
+                            {option.flag}
+                          </Box>
+                          {option.name}
+                          <Box as="span" ml={2} color="text.muted" fontSize="xs">
+                            {option.code}
+                          </Box>
+                        </Box>
+                      );
+                    })
+                  )}
+                </Box>
+              </Popover.Body>
+            </Popover.Content>
+          </Popover.Positioner>
+        </Portal>
+      </Popover.Root>
+      {error ? (
+        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
+          {error}
+        </Field.ErrorText>
+      ) : null}
+    </Field.Root>
   );
 }
 

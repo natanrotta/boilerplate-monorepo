@@ -15,10 +15,10 @@ function SaveButtonComponent({ isDirty, isSaving, onClick, label }: SaveButtonPr
   return (
     <Button
       size="sm"
-      colorScheme="brand"
-      isLoading={isSaving}
+      colorPalette="brand"
+      loading={isSaving}
       onClick={onClick}
-      isDisabled={!isDirty}
+      disabled={!isDirty}
     >
       {resolvedLabel}
     </Button>

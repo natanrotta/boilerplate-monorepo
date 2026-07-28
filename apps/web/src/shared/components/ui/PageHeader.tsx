@@ -1,13 +1,17 @@
 import { memo } from "react";
-import { Button, Divider, Flex, Heading, Icon, Text, type StackProps } from "@chakra-ui/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { Box, Button, Flex, Heading, Separator, Text, type StackProps } from "@chakra-ui/react";
+import { AnimatePresence, motion } from "motion/react";
 import type { PropsWithChildren, ReactNode } from "react";
 import { FiPlus } from "@/shared/components/icons";
 import type { IconType } from "@/shared/components/icons";
-import { TRANSITION_DEFAULT, TRANSITION_FAST } from "@/shared/constants/animation";
+import {
+  TRANSITION_DEFAULT,
+  TRANSITION_FAST,
+  type MotionConflictingProps,
+} from "@/shared/constants/animation";
 
-const MotionFlex = motion(Flex);
-const MotionText = motion(Text);
+const MotionFlex = motion.create(Flex);
+const MotionText = motion.create(Text);
 
 interface PageHeaderAction {
   label: string;
@@ -15,7 +19,9 @@ interface PageHeaderAction {
   icon?: IconType;
 }
 
-interface PageHeaderProps extends StackProps {
+// Omit the Chakra props that collide with motion's own props on the MotionFlex
+// root (see MotionConflictingProps) so the `{...stackProps}` spread stays typed.
+interface PageHeaderProps extends Omit<StackProps, MotionConflictingProps> {
   title: string;
   description?: string;
   count?: number;
@@ -91,32 +97,38 @@ function PageHeaderComponent({
 
         {hasActions && (
           <Flex align="center" gap={2} flexShrink={0} w={{ base: "full", md: "auto" }}>
-            {primaryAction && (
-              <Button
-                size="xs"
-                colorScheme="brand"
-                leftIcon={<Icon as={primaryAction.icon ?? FiPlus} boxSize={3.5} />}
-                onClick={primaryAction.onClick}
-                borderRadius="md"
-                fontWeight="500"
-                fontSize={{ base: "sm", md: "xs" }}
-                h={{ base: "44px", md: "30px" }}
-                px={3}
-                flex={{ base: 1, md: "initial" }}
-                _active={{
-                  transform: "scale(0.98)",
-                }}
-                transition="all 0.15s ease"
-                data-testid="page-header-primary-action"
-              >
-                {primaryAction.label}
-              </Button>
-            )}
+            {primaryAction &&
+              (() => {
+                const ActionIcon = primaryAction.icon ?? FiPlus;
+                return (
+                  <Button
+                    size="xs"
+                    colorPalette="brand"
+                    onClick={primaryAction.onClick}
+                    borderRadius="md"
+                    fontWeight="500"
+                    fontSize={{ base: "sm", md: "xs" }}
+                    h={{ base: "44px", md: "30px" }}
+                    px={3}
+                    flex={{ base: 1, md: "initial" }}
+                    _active={{
+                      transform: "scale(0.98)",
+                    }}
+                    transition="all 0.15s ease"
+                    data-testid="page-header-primary-action"
+                  >
+                    <Box asChild boxSize={3.5}>
+                      <ActionIcon />
+                    </Box>
+                    {primaryAction.label}
+                  </Button>
+                );
+              })()}
             {actions}
           </Flex>
         )}
       </Flex>
-      <Divider borderColor="border.subtle" />
+      <Separator borderColor="border.subtle" />
     </MotionFlex>
   );
 }

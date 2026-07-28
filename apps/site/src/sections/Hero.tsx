@@ -1,5 +1,6 @@
 import { useRef } from "react";
-import { Box, Button, Flex, HStack, Stack, Text, keyframes } from "@chakra-ui/react";
+import { Box, Button, Flex, HStack, Stack, Text } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { SiteContainer } from "@/components/Container";
 import { TextScatter } from "@/components/TextScatter";
@@ -54,11 +55,11 @@ export const Hero = () => {
         w={{ base: "320px", md: "520px" }}
         h={{ base: "320px", md: "520px" }}
         borderRadius="full"
-        bgGradient="radial(circle at 30% 30%, rgba(47, 128, 237, 0.30), transparent 60%)"
+        bgImage="radial-gradient(circle at 30% 30%, rgba(47, 128, 237, 0.30), transparent 60%)"
         filter="blur(8px)"
         pointerEvents="none"
         willChange="transform"
-        animation={`${orbFloatA} 16s ease-in-out infinite`}
+        css={{ animation: `${orbFloatA} 16s ease-in-out infinite` }}
       />
       <Box
         position="absolute"
@@ -67,11 +68,11 @@ export const Hero = () => {
         w={{ base: "360px", md: "560px" }}
         h={{ base: "360px", md: "560px" }}
         borderRadius="full"
-        bgGradient="radial(circle at 40% 40%, rgba(30, 178, 138, 0.26), transparent 60%)"
+        bgImage="radial-gradient(circle at 40% 40%, rgba(30, 178, 138, 0.26), transparent 60%)"
         filter="blur(8px)"
         pointerEvents="none"
         willChange="transform"
-        animation={`${orbFloatB} 20s ease-in-out infinite`}
+        css={{ animation: `${orbFloatB} 20s ease-in-out infinite` }}
       />
 
       <SiteContainer
@@ -81,10 +82,10 @@ export const Hero = () => {
         alignItems="center"
         justifyContent="center"
       >
-        <Stack spacing={{ base: 7, md: 9 }} align="center" textAlign="center" w="100%">
+        <Stack gap={{ base: 7, md: 9 }} align="center" textAlign="center" w="100%">
           <HStack
             className="hero-eyebrow"
-            spacing={3}
+            gap={3}
             px={4}
             py={2}
             borderRadius="full"
@@ -134,14 +135,11 @@ export const Hero = () => {
           </Text>
 
           <Flex className="hero-cta" gap={3} flexWrap="wrap" justify="center">
-            <Button
-              as="a"
-              href={PLATFORM_URL}
-              variant="solid"
-              size="lg"
-              rightIcon={<ArrowUpRight />}
-            >
-              {t("hero.ctaPrimary")}
+            <Button asChild variant="solid" size="lg">
+              <a href={PLATFORM_URL}>
+                {t("hero.ctaPrimary")}
+                <ArrowUpRight />
+              </a>
             </Button>
             <Button
               variant="outline"
@@ -175,7 +173,7 @@ export const Hero = () => {
         <Box
           as={ArrowDown}
           fontSize="md"
-          sx={{ animation: `${arrowBob} 2.8s ease-in-out infinite` }}
+          css={{ animation: `${arrowBob} 2.8s ease-in-out infinite` }}
         />
       </Flex>
     </Box>

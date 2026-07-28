@@ -1,17 +1,7 @@
 import { memo } from "react";
-import {
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  type NumberInputProps,
-} from "@chakra-ui/react";
+import { Field, NumberInput } from "@chakra-ui/react";
 
-interface NumberFieldProps extends Omit<NumberInputProps, "onChange" | "value"> {
+interface NumberFieldProps extends Omit<NumberInput.RootProps, "onChange" | "value"> {
   label?: string;
   value: number;
   error?: string;
@@ -20,21 +10,34 @@ interface NumberFieldProps extends Omit<NumberInputProps, "onChange" | "value"> 
 
 function NumberFieldComponent({ label, value, error, onChange, ...props }: NumberFieldProps) {
   return (
-    <FormControl isInvalid={Boolean(error)}>
-      {label && <FormLabel>{label}</FormLabel>}
-      <NumberInput
-        value={value}
-        onChange={(_, valueAsNumber) => onChange(Number.isNaN(valueAsNumber) ? 0 : valueAsNumber)}
+    <Field.Root invalid={Boolean(error)}>
+      {label && (
+        <Field.Label
+          fontSize="xs"
+          fontWeight="600"
+          color="text.secondary"
+          mb={1}
+          letterSpacing="0.01em"
+        >
+          {label}
+        </Field.Label>
+      )}
+      <NumberInput.Root
+        value={String(value)}
+        onValueChange={(details) =>
+          onChange(Number.isNaN(details.valueAsNumber) ? 0 : details.valueAsNumber)
+        }
         {...props}
       >
-        <NumberInputField />
-        <NumberInputStepper>
-          <NumberIncrementStepper />
-          <NumberDecrementStepper />
-        </NumberInputStepper>
-      </NumberInput>
-      {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
-    </FormControl>
+        <NumberInput.Control />
+        <NumberInput.Input />
+      </NumberInput.Root>
+      {error ? (
+        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
+          {error}
+        </Field.ErrorText>
+      ) : null}
+    </Field.Root>
   );
 }
 

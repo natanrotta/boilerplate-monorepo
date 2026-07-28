@@ -1,9 +1,9 @@
 import { Box } from "@chakra-ui/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useLocation, useOutlet } from "react-router-dom";
 import { EASE_ORGANIC } from "@/shared/constants/animation";
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 // Collapse known detail-route pathnames to their pattern so URLs that
 // resolve to the same `<Route>` share a transition key. Without this the

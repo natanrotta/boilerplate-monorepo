@@ -7,11 +7,10 @@ import {
   Heading,
   Link,
   PinInput,
-  PinInputField,
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
@@ -21,7 +20,7 @@ import { getPostAuthDestination } from "@/modules/auth/presentation/utils/postAu
 import { useNotify } from "@/shared/hooks/useNotify";
 import { LanguageSelector } from "@/shared/components/ui/LanguageSelector";
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 const PIN_LENGTH = 6;
 /** Mirrors the backend resend cooldown (EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS). */
@@ -112,7 +111,7 @@ export function EmailVerificationPage() {
       transition={{ duration: 0.3, ease: "easeOut" }}
       w="full"
     >
-      <Stack spacing={2} mb={6}>
+      <Stack gap={2} mb={6}>
         <Text fontWeight="700" color="text.brand" letterSpacing="wide" fontSize="sm">
           {tc("platform.name")}
         </Text>
@@ -122,30 +121,34 @@ export function EmailVerificationPage() {
         </Text>
       </Stack>
 
-      <Stack spacing={6}>
-        <HStack justify="center" spacing={{ base: 2, md: 3 }}>
-          <PinInput
+      <Stack gap={6}>
+        <HStack justify="center" gap={{ base: 2, md: 3 }}>
+          <PinInput.Root
             otp
-            type="number"
-            value={pin}
-            onChange={setPin}
-            onComplete={handleVerify}
-            isDisabled={isSubmitting}
+            type="numeric"
+            count={PIN_LENGTH}
+            value={pin.split("")}
+            onValueChange={(e) => setPin(e.value.join(""))}
+            onValueComplete={(e) => handleVerify(e.value.join(""))}
+            disabled={isSubmitting}
             size="lg"
             autoFocus
           >
-            {Array.from({ length: PIN_LENGTH }).map((_, i) => (
-              <PinInputField key={i} />
-            ))}
-          </PinInput>
+            <PinInput.HiddenInput />
+            <PinInput.Control>
+              {Array.from({ length: PIN_LENGTH }).map((_, i) => (
+                <PinInput.Input key={i} index={i} />
+              ))}
+            </PinInput.Control>
+          </PinInput.Root>
         </HStack>
 
         <Button
           size="lg"
           onClick={() => handleVerify(pin)}
-          isLoading={isSubmitting}
+          loading={isSubmitting}
           loadingText={t("verifyEmail.verifying")}
-          isDisabled={pin.length !== PIN_LENGTH}
+          disabled={pin.length !== PIN_LENGTH}
         >
           {t("verifyEmail.submit")}
         </Button>
@@ -155,13 +158,16 @@ export function EmailVerificationPage() {
             {t("verifyEmail.noCode")}
           </Text>
           <Button
-            variant="link"
+            variant="plain"
             size="sm"
             onClick={handleResend}
-            isDisabled={cooldown > 0 || isResending}
-            isLoading={isResending}
+            disabled={cooldown > 0 || isResending}
+            loading={isResending}
             color="text.brand"
             fontWeight="600"
+            textDecoration="underline"
+            h="auto"
+            p={0}
           >
             {cooldown > 0
               ? t("verifyEmail.resendIn", { seconds: cooldown })
@@ -171,13 +177,12 @@ export function EmailVerificationPage() {
 
         <Text color="text.secondary" fontSize="sm" textAlign="center">
           <Link
-            as={RouterLink}
-            to={ROUTE_PATHS.register}
+            asChild
             onClick={discardEmailVerification}
             color="text.brand"
             fontWeight="600"
           >
-            {t("verifyEmail.backToRegister")}
+            <RouterLink to={ROUTE_PATHS.register}>{t("verifyEmail.backToRegister")}</RouterLink>
           </Link>
         </Text>
       </Stack>

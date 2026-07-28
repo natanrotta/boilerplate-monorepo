@@ -1,20 +1,12 @@
 import type { PropsWithChildren } from "react";
-import {
-  Box,
-  Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerOverlay,
-  Flex,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { Box, Drawer, Flex, Portal, useDisclosure } from "@chakra-ui/react";
 import { SidebarNav } from "@/shared/components/layout/SidebarNav";
 import { MobileHeader } from "@/shared/components/layout/MobileHeader";
 import { MobileBottomNav } from "@/shared/components/layout/MobileBottomNav";
 import { useSidebar } from "@/shared/contexts/useSidebar";
 
 export function AppShell({ children }: PropsWithChildren) {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open, onOpen, onClose } = useDisclosure();
   const { isCollapsed } = useSidebar();
 
   return (
@@ -35,14 +27,24 @@ export function AppShell({ children }: PropsWithChildren) {
         <SidebarNav />
       </Box>
 
-      <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
-        <DrawerOverlay />
-        <DrawerContent maxW="248px">
-          <DrawerBody p={0}>
-            <SidebarNav forceExpanded onNavigate={onClose} />
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
+      <Drawer.Root
+        open={open}
+        placement="start"
+        onOpenChange={(e) => {
+          if (!e.open) onClose();
+        }}
+      >
+        <Portal>
+          <Drawer.Backdrop />
+          <Drawer.Positioner>
+            <Drawer.Content maxW="248px">
+              <Drawer.Body p={0}>
+                <SidebarNav forceExpanded onNavigate={onClose} />
+              </Drawer.Body>
+            </Drawer.Content>
+          </Drawer.Positioner>
+        </Portal>
+      </Drawer.Root>
 
       <Flex direction="column" flex="1" minW={0}>
         <MobileHeader onOpenSidebar={onOpen} />

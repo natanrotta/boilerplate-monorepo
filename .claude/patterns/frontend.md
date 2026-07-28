@@ -9,15 +9,15 @@ Every frontend skill (`/frontend`, `/fullstack`, `/ui-design`, `/code-review`, `
 ## Stack
 
 - **Bundler:** Vite
-- **Framework:** React 18 (functional + hooks, no class components)
+- **Framework:** React 19 (functional + hooks, no class components)
 - **Router:** React Router v6 (config-based, lazy + Suspense)
-- **UI:** Chakra UI 2.8 with custom theme + semantic tokens
+- **UI:** Chakra UI 3 — `createSystem(defaultConfig, defineConfig({...}))` in `app/theme/index.ts` (tokens, semanticTokens, recipes, globalCss) + semantic tokens. Compound components are namespaced (`Dialog.Root`, `Menu.Root`, `Field.Root`, `Tabs.Root`, `NativeSelect.Root`, ...). Official CLI snippets live in `src/components/ui/` (`provider`, `color-mode`, `tooltip`, `toaster`). Color mode is delegated to **next-themes** (class strategy) via the `color-mode` snippet — `useColorMode`/`useColorModeValue` import from `@/components/ui/color-mode`, NOT `@chakra-ui/react`.
 - **State (server):** TanStack Query v5
 - **State (global UI):** React Context only (Auth, Sidebar) — **no Redux, no Zustand**. If a feature needs its own navigation/UI state (never server data — that lives in TanStack Query), use a small feature-scoped Context and document why.
 - **Forms (validated):** react-hook-form + Zod (lazy schema builders for i18n)
 - **Forms (simple modals):** `useFormState` hook
 - **HTTP:** Axios with interceptors (session cookie ride-along, refresh, CSRF, language, envelope unwrap). If you ever need a streaming transport (SSE), Axios can't stream in the browser — use native `fetch` and re-attach `credentials: "include"` + the CSRF header manually.
-- **Animations:** Framer Motion (`motion(Box)` pattern, organic easing)
+- **Animations:** `motion` (framer-motion's successor — import from `motion/react`; `const MotionBox = motion.create(Box)`, organic easing). Toasts via `toaster.create(...)` from `@/components/ui/toaster`.
 - **i18n:** react-i18next (3 locales: pt-BR default, en, es). Only **pt-BR** (the fallback) is bundled in the entry chunk; en/es load on demand as one lazy chunk each (see `shared/i18n/index.ts` + `locales/{en,es}/index.ts`).
 - **Tests:** Vitest (co-located `*.spec.ts(x)` unit/component tests, `jsdom`) + Playwright (e2e in `apps/web/e2e/`)
 - **TypeScript:** strict, no `any` (use `unknown` and narrow)
@@ -30,9 +30,9 @@ Every frontend skill (`/frontend`, `/fullstack`, `/ui-design`, `/code-review`, `
 app/                              # App-level setup (one-time)
   router/AppRouter.tsx            # Lazy + Suspense + guards
   router/RoutePaths.ts            # All paths centralized — no string literals in components
-  theme/foundations/semantic-tokens.ts  # bg.*, text.*, border.*, status.* (with _dark variants)
-  theme/components/               # Chakra component overrides
-  providers/                      # AppProviders (QueryClient, Chakra, i18n, Auth)
+  theme/index.ts                  # createSystem — tokens, semanticTokens (bg.*/text.*/border.*/status.* as {value:{base,_dark}}), recipes, globalCss
+  providers/                      # AppProviders (QueryClient, Chakra v3 Provider + next-themes, i18n, Auth)
+components/ui/                    # Chakra v3 CLI snippets: provider, color-mode, tooltip, toaster
 
 core/                             # Cross-cutting infrastructure
   di/repositories.ts              # Singleton repository registry
@@ -452,14 +452,14 @@ Use this pattern only when the operation is fast and rollback is cheap; otherwis
 | Status | `status.success.fg` | `green.600` → `green.300` |
 | Status | `status.error.fg` | `red.600` → `red.300` |
 
-Dark mode is automatic via `_dark` keys in the token definitions — **never** write color-mode conditionals (`useColorMode().colorMode === "dark" ? ... : ...`) in components.
+Dark mode is automatic via the `_dark` condition inside each semantic token's `{ value: { base, _dark } }` (Chakra v3 format; next-themes toggles the `.dark` class) — **never** write color-mode conditionals (`useColorMode().colorMode === "dark" ? ... : ...`) in components. Consumption is unchanged (`bg="bg.canvas"`).
 
 ### Color Palettes
 
 | Palette | Usage |
 |---------|-------|
-| `brand` | Primary actions, links, focus rings (`colorScheme="brand"`) |
-| `accent` | Success states, secondary actions (`colorScheme="accent"`) |
+| `brand` | Primary actions, links, focus rings (`colorPalette="brand"`) |
+| `accent` | Success states, secondary actions (`colorPalette="accent"`) |
 | `neutral` | Text, borders, backgrounds (slate scale) |
 | `purple` | Warnings / attention states |
 

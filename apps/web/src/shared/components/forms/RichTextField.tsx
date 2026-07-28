@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Flex, FormControl, FormLabel, IconButton } from "@chakra-ui/react";
+import { Box, Field, Flex, IconButton } from "@chakra-ui/react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -129,7 +129,7 @@ export function RichTextField({
       <Box
         resize={isReadOnly ? undefined : "vertical"}
         overflow={isReadOnly ? undefined : "auto"}
-        sx={{ ".ProseMirror": { minHeight } }}
+        css={{ ".ProseMirror": { minHeight } }}
       >
         <EditorContent editor={editor} />
       </Box>
@@ -139,10 +139,18 @@ export function RichTextField({
   if (!label) return content;
 
   return (
-    <FormControl>
-      <FormLabel>{label}</FormLabel>
+    <Field.Root>
+      <Field.Label
+        fontSize="xs"
+        fontWeight="600"
+        color="text.secondary"
+        mb={1}
+        letterSpacing="0.01em"
+      >
+        {label}
+      </Field.Label>
       {content}
-    </FormControl>
+    </Field.Root>
   );
 }
 
@@ -216,12 +224,13 @@ function Toolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
         <IconButton
           key={item.label}
           aria-label={item.label}
-          icon={<item.icon size={15} />}
           size="xs"
           variant={item.isActive ? "solid" : "ghost"}
-          colorScheme={item.isActive ? "brand" : "gray"}
+          colorPalette={item.isActive ? "brand" : "gray"}
           onClick={item.action}
-        />
+        >
+          <item.icon size={15} />
+        </IconButton>
       ))}
     </Flex>
   );

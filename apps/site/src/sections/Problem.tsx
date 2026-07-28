@@ -42,8 +42,8 @@ export const Problem = () => {
       justifyContent={{ lg: "center" }}
     >
       <SiteContainer w="100%">
-        <Stack spacing={{ base: 14, md: 16, lg: 12 }}>
-          <Stack spacing={5} maxW="780px" data-reveal>
+        <Stack gap={{ base: 14, md: 16, lg: 12 }}>
+          <Stack gap={5} maxW="780px" data-reveal>
             <SectionEyebrow label={t("problem.eyebrow")} />
             <Heading
               as="h2"
@@ -55,9 +55,9 @@ export const Problem = () => {
               {t("problem.headlineLead")}
               <Box
                 as="span"
-                bgGradient="linear(135deg, brand.500, accent.500)"
+                bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
                 bgClip="text"
-                sx={{ WebkitTextFillColor: "transparent" }}
+                css={{ WebkitTextFillColor: "transparent" }}
               >
                 {t("problem.headlineHighlight")}
               </Box>
@@ -67,7 +67,7 @@ export const Problem = () => {
             </Text>
           </Stack>
 
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={{ base: 5, md: 6 }}>
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={{ base: 5, md: 6 }}>
             {PAINS.map((pain, idx) => {
               const isAnswer = pain.tone === "answer";
               const Icon = pain.icon;
@@ -75,7 +75,7 @@ export const Problem = () => {
                 <Stack
                   key={pain.id}
                   data-reveal
-                  spacing={5}
+                  gap={5}
                   p={{ base: 6, md: 7 }}
                   h="100%"
                   borderRadius="3xl"
@@ -85,7 +85,7 @@ export const Problem = () => {
                   {...(isAnswer
                     ? {
                         color: "white",
-                        bgGradient: "linear(150deg, brand.500, accent.500)",
+                        bgImage: "linear-gradient(150deg, #2f80ed, #1eb28a)",
                         boxShadow: "0 18px 40px -16px rgba(47, 128, 237, 0.5)",
                         _hover: {
                           transform: "translateY(-6px)",
@@ -112,7 +112,7 @@ export const Problem = () => {
                       w="240px"
                       h="240px"
                       borderRadius="full"
-                      bgGradient="radial(circle, rgba(255, 255, 255, 0.20), transparent 60%)"
+                      bgImage="radial-gradient(circle, rgba(255, 255, 255, 0.20), transparent 60%)"
                       pointerEvents="none"
                     />
                   )}
@@ -135,14 +135,14 @@ export const Problem = () => {
                           backdropFilter: "blur(6px)",
                         }
                       : {
-                          bgGradient: "linear(135deg, brand.500, accent.500)",
+                          bgImage: "linear-gradient(135deg, #2f80ed, #1eb28a)",
                           boxShadow: "0 10px 24px -8px rgba(47, 128, 237, 0.45)",
                         })}
                   >
                     <Box as={Icon} />
                   </Flex>
 
-                  <Stack spacing={2.5} position="relative">
+                  <Stack gap={2.5} position="relative">
                     <Text
                       fontSize="2xs"
                       fontWeight="800"
@@ -177,9 +177,7 @@ export const Problem = () => {
 
           <Flex justify="center" data-reveal>
             <Box
-              as="button"
-              type="button"
-              onClick={() => goTo("modulos")}
+              asChild
               display="inline-flex"
               alignItems="center"
               gap={2.5}
@@ -206,16 +204,18 @@ export const Problem = () => {
                 outlineOffset: "2px",
               }}
             >
-              <Box as="span">{t("problem.bridge")}</Box>
-              <Box
-                as="span"
-                className="bridge-arrow"
-                display="inline-flex"
-                alignItems="center"
-                transition="transform 320ms cubic-bezier(0.22, 1, 0.36, 1)"
-              >
-                <Box as={ArrowDown} fontSize="md" />
-              </Box>
+              <button type="button" onClick={() => goTo("modulos")}>
+                <Box as="span">{t("problem.bridge")}</Box>
+                <Box
+                  as="span"
+                  className="bridge-arrow"
+                  display="inline-flex"
+                  alignItems="center"
+                  transition="transform 320ms cubic-bezier(0.22, 1, 0.36, 1)"
+                >
+                  <Box as={ArrowDown} fontSize="md" />
+                </Box>
+              </button>
             </Box>
           </Flex>
         </Stack>

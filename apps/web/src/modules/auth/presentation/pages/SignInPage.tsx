@@ -1,21 +1,20 @@
 import {
   Box,
   Button,
-  Divider,
+  Field,
   Flex,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
   Heading,
   Icon,
   Image,
   Input,
   Link,
+  Separator,
   SimpleGrid,
   Stack,
   Text,
+  chakra,
 } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -49,8 +48,8 @@ import { ColorModeToggle } from "@/shared/components/ui/ColorModeToggle";
 import { buildSignInSchema, type SignInFormValues } from "@/modules/auth/domain/schemas";
 import { TRANSITION_PAGE_SWAP, TRANSITION_SLOW } from "@/shared/constants/animation";
 
-const MotionBox = motion(Box);
-const MotionImage = motion(Image);
+const MotionBox = motion.create(Box);
+const MotionImage = motion.create(Image);
 
 export function SignInPage() {
   const { t, i18n } = useTranslation("auth");
@@ -105,7 +104,7 @@ export function SignInPage() {
       minH={{ lg: "100vh" }}
       display={{ base: "none", lg: "flex" }}
     >
-      <Stack spacing={7} position="relative" maxW="440px" w="full">
+      <Stack gap={7} position="relative" maxW="440px" w="full">
         <MotionImage
           src="/boilerplate-icon.png"
           alt={tc("platform.name")}
@@ -119,7 +118,7 @@ export function SignInPage() {
           transition={{ duration: 0.45, ease: "easeOut" }}
         />
 
-        <Stack spacing={3}>
+        <Stack gap={3}>
           <Text
             fontSize="xs"
             fontWeight="700"
@@ -148,7 +147,7 @@ export function SignInPage() {
 
   const mobileBrand = (
     <Stack
-      spacing={3}
+      gap={3}
       align="center"
       mb={6}
       display={{ base: "flex", lg: "none" }}
@@ -188,7 +187,7 @@ export function SignInPage() {
       transition={fromRegister ? TRANSITION_PAGE_SWAP : TRANSITION_SLOW}
       w="full"
     >
-      <Stack spacing={1.5} mb={7}>
+      <Stack gap={1.5} mb={7}>
         <Heading size="lg" letterSpacing="-0.01em">
           {t("signIn.title")}
         </Heading>
@@ -203,16 +202,16 @@ export function SignInPage() {
       />
 
       <Flex align="center" my={4}>
-        <Divider />
+        <Separator flex="1" />
         <Text px={3} color="text.secondary" fontSize="sm" whiteSpace="nowrap">
           {t("signIn.or")}
         </Text>
-        <Divider />
+        <Separator flex="1" />
       </Flex>
 
-      <Stack as="form" spacing={4} onSubmit={onSubmit} noValidate>
-        <FormControl isInvalid={Boolean(errors.email)}>
-          <FormLabel>{t("signIn.emailLabel")}</FormLabel>
+      <chakra.form onSubmit={onSubmit} noValidate display="flex" flexDirection="column" gap={4}>
+        <Field.Root invalid={Boolean(errors.email)}>
+          <Field.Label>{t("signIn.emailLabel")}</Field.Label>
           {/* F-H6 exception: RHF register() needs a ref-spread input; FormField is controlled-only. */}
           <Input
             type="email"
@@ -220,8 +219,8 @@ export function SignInPage() {
             autoComplete="email"
             {...register("email")}
           />
-          {errors.email ? <FormErrorMessage>{errors.email.message}</FormErrorMessage> : null}
-        </FormControl>
+          {errors.email ? <Field.ErrorText>{errors.email.message}</Field.ErrorText> : null}
+        </Field.Root>
 
         <Controller
           control={control}
@@ -240,41 +239,40 @@ export function SignInPage() {
 
         <Flex justify="flex-end" mt={-1}>
           <Link
-            as={RouterLink}
-            to={ROUTE_PATHS.forgotPassword}
+            asChild
             color="text.brand"
             fontSize="sm"
             fontWeight="500"
           >
-            {t("signIn.forgotPassword")}
+            <RouterLink to={ROUTE_PATHS.forgotPassword}>{t("signIn.forgotPassword")}</RouterLink>
           </Link>
         </Flex>
 
         <Button
           type="submit"
           size="lg"
-          isLoading={isSubmitting}
+          loading={isSubmitting}
           loadingText={t("signIn.loading")}
           mt={2}
         >
           {t("signIn.button")}
         </Button>
-      </Stack>
+      </chakra.form>
 
       <Text color="text.secondary" fontSize="sm" mt={6} textAlign="center">
         {t("signIn.noAccount")}{" "}
         <Link
-          as={RouterLink}
-          to={ROUTE_PATHS.register}
-          state={{ from: "signIn" }}
+          asChild
           color="text.brand"
           fontWeight="600"
           display="inline-flex"
           alignItems="center"
           gap={1}
         >
-          {t("signIn.createAccount")}
-          <Icon as={FiArrowRight} aria-hidden boxSize={3.5} />
+          <RouterLink to={ROUTE_PATHS.register} state={{ from: "signIn" }}>
+            {t("signIn.createAccount")}
+            <Icon as={FiArrowRight} aria-hidden boxSize={3.5} />
+          </RouterLink>
         </Link>
       </Text>
     </MotionBox>
@@ -291,7 +289,7 @@ export function SignInPage() {
         w="780px"
         h="780px"
         borderRadius="full"
-        bgGradient="radial(circle, rgba(47, 128, 237, 0.22), transparent 70%)"
+        bgImage="radial-gradient(circle, rgba(47, 128, 237, 0.22), transparent 70%)"
         pointerEvents="none"
         zIndex={0}
       />
@@ -303,7 +301,7 @@ export function SignInPage() {
         w="720px"
         h="720px"
         borderRadius="full"
-        bgGradient="radial(circle, rgba(30, 178, 138, 0.20), transparent 70%)"
+        bgImage="radial-gradient(circle, rgba(30, 178, 138, 0.20), transparent 70%)"
         pointerEvents="none"
         zIndex={0}
       />
@@ -315,7 +313,7 @@ export function SignInPage() {
         w="520px"
         h="520px"
         borderRadius="full"
-        bgGradient="radial(circle, rgba(95, 161, 255, 0.12), transparent 70%)"
+        bgImage="radial-gradient(circle, rgba(95, 161, 255, 0.12), transparent 70%)"
         pointerEvents="none"
         zIndex={0}
       />

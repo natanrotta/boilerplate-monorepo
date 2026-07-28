@@ -132,7 +132,7 @@ export const BrandCursor = () => {
         zIndex={99999}
         pointerEvents="none"
         opacity={0}
-        sx={{ transition: "opacity 200ms ease", transformOrigin: "top left" }}
+        css={{ transition: "opacity 200ms ease", transformOrigin: "top left" }}
       >
         <svg
           width="26"
@@ -169,14 +169,14 @@ export const BrandCursor = () => {
         px={3}
         py={1}
         borderRadius="full"
-        bgGradient="linear(135deg, brand.500, accent.500)"
+        bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
         color="white"
         fontSize="sm"
         fontWeight="700"
         whiteSpace="nowrap"
         opacity={0}
         boxShadow="0 6px 18px -4px rgba(47, 128, 237, 0.5)"
-        sx={{ transition: "opacity 200ms ease", transformOrigin: "left center" }}
+        css={{ transition: "opacity 200ms ease", transformOrigin: "left center" }}
       />
     </Box>
   );

@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Button, Icon } from "@chakra-ui/react";
+import { Button } from "@chakra-ui/react";
 import { FiTrash2 } from "@/shared/components/icons";
 import { useTranslation } from "react-i18next";
 
@@ -16,10 +16,10 @@ function UnlinkButtonComponent({ onClick, label }: UnlinkButtonProps) {
       size="xs"
       variant="ghost"
       color="red.500"
-      leftIcon={<Icon as={FiTrash2} />}
       _hover={{ bg: "status.error.bg", color: "red.600" }}
       onClick={onClick}
     >
+      <FiTrash2 />
       {resolvedLabel}
     </Button>
   );

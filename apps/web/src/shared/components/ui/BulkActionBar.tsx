@@ -1,13 +1,13 @@
 import { memo } from "react";
 import { useState } from "react";
-import { Box, Button, Flex, Icon, Text } from "@chakra-ui/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { Box, Button, Flex, Text } from "@chakra-ui/react";
+import { AnimatePresence, motion } from "motion/react";
 import { FiCheckSquare, FiTrash2, FiX } from "@/shared/components/icons";
 import { useTranslation } from "react-i18next";
 import { TRANSITION_DEFAULT } from "@/shared/constants/animation";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 
-const MotionFlex = motion(Flex);
+const MotionFlex = motion.create(Flex);
 
 interface BulkActionBarProps {
   isOpen: boolean;
@@ -72,7 +72,9 @@ function BulkActionBarComponent({
               maxW="fit-content"
             >
               <Flex align="center" gap={2} mr={1}>
-                <Icon as={FiCheckSquare} boxSize={4} color="brand.300" />
+                <Box asChild boxSize={4} color="brand.300">
+                  <FiCheckSquare />
+                </Box>
                 <Text fontSize="sm" fontWeight="600" whiteSpace="nowrap">
                   {t("bulk.selected", { count: selectedCount })}
                 </Text>
@@ -95,12 +97,14 @@ function BulkActionBarComponent({
 
               <Button
                 size="sm"
-                colorScheme="red"
-                leftIcon={<Icon as={FiTrash2} boxSize={3.5} />}
-                isDisabled={selectedCount === 0}
+                colorPalette="red"
+                disabled={selectedCount === 0}
                 onClick={() => setShowConfirm(true)}
                 _hover={{ bg: "red.500" }}
               >
+                <Box asChild boxSize={3.5}>
+                  <FiTrash2 />
+                </Box>
                 {t("actions.delete")}
               </Button>
 
@@ -108,10 +112,12 @@ function BulkActionBarComponent({
                 size="sm"
                 variant="ghost"
                 color="neutral.400"
-                leftIcon={<Icon as={FiX} boxSize={3.5} />}
                 _hover={{ bg: "whiteAlpha.200", color: "white" }}
                 onClick={onCancel}
               >
+                <Box asChild boxSize={3.5}>
+                  <FiX />
+                </Box>
                 {t("actions.cancel")}
               </Button>
             </MotionFlex>

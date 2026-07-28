@@ -1,12 +1,13 @@
 import { memo } from "react";
-import { Box, Flex, Icon, IconButton, Text, Tooltip } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import { Box, Flex, IconButton, Text } from "@chakra-ui/react";
+import { motion } from "motion/react";
+import { Tooltip } from "@/components/ui/tooltip";
 import { TRANSITION_SLOW } from "@/shared/constants/animation";
 import type { IconType } from "@/shared/components/icons";
 import type { ReactNode } from "react";
 import { ActionMenu, type ActionMenuItem } from "@/shared/components/ui/ActionMenu";
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 interface EntityCardMetaItem {
   icon: IconType;
@@ -91,13 +92,19 @@ export const EntityCard = memo(function EntityCard({
         <Flex align="center" gap={3} flex={1} minW={0}>
           {avatar}
           <Box flex={1} minW={0}>
-            <Tooltip label={title} fontSize="xs" openDelay={400} hasArrow placement="top">
-              <Text fontWeight="700" fontSize="sm" noOfLines={1}>
+            <Tooltip
+              content={title}
+              showArrow
+              openDelay={400}
+              positioning={{ placement: "top" }}
+              contentProps={{ fontSize: "xs" }}
+            >
+              <Text fontWeight="700" fontSize="sm" lineClamp={1}>
                 {title}
               </Text>
             </Tooltip>
             {subtitle && (
-              <Text fontSize="xs" color="text.secondary" noOfLines={1} mt={0.5}>
+              <Text fontSize="xs" color="text.secondary" lineClamp={1} mt={0.5}>
                 {subtitle}
               </Text>
             )}
@@ -140,24 +147,24 @@ export const EntityCard = memo(function EntityCard({
             flex={1}
             minW={0}
             overflowX={{ base: "visible", md: "auto" }}
-            sx={{
+            css={{
               scrollbarWidth: "none",
               "&::-webkit-scrollbar": { display: "none" },
             }}
           >
-            {metaItems?.map((meta) => (
-              <Flex key={meta.label} align="center" gap={1.5} flexShrink={0}>
-                <Icon
-                  as={meta.icon}
-                  boxSize={3.5}
-                  color={meta.color ?? "text.secondary"}
-                  flexShrink={0}
-                />
-                <Text fontSize="xs" color={meta.color ?? "text.secondary"} whiteSpace="nowrap">
-                  {meta.label}
-                </Text>
-              </Flex>
-            ))}
+            {metaItems?.map((meta) => {
+              const MetaIcon = meta.icon;
+              return (
+                <Flex key={meta.label} align="center" gap={1.5} flexShrink={0}>
+                  <Box asChild color={meta.color ?? "text.secondary"} flexShrink={0} boxSize={3.5}>
+                    <MetaIcon />
+                  </Box>
+                  <Text fontSize="xs" color={meta.color ?? "text.secondary"} whiteSpace="nowrap">
+                    {meta.label}
+                  </Text>
+                </Flex>
+              );
+            })}
           </Flex>
           {footerEnd && (
             <Flex flexShrink={0} onClick={(e) => e.stopPropagation()} align="center">
@@ -173,19 +180,30 @@ export const EntityCard = memo(function EntityCard({
               _groupHover={{ opacity: 1 }}
               transition="opacity 0.15s ease"
             >
-              {quickActions.map((action) => (
-                <Tooltip key={action.label} label={action.label} fontSize="xs" hasArrow>
-                  <IconButton
-                    aria-label={action.label}
-                    icon={<Icon as={action.icon} boxSize={3.5} />}
-                    size="xs"
-                    variant="ghost"
-                    color="text.secondary"
-                    _hover={{ color: "text.brand", bg: "bg.brand.subtle" }}
-                    onClick={action.onClick}
-                  />
-                </Tooltip>
-              ))}
+              {quickActions.map((action) => {
+                const ActionIcon = action.icon;
+                return (
+                  <Tooltip
+                    key={action.label}
+                    content={action.label}
+                    showArrow
+                    contentProps={{ fontSize: "xs" }}
+                  >
+                    <IconButton
+                      aria-label={action.label}
+                      size="xs"
+                      variant="ghost"
+                      color="text.secondary"
+                      _hover={{ color: "text.brand", bg: "bg.brand.subtle" }}
+                      onClick={action.onClick}
+                    >
+                      <Box asChild boxSize={3.5}>
+                        <ActionIcon />
+                      </Box>
+                    </IconButton>
+                  </Tooltip>
+                );
+              })}
             </Flex>
           )}
         </Flex>

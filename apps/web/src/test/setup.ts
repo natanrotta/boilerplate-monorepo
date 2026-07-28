@@ -9,11 +9,13 @@ import type { TestingLibraryMatchers } from "@testing-library/jest-dom/matchers"
 // active in test compilation contexts, not production code.
 declare module "vitest" {
   // Matches the signatures published by @testing-library/jest-dom/types/vitest.d.ts;
-  // diverging type parameters here would conflict at type-check time.
-  /* eslint-disable @typescript-eslint/no-explicit-any */
+  // diverging type parameters here would conflict at type-check time. Module
+  // augmentation requires `interface extends …` (a type alias can't augment),
+  // so the empty-object-type rule is disabled for these two lines.
+  /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type */
   interface Assertion<T = any> extends TestingLibraryMatchers<any, T> {}
   interface AsymmetricMatchersContaining extends TestingLibraryMatchers<any, any> {}
-  /* eslint-enable @typescript-eslint/no-explicit-any */
+  /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type */
 }
 
 // jest-dom v6 ships a Vitest entrypoint that, on Vitest 1.6+, tries to mutate

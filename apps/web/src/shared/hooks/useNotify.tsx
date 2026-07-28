@@ -1,57 +1,46 @@
-import { useToast } from "@chakra-ui/react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { toaster } from "@/components/ui/toaster";
 import { AppError } from "@/core/errors/AppError";
 import { ErrorCodes } from "@/core/errors/errorCodes";
-import { ToastContent } from "./ToastContent";
 
 export function useNotify() {
-  const toast = useToast();
   const { t } = useTranslation("common");
 
-  const showSuccess = useCallback(
-    (title: string) => {
-      toast({
-        position: "bottom",
-        duration: 2500,
-        render: () => <ToastContent title={title} status="success" />,
-      });
-    },
-    [toast]
-  );
+  const showSuccess = useCallback((title: string) => {
+    toaster.create({
+      title,
+      type: "success",
+      duration: 2500,
+    });
+  }, []);
 
   const showAutoSaved = useCallback(
     (title = t("notify.autoSaved")) => {
-      toast({
-        position: "bottom",
+      toaster.create({
+        title,
+        type: "info",
         duration: 1500,
-        render: () => <ToastContent title={title} status="info" />,
       });
     },
-    [toast, t]
+    [t]
   );
 
-  const showInfo = useCallback(
-    (title: string) => {
-      toast({
-        position: "bottom",
-        duration: 2500,
-        render: () => <ToastContent title={title} status="info" />,
-      });
-    },
-    [toast]
-  );
+  const showInfo = useCallback((title: string) => {
+    toaster.create({
+      title,
+      type: "info",
+      duration: 2500,
+    });
+  }, []);
 
-  const showWarning = useCallback(
-    (title: string) => {
-      toast({
-        position: "bottom",
-        duration: 3000,
-        render: () => <ToastContent title={title} status="warning" />,
-      });
-    },
-    [toast]
-  );
+  const showWarning = useCallback((title: string) => {
+    toaster.create({
+      title,
+      type: "warning",
+      duration: 3000,
+    });
+  }, []);
 
   const showError = useCallback(
     (error: unknown, fallbackMessage = t("notify.defaultError")) => {
@@ -76,18 +65,17 @@ export function useNotify() {
       // Truncate the keying surface so a long error message doesn't
       // produce an unbounded toast id.
       const id = `error:${message.slice(0, 80)}`;
-      if (toast.isActive(id)) return;
+      if (toaster.isVisible(id)) return;
 
-      toast({
+      toaster.create({
         id,
-        position: "bottom",
+        title: t("notify.errorTitle"),
+        description: message,
+        type: "error",
         duration: 4000,
-        render: () => (
-          <ToastContent title={t("notify.errorTitle")} description={message} status="error" />
-        ),
       });
     },
-    [toast, t]
+    [t]
   );
 
   return { showSuccess, showAutoSaved, showInfo, showWarning, showError };

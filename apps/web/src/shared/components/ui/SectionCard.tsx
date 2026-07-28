@@ -1,12 +1,14 @@
 import { memo } from "react";
 import { Box, type BoxProps } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import type { PropsWithChildren } from "react";
-import { TRANSITION_SLOW } from "@/shared/constants/animation";
+import { TRANSITION_SLOW, type MotionConflictingProps } from "@/shared/constants/animation";
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
-interface SectionCardProps extends BoxProps {
+// Omit the Chakra props that collide with motion's own props on the MotionBox
+// root (see MotionConflictingProps) so the `{...props}` spread stays typed.
+interface SectionCardProps extends Omit<BoxProps, MotionConflictingProps> {
   isInteractive?: boolean;
   accentColor?: string;
   variant?: "default" | "glass" | "sunken";
