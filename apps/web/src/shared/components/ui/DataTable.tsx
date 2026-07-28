@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Box, Table, TableContainer, Tbody, Td, Th, Thead, Tr } from "@chakra-ui/react";
+import { Box, Table } from "@chakra-ui/react";
 import type { ReactNode } from "react";
 
 export interface DataTableColumn<RowData> {
@@ -25,12 +25,12 @@ function DataTableInner<RowData extends { id: string }>({
       bg="bg.surface"
       overflow="hidden"
     >
-      <TableContainer>
-        <Table variant="simple" size="md" minW="600px">
-          <Thead>
-            <Tr>
+      <Table.ScrollArea>
+        <Table.Root variant="line" size="md" minW="600px">
+          <Table.Header>
+            <Table.Row>
               {columns.map((column) => (
-                <Th
+                <Table.ColumnHeader
                   key={column.key}
                   py={4}
                   color="text.secondary"
@@ -38,23 +38,23 @@ function DataTableInner<RowData extends { id: string }>({
                   letterSpacing="widest"
                 >
                   {column.header}
-                </Th>
+                </Table.ColumnHeader>
               ))}
-            </Tr>
-          </Thead>
-          <Tbody>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {data.map((row) => (
-              <Tr key={row.id}>
+              <Table.Row key={row.id}>
                 {columns.map((column) => (
-                  <Td key={column.key} py={4}>
+                  <Table.Cell key={column.key} py={4}>
                     {column.render(row)}
-                  </Td>
+                  </Table.Cell>
                 ))}
-              </Tr>
+              </Table.Row>
             ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
+          </Table.Body>
+        </Table.Root>
+      </Table.ScrollArea>
     </Box>
   );
 }

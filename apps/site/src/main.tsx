@@ -1,17 +1,20 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
 import { App } from "@/App";
-import { theme } from "@/theme";
+import { COLOR_MODE_STORAGE_KEY } from "@/theme";
+import { Provider as ChakraUIProvider } from "@/components/ui/provider";
 import { LocaleProvider } from "@/hooks/useLocale";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-    <ChakraProvider theme={theme}>
+    <ChakraUIProvider
+      attribute="class"
+      defaultTheme="light"
+      storageKey={COLOR_MODE_STORAGE_KEY}
+    >
       <LocaleProvider>
         <App />
       </LocaleProvider>
-    </ChakraProvider>
+    </ChakraUIProvider>
   </React.StrictMode>
 );

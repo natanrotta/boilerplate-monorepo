@@ -1,12 +1,5 @@
 import { memo } from "react";
-import {
-  FormControl,
-  FormErrorMessage,
-  FormHelperText,
-  FormLabel,
-  Textarea,
-  type TextareaProps,
-} from "@chakra-ui/react";
+import { Field, Textarea, type TextareaProps } from "@chakra-ui/react";
 
 interface TextAreaFieldProps extends Omit<TextareaProps, "onChange" | "value"> {
   label?: string;
@@ -26,15 +19,27 @@ function TextAreaFieldComponent({
   ...props
 }: TextAreaFieldProps) {
   return (
-    <FormControl isInvalid={Boolean(error)}>
-      {label && <FormLabel>{label}</FormLabel>}
+    <Field.Root invalid={Boolean(error)}>
+      {label && (
+        <Field.Label
+          fontSize="xs"
+          fontWeight="600"
+          color="text.secondary"
+          mb={1}
+          letterSpacing="0.01em"
+        >
+          {label}
+        </Field.Label>
+      )}
       <Textarea value={value} onChange={(event) => onChange(event.target.value)} {...props} />
       {error ? (
-        <FormErrorMessage>{error}</FormErrorMessage>
+        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
+          {error}
+        </Field.ErrorText>
       ) : helperText ? (
-        <FormHelperText>{helperText}</FormHelperText>
+        <Field.HelperText>{helperText}</Field.HelperText>
       ) : null}
-    </FormControl>
+    </Field.Root>
   );
 }
 

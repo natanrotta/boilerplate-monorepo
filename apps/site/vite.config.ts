@@ -26,7 +26,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           react: ["react", "react-dom", "react-router-dom"],
-          chakra: ["@chakra-ui/react", "@emotion/react", "@emotion/styled"],
+          chakra: ["@chakra-ui/react", "@emotion/react"],
           gsap: ["gsap", "@gsap/react"],
         },
       },

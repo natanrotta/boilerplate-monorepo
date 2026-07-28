@@ -159,9 +159,9 @@ export const TextScatter = ({ lines, radius = 130, strength = 70, ...rest }: Tex
                       willChange="transform"
                       {...(word.gradient
                         ? {
-                            bgGradient: "linear(135deg, brand.500, accent.500)",
+                            bgImage: "linear-gradient(135deg, #2f80ed, #1eb28a)",
                             bgClip: "text",
-                            sx: { WebkitTextFillColor: "transparent" },
+                            css: { WebkitTextFillColor: "transparent" },
                           }
                         : {})}
                     >

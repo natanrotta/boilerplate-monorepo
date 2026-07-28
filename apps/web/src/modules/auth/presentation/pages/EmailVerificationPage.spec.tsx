@@ -47,11 +47,17 @@ describe("EmailVerificationPage", () => {
     vi.clearAllMocks();
   });
 
-  // Chakra PinInput auto-advances focus per keystroke, so `userEvent.type`
-  // on a single field only registers the first char. Type one digit into
-  // each field instead.
+  // Chakra v3 PinInput (Ark UI) renders the visible cells as `data-part="input"`
+  // plus one `PinInput.HiddenInput` for form/paste integration — so we target the
+  // visible cells only. It auto-advances focus per keystroke, so `userEvent.type`
+  // on a single field only registers the first char; type one digit per field.
+  function pinCells(container: HTMLElement) {
+    return Array.from(
+      container.querySelectorAll<HTMLInputElement>('input[data-part="input"]')
+    );
+  }
   async function fillPin(container: HTMLElement, code: string) {
-    const inputs = Array.from(container.querySelectorAll("input"));
+    const inputs = pinCells(container);
     for (let i = 0; i < code.length; i++) {
       await userEvent.type(inputs[i]!, code[i]!);
     }
@@ -63,7 +69,7 @@ describe("EmailVerificationPage", () => {
     await waitFor(() => expect(sendVerificationPinMock).toHaveBeenCalledTimes(1));
     expect(screen.getByText(/john@test\.com/)).toBeInTheDocument();
     // Six PIN fields are rendered.
-    expect(container.querySelectorAll("input")).toHaveLength(6);
+    expect(pinCells(container)).toHaveLength(6);
   });
 
   it("verifies the PIN and navigates to the post-auth destination", async () => {
@@ -90,5 +96,7 @@ describe("EmailVerificationPage", () => {
 
     await waitFor(() => expect(verifyEmailPinMock).toHaveBeenCalledWith("000000"));
     await waitFor(() => expect(showErrorMock).toHaveBeenCalled());
+    // On a wrong PIN, handleVerify resets the field — every cell clears.
+    await waitFor(() => expect(pinCells(container).every((i) => i.value === "")).toBe(true));
   });
 });

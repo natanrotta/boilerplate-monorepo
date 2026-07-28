@@ -19,9 +19,9 @@ export const GradientHeading = ({ children, highlight, ...rest }: Props) => {
         display="inline"
         fontSize="inherit"
         fontWeight="inherit"
-        bgGradient="linear(135deg, brand.500, accent.500)"
+        bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
         bgClip="text"
-        sx={{ WebkitTextFillColor: "transparent" }}
+        css={{ WebkitTextFillColor: "transparent" }}
       >
         {highlight}
       </Heading>

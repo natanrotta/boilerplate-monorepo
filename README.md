@@ -10,24 +10,24 @@ Everything you need to build and ship — clone it, rename it, start shipping.
 
 | App | Path | Stack | Dev port |
 |---|---|---|---|
-| **API** | `apps/api` | Node.js · Express 4 · Prisma 7 (Postgres) · tsyringe DI · Zod · Vitest | `3333` |
-| **Web** | `apps/web` | React 18 · Vite 5 · Chakra UI 2 · TanStack Query 5 · react-i18next · Vitest + Playwright | `3000` |
-| **Site** | `apps/site` | React 18 · Vite 5 · Chakra UI 2 · GSAP · i18n (en/pt/es) | `3001` |
+| **API** | `apps/api` | Node.js 22 · Express 4 · Prisma 7 (Postgres) · tsyringe DI · Zod · Vitest | `3333` |
+| **Web** | `apps/web` | React 19 · Vite 7 · Chakra UI 3 · TanStack Query 5 · react-i18next · Vitest + Playwright | `3000` |
+| **Site** | `apps/site` | React 19 · Vite 7 · Chakra UI 3 · GSAP · i18n (en/pt/es) | `3001` |
 | **Shared types** | `packages/shared-types` | `@boilerplate/shared-types` — DTOs shared by API + web | — |
 
 `apps/api` and `apps/web` are Turborepo/yarn workspaces; **`apps/site` is a standalone yarn project** (its own `yarn.lock`), run via `yarn site:*`.
 
 ## Requirements
 
-- Node `>= 20.19`
+- Node `>= 22` (see `.nvmrc` — run `nvm use`)
 - Yarn `1.x` (Classic)
 - Docker (for Postgres + Redis)
 
 ## Quick start
 
 ```bash
-yarn install                      # install API + web + shared-types
-yarn site:install                 # install the standalone site
+yarn install                      # install API + web + shared-types (Node 22 — run `nvm use` first)
+yarn site:install                 # install the standalone site (also auto-run by `yarn dev`)
 cp apps/api/.env.example apps/api/.env
 # (optional) cp apps/web/.env.example apps/web/.env
 

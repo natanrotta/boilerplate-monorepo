@@ -1,18 +1,12 @@
 import { memo } from "react";
-import {
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
-  Select,
-  type SelectProps,
-} from "@chakra-ui/react";
+import { Field, NativeSelect } from "@chakra-ui/react";
 
 export interface SelectOption {
   label: string;
   value: string;
 }
 
-interface SelectFieldProps extends Omit<SelectProps, "onChange" | "value"> {
+interface SelectFieldProps extends Omit<NativeSelect.FieldProps, "onChange" | "value"> {
   label?: string;
   options: SelectOption[];
   value: string;
@@ -30,28 +24,45 @@ function SelectFieldComponent({
   ...props
 }: SelectFieldProps) {
   return (
-    <FormControl isInvalid={Boolean(error)}>
-      {label && <FormLabel>{label}</FormLabel>}
-      <Select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        cursor="pointer"
-        color={value ? undefined : "text.muted"}
-        {...props}
-      >
-        {placeholder && (
-          <option value="" disabled hidden>
-            {placeholder}
-          </option>
-        )}
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </Select>
-      {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
-    </FormControl>
+    <Field.Root invalid={Boolean(error)}>
+      {label && (
+        <Field.Label
+          fontSize="xs"
+          fontWeight="600"
+          color="text.secondary"
+          mb={1}
+          letterSpacing="0.01em"
+        >
+          {label}
+        </Field.Label>
+      )}
+      <NativeSelect.Root>
+        <NativeSelect.Field
+          value={value}
+          onChange={(event) => onChange(event.currentTarget.value)}
+          cursor="pointer"
+          color={value ? undefined : "text.muted"}
+          {...props}
+        >
+          {placeholder && (
+            <option value="" disabled hidden>
+              {placeholder}
+            </option>
+          )}
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </NativeSelect.Field>
+        <NativeSelect.Indicator />
+      </NativeSelect.Root>
+      {error ? (
+        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
+          {error}
+        </Field.ErrorText>
+      ) : null}
+    </Field.Root>
   );
 }
 

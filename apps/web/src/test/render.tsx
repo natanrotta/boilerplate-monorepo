@@ -1,6 +1,6 @@
 import { type ReactElement, type ReactNode } from "react";
 import { render, type RenderOptions } from "@testing-library/react";
-import { ChakraProvider } from "@chakra-ui/react";
+import { Provider } from "@/components/ui/provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { I18nextProvider } from "react-i18next";
@@ -33,11 +33,11 @@ export function renderWithProviders(
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <I18nextProvider i18n={i18n}>
-        <ChakraProvider>
+        <Provider>
           <QueryClientProvider client={client}>
             <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
           </QueryClientProvider>
-        </ChakraProvider>
+        </Provider>
       </I18nextProvider>
     );
   }

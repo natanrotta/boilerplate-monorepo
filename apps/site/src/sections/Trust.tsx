@@ -38,8 +38,8 @@ export const Trust = () => {
     // not a navigation destination, so the header pill doesn't track it.
     <Box as="section" id="confianca" bg="bg.sunken" py={{ base: 24, lg: 28 }} ref={reveal}>
       <SiteContainer w="100%">
-        <Stack spacing={{ base: 14, md: 16 }}>
-          <Stack spacing={5} maxW="780px" data-reveal>
+        <Stack gap={{ base: 14, md: 16 }}>
+          <Stack gap={5} maxW="780px" data-reveal>
             <SectionEyebrow label={t("trust.eyebrow")} />
             <Heading
               as="h2"
@@ -51,9 +51,9 @@ export const Trust = () => {
               {t("trust.titleLead")}
               <Box
                 as="span"
-                bgGradient="linear(135deg, brand.500, accent.500)"
+                bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
                 bgClip="text"
-                sx={{ WebkitTextFillColor: "transparent" }}
+                css={{ WebkitTextFillColor: "transparent" }}
               >
                 {t("trust.titleHighlight")}
               </Box>
@@ -64,7 +64,7 @@ export const Trust = () => {
           </Stack>
 
           {/* Placeholder logo strip */}
-          <Stack spacing={5} data-reveal>
+          <Stack gap={5} data-reveal>
             <Text
               fontSize="2xs"
               fontWeight="800"
@@ -79,7 +79,7 @@ export const Trust = () => {
               align="center"
               gap={{ base: 6, md: 12 }}
               opacity={0.7}
-              sx={{ filter: "grayscale(1)" }}
+              css={{ filter: "grayscale(1)" }}
             >
               {LOGOS.map((name) => (
                 <Text
@@ -96,14 +96,14 @@ export const Trust = () => {
           </Stack>
 
           {/* Value pillars */}
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={{ base: 5, md: 6 }}>
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={{ base: 5, md: 6 }}>
             {PILLARS.map((pillar) => {
               const Icon = pillar.icon;
               return (
                 <Stack
                   key={pillar.id}
                   data-reveal
-                  spacing={5}
+                  gap={5}
                   p={{ base: 6, md: 7 }}
                   h="100%"
                   borderRadius="3xl"
@@ -127,13 +127,13 @@ export const Trust = () => {
                     justify="center"
                     fontSize="xl"
                     color="white"
-                    bgGradient="linear(135deg, brand.500, accent.500)"
+                    bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
                     boxShadow="0 10px 24px -8px rgba(47, 128, 237, 0.45)"
                   >
                     <Box as={Icon} />
                   </Flex>
 
-                  <Stack spacing={2.5}>
+                  <Stack gap={2.5}>
                     <Heading
                       as="h3"
                       fontSize={{ base: "lg", md: "xl" }}
@@ -154,12 +154,12 @@ export const Trust = () => {
           </SimpleGrid>
 
           {/* Testimonials */}
-          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 5, md: 6 }}>
+          <SimpleGrid columns={{ base: 1, md: 3 }} gap={{ base: 5, md: 6 }}>
             {TESTIMONIALS.map((id) => (
               <Stack
                 key={id}
                 data-reveal
-                spacing={5}
+                gap={5}
                 p={{ base: 6, md: 7 }}
                 h="100%"
                 borderRadius="3xl"
@@ -183,11 +183,11 @@ export const Trust = () => {
                     fontSize="sm"
                     fontWeight="800"
                     color="white"
-                    bgGradient="linear(135deg, brand.500, accent.500)"
+                    bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
                   >
                     {t(`trust.testimonials.${id}.initials`)}
                   </Flex>
-                  <Stack spacing={0}>
+                  <Stack gap={0}>
                     <Text fontSize="sm" fontWeight="700" color="text.primary">
                       {t(`trust.testimonials.${id}.author`)}
                     </Text>

@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Flex, FormControl, FormLabel, Grid, Icon, Text } from "@chakra-ui/react";
+import { Box, Field, Flex, Grid, Text } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { FiExternalLink } from "@/shared/components/icons";
 import type { SelectOption } from "@/shared/components/forms/SelectField";
@@ -40,10 +40,10 @@ function EditableInfoGridComponent({ items, columns = 2, onChange }: EditableInf
   return (
     <Grid templateColumns={{ base: "1fr", md: `repeat(${columns}, 1fr)` }} gap={{ base: 3, md: 4 }}>
       {items.map((item) => (
-        <FormControl key={item.key} gridColumn={item.colSpan === 2 ? { md: "span 2" } : undefined}>
-          <FormLabel>{item.label}</FormLabel>
+        <Field.Root key={item.key} gridColumn={item.colSpan === 2 ? { md: "span 2" } : undefined}>
+          <Field.Label>{item.label}</Field.Label>
           <FieldInput item={item} onChange={onChange} />
-        </FormControl>
+        </Field.Root>
       ))}
     </Grid>
   );
@@ -80,7 +80,9 @@ function FieldInput({
           onClick={item.onLinkClick}
         >
           {item.value || "\u2014"}
-          <Icon as={FiExternalLink} boxSize={3.5} />
+          <Box asChild boxSize={3.5}>
+            <FiExternalLink />
+          </Box>
         </Flex>
       );
     }

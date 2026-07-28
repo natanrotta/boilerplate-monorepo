@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Box, Stack } from "@chakra-ui/react";
 
 const Section = ({ children }: { children: ReactNode }) => (
-  <Stack as="section" spacing={3}>
+  <Stack as="section" gap={3}>
     {children}
   </Stack>
 );

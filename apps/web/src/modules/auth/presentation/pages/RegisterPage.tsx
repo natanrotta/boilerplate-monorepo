@@ -1,21 +1,20 @@
 import {
   Box,
   Button,
-  Divider,
+  Field,
   Flex,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
   Heading,
   Icon,
   Image,
   Input,
   Link,
+  Separator,
   SimpleGrid,
   Stack,
   Text,
+  chakra,
 } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -32,8 +31,8 @@ import { LanguageSelector } from "@/shared/components/ui/LanguageSelector";
 import { buildRegisterSchema, type RegisterFormValues } from "@/modules/auth/domain/schemas";
 import { TRANSITION_PAGE_SWAP, TRANSITION_SLOW } from "@/shared/constants/animation";
 
-const MotionBox = motion(Box);
-const MotionImage = motion(Image);
+const MotionBox = motion.create(Box);
+const MotionImage = motion.create(Image);
 
 export function RegisterPage() {
   const { t, i18n } = useTranslation("auth");
@@ -104,7 +103,7 @@ export function RegisterPage() {
       minH={{ lg: "100vh" }}
       display={{ base: "none", lg: "flex" }}
     >
-      <Stack spacing={7} position="relative" maxW="440px" w="full">
+      <Stack gap={7} position="relative" maxW="440px" w="full">
         <MotionImage
           src="/boilerplate-icon.png"
           alt={tc("platform.name")}
@@ -118,7 +117,7 @@ export function RegisterPage() {
           transition={{ duration: 0.45, ease: "easeOut" }}
         />
 
-        <Stack spacing={3}>
+        <Stack gap={3}>
           <Text
             fontSize="xs"
             fontWeight="700"
@@ -147,7 +146,7 @@ export function RegisterPage() {
 
   const mobileBrand = (
     <Stack
-      spacing={3}
+      gap={3}
       align="center"
       mb={6}
       display={{ base: "flex", lg: "none" }}
@@ -187,7 +186,7 @@ export function RegisterPage() {
       transition={fromSignIn ? TRANSITION_PAGE_SWAP : TRANSITION_SLOW}
       w="full"
     >
-      <Stack spacing={1.5} mb={7}>
+      <Stack gap={1.5} mb={7}>
         <Heading size="lg" letterSpacing="-0.01em">
           {t("register.title")}
         </Heading>
@@ -201,23 +200,23 @@ export function RegisterPage() {
         onError={() => showError(undefined, t("register.googleError"))}
       />
       <Flex align="center" my={4}>
-        <Divider />
+        <Separator flex="1" />
         <Text px={3} color="text.secondary" fontSize="sm" whiteSpace="nowrap">
           {t("register.or")}
         </Text>
-        <Divider />
+        <Separator flex="1" />
       </Flex>
 
-      <Stack as="form" spacing={4} onSubmit={onSubmit} noValidate>
-        <FormControl isInvalid={Boolean(errors.name)}>
-          <FormLabel>{t("register.nameLabel")}</FormLabel>
+      <chakra.form onSubmit={onSubmit} noValidate display="flex" flexDirection="column" gap={4}>
+        <Field.Root invalid={Boolean(errors.name)}>
+          <Field.Label>{t("register.nameLabel")}</Field.Label>
           {/* F-H6 exception: RHF register() needs a ref-spread input; FormField is controlled-only. */}
           <Input placeholder={t("register.namePlaceholder")} autoComplete="name" {...register("name")} />
-          {errors.name ? <FormErrorMessage>{errors.name.message}</FormErrorMessage> : null}
-        </FormControl>
+          {errors.name ? <Field.ErrorText>{errors.name.message}</Field.ErrorText> : null}
+        </Field.Root>
 
-        <FormControl isInvalid={Boolean(errors.email)}>
-          <FormLabel>{t("register.emailLabel")}</FormLabel>
+        <Field.Root invalid={Boolean(errors.email)}>
+          <Field.Label>{t("register.emailLabel")}</Field.Label>
           {/* F-H6 exception: RHF register() needs a ref-spread input; FormField is controlled-only. */}
           <Input
             type="email"
@@ -225,8 +224,8 @@ export function RegisterPage() {
             autoComplete="email"
             {...register("email")}
           />
-          {errors.email ? <FormErrorMessage>{errors.email.message}</FormErrorMessage> : null}
-        </FormControl>
+          {errors.email ? <Field.ErrorText>{errors.email.message}</Field.ErrorText> : null}
+        </Field.Root>
 
         <Box>
           <Controller
@@ -249,28 +248,28 @@ export function RegisterPage() {
         <Button
           type="submit"
           size="lg"
-          isLoading={isSubmitting}
+          loading={isSubmitting}
           loadingText={t("register.loading")}
           mt={2}
         >
           {t("register.button")}
         </Button>
-      </Stack>
+      </chakra.form>
 
       <Text color="text.secondary" fontSize="sm" mt={6} textAlign="center">
         {t("register.hasAccount")}{" "}
         <Link
-          as={RouterLink}
-          to={ROUTE_PATHS.signIn}
-          state={{ from: "register" }}
+          asChild
           color="text.brand"
           fontWeight="600"
           display="inline-flex"
           alignItems="center"
           gap={1}
         >
-          <Icon as={FiArrowLeft} aria-hidden boxSize={3.5} />
-          {t("register.signIn")}
+          <RouterLink to={ROUTE_PATHS.signIn} state={{ from: "register" }}>
+            <Icon as={FiArrowLeft} aria-hidden boxSize={3.5} />
+            {t("register.signIn")}
+          </RouterLink>
         </Link>
       </Text>
     </MotionBox>
@@ -287,7 +286,7 @@ export function RegisterPage() {
         w="780px"
         h="780px"
         borderRadius="full"
-        bgGradient="radial(circle, rgba(47, 128, 237, 0.22), transparent 70%)"
+        bgImage="radial-gradient(circle, rgba(47, 128, 237, 0.22), transparent 70%)"
         pointerEvents="none"
         zIndex={0}
       />
@@ -299,7 +298,7 @@ export function RegisterPage() {
         w="720px"
         h="720px"
         borderRadius="full"
-        bgGradient="radial(circle, rgba(30, 178, 138, 0.20), transparent 70%)"
+        bgImage="radial-gradient(circle, rgba(30, 178, 138, 0.20), transparent 70%)"
         pointerEvents="none"
         zIndex={0}
       />
@@ -311,7 +310,7 @@ export function RegisterPage() {
         w="520px"
         h="520px"
         borderRadius="full"
-        bgGradient="radial(circle, rgba(95, 161, 255, 0.12), transparent 70%)"
+        bgImage="radial-gradient(circle, rgba(95, 161, 255, 0.12), transparent 70%)"
         pointerEvents="none"
         zIndex={0}
       />

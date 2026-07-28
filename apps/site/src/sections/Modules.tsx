@@ -47,7 +47,7 @@ const FeatureVisual = ({ icon: Icon }: { icon: LucideIcon }) => (
     align="center"
     justify="center"
     maxH={{ lg: "42vh" }}
-    sx={{ aspectRatio: "11 / 6" }}
+    css={{ aspectRatio: "11 / 6" }}
   >
     <Box
       position="absolute"
@@ -56,7 +56,7 @@ const FeatureVisual = ({ icon: Icon }: { icon: LucideIcon }) => (
       w="60%"
       h="120%"
       borderRadius="full"
-      bgGradient="radial(circle, rgba(47, 128, 237, 0.12), transparent 60%)"
+      bgImage="radial-gradient(circle, rgba(47, 128, 237, 0.12), transparent 60%)"
       pointerEvents="none"
     />
     <Box
@@ -66,7 +66,7 @@ const FeatureVisual = ({ icon: Icon }: { icon: LucideIcon }) => (
       w="55%"
       h="120%"
       borderRadius="full"
-      bgGradient="radial(circle, rgba(126, 87, 255, 0.10), transparent 60%)"
+      bgImage="radial-gradient(circle, rgba(126, 87, 255, 0.10), transparent 60%)"
       pointerEvents="none"
     />
     <Flex
@@ -74,7 +74,7 @@ const FeatureVisual = ({ icon: Icon }: { icon: LucideIcon }) => (
       w={{ base: 16, md: 20 }}
       h={{ base: 16, md: 20 }}
       borderRadius="2xl"
-      bgGradient="linear(135deg, brand.500, accent.500)"
+      bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
       color="white"
       align="center"
       justify="center"
@@ -120,7 +120,7 @@ export const Modules = () => {
       <Box
         position="absolute"
         inset={0}
-        bgGradient="radial(ellipse 60% 50% at 50% 0%, rgba(47, 128, 237, 0.08), transparent 70%)"
+        bgImage="radial-gradient(ellipse 60% 50% at 50% 0%, rgba(47, 128, 237, 0.08), transparent 70%)"
         pointerEvents="none"
       />
 
@@ -132,7 +132,7 @@ export const Modules = () => {
         flexDirection={{ lg: "column" }}
         justifyContent={{ lg: "center" }}
       >
-        <Stack spacing={5} maxW="720px" mb={{ base: 12, md: 16, lg: 6 }} flexShrink={0} data-reveal>
+        <Stack gap={5} maxW="720px" mb={{ base: 12, md: 16, lg: 6 }} flexShrink={0} data-reveal>
           <SectionEyebrow label={t("modules.eyebrow")} />
           <Heading
             as="h2"
@@ -144,9 +144,9 @@ export const Modules = () => {
             {t("modules.titleLead")}
             <Box
               as="span"
-              bgGradient="linear(135deg, brand.500, accent.500)"
+              bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
               bgClip="text"
-              sx={{ WebkitTextFillColor: "transparent" }}
+              css={{ WebkitTextFillColor: "transparent" }}
             >
               {t("modules.titleHighlight")}
             </Box>
@@ -198,7 +198,7 @@ export const Modules = () => {
               transform={`translateX(-${active * 100}%)`}
               transition="transform 600ms cubic-bezier(0.22, 1, 0.36, 1)"
               willChange="transform"
-              sx={{
+              css={{
                 "@media (prefers-reduced-motion: reduce)": { transition: "none" },
               }}
             >
@@ -230,14 +230,14 @@ export const Modules = () => {
                       <FeatureVisual icon={Icon} />
                     </Box>
 
-                    <Stack flex="1" spacing={5} maxW={{ md: "440px" }}>
+                    <Stack flex="1" gap={5} maxW={{ md: "440px" }}>
                       <Flex align="center" gap={3}>
                         <Flex
                           w={12}
                           h={12}
                           flexShrink={0}
                           borderRadius="2xl"
-                          bgGradient="linear(135deg, brand.500, accent.500)"
+                          bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
                           color="white"
                           align="center"
                           justify="center"
@@ -271,7 +271,9 @@ export const Modules = () => {
                         w={10}
                         h="3px"
                         borderRadius="full"
-                        bgGradient="linear(to-r, brand.500, accent.500)"
+                        bgGradient="to-r"
+                        gradientFrom="brand.500"
+                        gradientTo="accent.500"
                       />
 
                       <Text
@@ -290,29 +292,22 @@ export const Modules = () => {
         </Box>
 
         <Flex justify="center" align="center" gap={4} mt={{ base: 8, lg: 6 }} data-reveal>
-          <IconButton
-            aria-label={t("modules.a11yPrev")}
-            icon={<Box as={ChevronLeft} fontSize="2xl" />}
-            onClick={prev}
-            {...NAV_BTN_SX}
-          />
+          <IconButton aria-label={t("modules.a11yPrev")} onClick={prev} {...NAV_BTN_SX}>
+            <Box as={ChevronLeft} fontSize="2xl" />
+          </IconButton>
 
           <Flex gap={2.5} align="center">
             {FEATURE_SLIDES.map((slide, i) => {
               const isActive = i === active;
               return (
                 <Box
-                  as="button"
-                  type="button"
+                  asChild
                   key={slide.id}
-                  aria-label={`${t("modules.a11yGoTo")} ${t(`modules.items.${slide.id}.title`)}`}
-                  aria-current={isActive ? "true" : undefined}
-                  onClick={() => goTo(i)}
                   h="3px"
                   w={isActive ? 8 : 4}
                   borderRadius="full"
                   bg={isActive ? undefined : "border.default"}
-                  bgGradient={isActive ? "linear(to-r, brand.500, accent.500)" : undefined}
+                  bgImage={isActive ? "linear-gradient(to right, #2f80ed, #1eb28a)" : undefined}
                   transition="all 300ms cubic-bezier(0.22, 1, 0.36, 1)"
                   _hover={{ bg: isActive ? undefined : "border.strong" }}
                   _focusVisible={{
@@ -320,17 +315,21 @@ export const Modules = () => {
                     outlineColor: "border.brand",
                     outlineOffset: "3px",
                   }}
-                />
+                >
+                  <button
+                    type="button"
+                    aria-label={`${t("modules.a11yGoTo")} ${t(`modules.items.${slide.id}.title`)}`}
+                    aria-current={isActive ? "true" : undefined}
+                    onClick={() => goTo(i)}
+                  />
+                </Box>
               );
             })}
           </Flex>
 
-          <IconButton
-            aria-label={t("modules.a11yNext")}
-            icon={<Box as={ChevronRight} fontSize="2xl" />}
-            onClick={next}
-            {...NAV_BTN_SX}
-          />
+          <IconButton aria-label={t("modules.a11yNext")} onClick={next} {...NAV_BTN_SX}>
+            <Box as={ChevronRight} fontSize="2xl" />
+          </IconButton>
         </Flex>
       </SiteContainer>
     </Box>

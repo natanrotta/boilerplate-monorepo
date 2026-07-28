@@ -1,23 +1,6 @@
-import {
-  Box,
-  Flex,
-  Tab,
-  TabIndicator,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
-  keyframes,
-  type TabsProps,
-} from "@chakra-ui/react";
+import { Box, Flex, Tabs } from "@chakra-ui/react";
 import type { ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
-
-const dotPulse = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  70% { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-`;
 
 export interface AppTabItem {
   id: string;
@@ -30,13 +13,14 @@ export interface AppTabItem {
 
 export type ProfileTabItem = AppTabItem;
 
-interface AppTabsProps extends Omit<TabsProps, "children" | "isLazy" | "lazyBehavior"> {
+interface AppTabsProps
+  extends Omit<Tabs.RootProps, "children" | "value" | "defaultValue" | "onValueChange"> {
   items: AppTabItem[];
   syncWithUrl?: boolean;
   /**
-   * Defaults to `true` (`lazyBehavior="keepMounted"`) so tab panels only
-   * mount when first activated. Opt-out only with a documented reason —
-   * see `code-review-checklist.md` § F-H18.
+   * Defaults to `true` (lazy mount + keepMounted) so tab panels only mount
+   * when first activated. Opt-out only with a documented reason — see
+   * `code-review-checklist.md` § F-H18.
    */
   isLazy?: boolean;
 }
@@ -45,18 +29,18 @@ export function AppTabs({ items, syncWithUrl = false, isLazy = true, ...props }:
   const [searchParams, setSearchParams] = useSearchParams();
 
   const tabParam = syncWithUrl ? searchParams.get("tab") : null;
-  const defaultIndex = tabParam
-    ? Math.max(
-        0,
-        items.findIndex((item) => item.id === tabParam)
-      )
-    : 0;
+  // v3 Tabs are value-based. Resolve the active value from the URL, falling
+  // back to the first item's id (the previous `defaultIndex = 0` behavior).
+  const defaultValue =
+    tabParam && items.some((item) => item.id === tabParam)
+      ? tabParam
+      : (items[0]?.id ?? undefined);
 
-  function handleTabChange(index: number) {
+  function handleValueChange(value: string) {
     if (!syncWithUrl) return;
-    const item = items[index];
-    if (item && index > 0) {
-      setSearchParams({ tab: item.id }, { replace: true });
+    const index = items.findIndex((item) => item.id === value);
+    if (index > 0) {
+      setSearchParams({ tab: value }, { replace: true });
     } else {
       searchParams.delete("tab");
       setSearchParams(searchParams, { replace: true });
@@ -64,24 +48,33 @@ export function AppTabs({ items, syncWithUrl = false, isLazy = true, ...props }:
   }
 
   return (
-    <Tabs
-      variant="soft-line"
-      colorScheme="brand"
+    <Tabs.Root
+      variant="line"
+      colorPalette="brand"
       // Lazy mount + keepMounted: tab panels only mount when first
-      // activated, and stay mounted after — queries inside an inactive
-      // tab don't fire, and switching back doesn't refetch.
-      isLazy={isLazy}
-      lazyBehavior="keepMounted"
-      {...(syncWithUrl ? { defaultIndex, onChange: handleTabChange } : {})}
+      // activated, and stay mounted after (no `unmountOnExit`) — queries
+      // inside an inactive tab don't fire, and switching back doesn't refetch.
+      lazyMount={isLazy}
+      // Always seed the active value (v3 Tabs start at `null` → no tab
+      // selected). URL sync only adds the change handler on top.
+      defaultValue={defaultValue}
+      {...(syncWithUrl ? { onValueChange: (e) => handleValueChange(e.value) } : {})}
       {...props}
     >
-      <TabList
+      <Tabs.List
         overflowX="auto"
         overflowY="hidden"
         css={{ "&::-webkit-scrollbar": { display: "none" }, scrollbarWidth: "none" }}
       >
         {items.map((item) => (
-          <Tab key={item.id} display="flex" gap={2} whiteSpace="nowrap" flexShrink={0}>
+          <Tabs.Trigger
+            key={item.id}
+            value={item.id}
+            display="flex"
+            gap={2}
+            whiteSpace="nowrap"
+            flexShrink={0}
+          >
             {item.label}
             {item.dotIndicator ? (
               <Box
@@ -89,8 +82,15 @@ export function AppTabs({ items, syncWithUrl = false, isLazy = true, ...props }:
                 h="5px"
                 borderRadius="full"
                 bg="status.error.fg"
-                animation={`${dotPulse} 2s ease-out infinite`}
+                animation="appTabsDotPulse 2s ease-out infinite"
                 flexShrink={0}
+                css={{
+                  "@keyframes appTabsDotPulse": {
+                    "0%": { boxShadow: "0 0 0 0 rgba(239, 68, 68, 0.4)" },
+                    "70%": { boxShadow: "0 0 0 3px rgba(239, 68, 68, 0)" },
+                    "100%": { boxShadow: "0 0 0 0 rgba(239, 68, 68, 0)" },
+                  },
+                }}
               />
             ) : item.badge ? (
               <Flex
@@ -109,19 +109,17 @@ export function AppTabs({ items, syncWithUrl = false, isLazy = true, ...props }:
                 {item.badge}
               </Flex>
             ) : null}
-          </Tab>
+          </Tabs.Trigger>
         ))}
-        {/* Sliding underline — inside TabList so it scrolls with the tabs when
+        {/* Sliding underline — inside Tabs.List so it scrolls with the tabs when
             the list overflows. Styled via the `indicator` part of the theme. */}
-        <TabIndicator />
-      </TabList>
-      <TabPanels>
-        {items.map((item) => (
-          <TabPanel key={item.id} px={0} pt={4}>
-            {item.content}
-          </TabPanel>
-        ))}
-      </TabPanels>
-    </Tabs>
+        <Tabs.Indicator />
+      </Tabs.List>
+      {items.map((item) => (
+        <Tabs.Content key={item.id} value={item.id} px={0} pt={4}>
+          {item.content}
+        </Tabs.Content>
+      ))}
+    </Tabs.Root>
   );
 }

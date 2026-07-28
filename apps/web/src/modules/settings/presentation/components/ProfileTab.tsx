@@ -129,13 +129,10 @@ export function ProfileTab() {
             aria-label={t("profile.changeAvatar")}
             flexShrink={0}
           >
-            <Avatar
-              size="xl"
-              src={avatarPreview || user?.avatarUrl || undefined}
-              name={user?.name}
-              bg="brand.500"
-              color="white"
-            />
+            <Avatar.Root size="xl" bg="brand.500" color="white">
+              <Avatar.Fallback name={user?.name} />
+              <Avatar.Image src={avatarPreview || user?.avatarUrl || undefined} />
+            </Avatar.Root>
             <Flex
               position="absolute"
               inset={0}
@@ -169,10 +166,10 @@ export function ProfileTab() {
             align={{ base: "center", md: "flex-start" }}
             textAlign={{ base: "center", md: "left" }}
           >
-            <Text fontSize="lg" fontWeight="700" color="text.primary" noOfLines={1}>
+            <Text fontSize="lg" fontWeight="700" color="text.primary" lineClamp={1}>
               {user?.name}
             </Text>
-            <Text fontSize="sm" color="text.secondary" noOfLines={1}>
+            <Text fontSize="sm" color="text.secondary" lineClamp={1}>
               {user?.email}
             </Text>
           </Flex>
@@ -193,13 +190,13 @@ export function ProfileTab() {
           <Button
             size="sm"
             variant="outline"
-            colorScheme="brand"
-            leftIcon={<Icon as={FiLock} boxSize={3.5} />}
+            colorPalette="brand"
             onClick={handleRequestPasswordReset}
-            isLoading={isRequestingPasswordReset}
+            loading={isRequestingPasswordReset}
             loadingText={t("profile.security.sending")}
             alignSelf={{ base: "flex-start", md: "auto" }}
           >
+            <Icon as={FiLock} boxSize={3.5} />
             {t("profile.security.changePassword")}
           </Button>
         </Flex>

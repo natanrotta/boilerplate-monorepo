@@ -1,5 +1,6 @@
 import { GoogleLogin } from "@react-oauth/google";
-import { Box, useColorMode } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
+import { useColorMode } from "@/components/ui/color-mode";
 import { useEffect, useRef, useState } from "react";
 
 interface GoogleSignInButtonProps {

@@ -58,7 +58,7 @@ export const Footer = () => {
         left={0}
         right={0}
         h="2px"
-        bgGradient="linear(to-r, transparent, brand.500, accent.500, transparent)"
+        bgImage="linear-gradient(to right, transparent, #2f80ed, #1eb28a, transparent)"
         opacity={0.7}
         pointerEvents="none"
       />
@@ -70,22 +70,23 @@ export const Footer = () => {
         w="760px"
         h="420px"
         borderRadius="full"
-        bgGradient="radial(ellipse, rgba(47, 128, 237, 0.07), transparent 60%)"
+        bgImage="radial-gradient(ellipse, rgba(47, 128, 237, 0.07), transparent 60%)"
         pointerEvents="none"
       />
 
       <SiteContainer position="relative">
         <SimpleGrid columns={{ base: 1, md: 12 }} gap={{ base: 10, md: 12 }}>
           {/* Brand */}
-          <Stack spacing={5} gridColumn={{ md: "span 5" }} maxW="420px">
+          <Stack gap={5} gridColumn={{ md: "span 5" }} maxW="420px">
             <BrandMark />
             <Text color="text.secondary" fontSize="sm" lineHeight="1.7">
               {t("footer.tagline")}
             </Text>
-            <HStack spacing={3}>
+            <HStack gap={3}>
               <Link
                 href={INSTAGRAM_URL}
-                isExternal
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Instagram"
                 data-cursor-label="Instagram"
                 w={10}
@@ -110,7 +111,8 @@ export const Footer = () => {
               </Link>
               <Link
                 href={whatsappUrl}
-                isExternal
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label={t("footer.whatsapp")}
                 data-cursor-label={t("footer.whatsapp")}
                 w={10}
@@ -137,7 +139,7 @@ export const Footer = () => {
           </Stack>
 
           {/* Navegar */}
-          <Stack spacing={4} gridColumn={{ md: "span 3" }}>
+          <Stack gap={4} gridColumn={{ md: "span 3" }}>
             <Heading
               as="h4"
               fontSize="sm"
@@ -148,7 +150,7 @@ export const Footer = () => {
             >
               {t("footer.navHeader")}
             </Heading>
-            <Stack spacing={2.5} align="flex-start">
+            <Stack gap={2.5} align="flex-start">
               {NAV_IDS.map((id) => (
                 <Box
                   as="button"
@@ -168,7 +170,7 @@ export const Footer = () => {
           </Stack>
 
           {/* Contato */}
-          <Stack spacing={4} gridColumn={{ md: "span 4" }} maxW="360px">
+          <Stack gap={4} gridColumn={{ md: "span 4" }} maxW="360px">
             <Heading
               as="h4"
               fontSize="sm"
@@ -194,14 +196,13 @@ export const Footer = () => {
               {CONTACT_EMAIL}
             </Link>
             <Button
-              as="a"
-              href={PLATFORM_URL}
-              data-cursor-label={t("footer.acessar")}
+              asChild
               variant="solid"
               alignSelf="flex-start"
               display="inline-flex"
               alignItems="center"
               justifyContent="center"
+              gap={2}
               h="auto"
               minH={12}
               px={6}
@@ -210,11 +211,13 @@ export const Footer = () => {
               fontSize="sm"
               lineHeight="1.2"
               whiteSpace="nowrap"
-              rightIcon={<Box as={ArrowUpRight} fontSize="sm" />}
               textDecoration="none"
               _hover={{ textDecoration: "none" }}
             >
-              {t("footer.acessar")}
+              <a href={PLATFORM_URL} data-cursor-label={t("footer.acessar")}>
+                {t("footer.acessar")}
+                <Box as={ArrowUpRight} fontSize="sm" />
+              </a>
             </Button>
           </Stack>
         </SimpleGrid>
@@ -232,19 +235,19 @@ export const Footer = () => {
           <Text fontSize="xs" color="text.muted">
             © {new Date().getFullYear()} Boilerplate. {t("footer.copyright")}
           </Text>
-          <HStack spacing={5}>
+          <HStack gap={5}>
             {LEGAL_LINKS.map((l) => (
               <Link
-                as={RouterLink}
+                asChild
                 key={l.to}
-                to={l.to}
-                data-cursor-label={t(`footer.${l.key}`)}
                 fontSize="xs"
                 color="text.muted"
                 transition="color 200ms"
                 _hover={{ color: "text.brand", textDecoration: "none" }}
               >
-                {t(`footer.${l.key}`)}
+                <RouterLink to={l.to} data-cursor-label={t(`footer.${l.key}`)}>
+                  {t(`footer.${l.key}`)}
+                </RouterLink>
               </Link>
             ))}
           </HStack>

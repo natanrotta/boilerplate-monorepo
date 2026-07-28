@@ -26,7 +26,7 @@ export function DashboardPage() {
       />
 
       <FadeIn delay={0.05}>
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={4}>
+        <SimpleGrid columns={{ base: 1, md: 3 }} gap={4} mb={4}>
           <StatCard
             label={t("stats.total.label")}
             value="0"

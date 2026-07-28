@@ -5,7 +5,7 @@
   "description": "Boilerplate - Monorepo",
   "license": "MIT",
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
   "workspaces": {
@@ -29,7 +29,7 @@
     "backend:prisma:migrate": "yarn workspace @boilerplate/api prisma migrate dev",
     "backend:prisma:reset": "yarn workspace @boilerplate/api prisma migrate reset",
     "web:up": "turbo run dev --filter=@boilerplate/web",
-    "site:up": "cd apps/site && yarn dev",
+    "site:up": "cd apps/site && yarn install && yarn dev",
     "dev": "for p in 3000 3001; do kill -9 $(lsof -ti tcp:$p) 2>/dev/null || true; done && yarn backend:up-d && concurrently --kill-others-on-fail -n web,site -c green,magenta \"yarn web:up\" \"yarn site:up\"",
     "build": "turbo run build",
     "build:api": "turbo run build --filter=@boilerplate/api",

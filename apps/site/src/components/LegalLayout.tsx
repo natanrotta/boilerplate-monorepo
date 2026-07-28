@@ -23,13 +23,12 @@ export const LegalLayout = ({ eyebrow, title, updatedAt, intro, children }: Lega
   return (
     <Box as="main" py={{ base: 28, md: 36 }} bg="bg.canvas" minH="100vh">
       <SiteContainer maxW="760px">
-        <Stack spacing={{ base: 6, md: 8 }} mb={{ base: 10, md: 14 }}>
+        <Stack gap={{ base: 6, md: 8 }} mb={{ base: 10, md: 14 }}>
           <Button
-            as={RouterLink}
-            to="/"
-            leftIcon={<Box as={ArrowLeft} fontSize="md" />}
+            asChild
             variant="ghost"
             size="sm"
+            gap={2}
             alignSelf="flex-start"
             color="text.secondary"
             fontWeight="600"
@@ -37,7 +36,10 @@ export const LegalLayout = ({ eyebrow, title, updatedAt, intro, children }: Lega
             ml={-2}
             _hover={{ color: "text.brand", bg: "bg.brand.subtle" }}
           >
-            {t("legal.backToHome")}
+            <RouterLink to="/">
+              <Box as={ArrowLeft} fontSize="md" />
+              {t("legal.backToHome")}
+            </RouterLink>
           </Button>
           <Box>
             <SectionEyebrow label={eyebrow} />
@@ -61,11 +63,11 @@ export const LegalLayout = ({ eyebrow, title, updatedAt, intro, children }: Lega
         </Stack>
 
         <Stack
-          spacing={{ base: 8, md: 10 }}
+          gap={{ base: 8, md: 10 }}
           color="text.secondary"
           fontSize={{ base: "sm", md: "md" }}
           lineHeight="1.75"
-          sx={{
+          css={{
             h2: {
               fontSize: { base: "xl", md: "2xl" },
               fontWeight: "800",

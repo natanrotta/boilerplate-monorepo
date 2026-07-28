@@ -1,9 +1,9 @@
 import { Box } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import type { PropsWithChildren } from "react";
 import { EASE_ORGANIC } from "@/shared/constants/animation";
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 interface FadeInProps {
   delay?: number;

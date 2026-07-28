@@ -1,6 +1,6 @@
 import { Box, Flex, SimpleGrid } from "@chakra-ui/react";
 import { type ReactNode, useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { FiSearch } from "@/shared/components/icons";
 import type { IconType } from "@/shared/components/icons";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,7 @@ import { StaggerContainer, StaggerItem } from "@/shared/components/animations/Fa
 import { EASE_ORGANIC } from "@/shared/constants/animation";
 import { useInfiniteScrollSentinel } from "@/shared/hooks/useInfiniteScrollSentinel";
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 interface DeleteConfirmState {
   isOpen: boolean;

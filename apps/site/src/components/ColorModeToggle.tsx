@@ -1,5 +1,6 @@
-import { Box, IconButton, useColorMode } from "@chakra-ui/react";
+import { Box, IconButton } from "@chakra-ui/react";
 import { Moon, Sun } from "lucide-react";
+import { useColorMode } from "@/components/ui/color-mode";
 import { useLocale } from "@/hooks/useLocale";
 
 /** Light/dark theme switch. The icon shows the mode it switches TO. */
@@ -12,7 +13,6 @@ export const ColorModeToggle = () => {
     <IconButton
       aria-label={t("nav.tema")}
       data-cursor-label={t("nav.tema")}
-      icon={<Box as={isDark ? Sun : Moon} fontSize="md" />}
       onClick={toggleColorMode}
       variant="ghost"
       h={9}
@@ -24,6 +24,8 @@ export const ColorModeToggle = () => {
       color="text.secondary"
       _hover={{ bg: "bg.brand.subtle", color: "text.brand" }}
       _active={{ bg: "bg.brand.subtle" }}
-    />
+    >
+      <Box as={isDark ? Sun : Moon} fontSize="md" />
+    </IconButton>
   );
 };

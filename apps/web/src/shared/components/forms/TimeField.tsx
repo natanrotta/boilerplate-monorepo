@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { FormControl, FormErrorMessage, FormLabel, Input } from "@chakra-ui/react";
+import { Field, Input } from "@chakra-ui/react";
 import type { TimeFieldProps } from "./TimeFieldPicker";
 
 export type { TimeFieldProps } from "./TimeFieldPicker";
@@ -9,11 +9,25 @@ const TimeFieldPicker = lazy(() => import("./TimeFieldPicker"));
 
 function TimeFieldFallback({ label, error, placeholder }: TimeFieldProps) {
   return (
-    <FormControl isInvalid={Boolean(error)}>
-      {label && <FormLabel>{label}</FormLabel>}
-      <Input placeholder={placeholder} isDisabled cursor="pointer" />
-      {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
-    </FormControl>
+    <Field.Root invalid={Boolean(error)}>
+      {label && (
+        <Field.Label
+          fontSize="xs"
+          fontWeight="600"
+          color="text.secondary"
+          mb={1}
+          letterSpacing="0.01em"
+        >
+          {label}
+        </Field.Label>
+      )}
+      <Input placeholder={placeholder} disabled cursor="pointer" />
+      {error ? (
+        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
+          {error}
+        </Field.ErrorText>
+      ) : null}
+    </Field.Root>
   );
 }
 

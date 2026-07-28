@@ -138,14 +138,14 @@ export const Pricing = () => {
         w="900px"
         h="500px"
         borderRadius="full"
-        bgGradient="radial(ellipse, rgba(47, 128, 237, 0.10), transparent 60%)"
+        bgImage="radial-gradient(ellipse, rgba(47, 128, 237, 0.10), transparent 60%)"
         pointerEvents="none"
       />
 
       <SiteContainer position="relative">
         <Stack
           className="pricing-header"
-          spacing={5}
+          gap={5}
           maxW="780px"
           mx="auto"
           textAlign="center"
@@ -165,9 +165,9 @@ export const Pricing = () => {
             {t("pricing.titleLead")}
             <Box
               as="span"
-              bgGradient="linear(135deg, brand.500, accent.500)"
+              bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
               bgClip="text"
-              sx={{ WebkitTextFillColor: "transparent" }}
+              css={{ WebkitTextFillColor: "transparent" }}
             >
               {t("pricing.titleHighlight")}
             </Box>
@@ -204,7 +204,7 @@ export const Pricing = () => {
             h={9}
             flexShrink={0}
             borderRadius="full"
-            bgGradient="linear(135deg, brand.500, accent.500)"
+            bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
             color="white"
             align="center"
             justify="center"
@@ -213,7 +213,7 @@ export const Pricing = () => {
           >
             <Box as={Gift} />
           </Flex>
-          <Stack spacing={0} textAlign="left">
+          <Stack gap={0} textAlign="left">
             <Text
               fontSize={{ base: "sm", md: "md" }}
               fontWeight="800"
@@ -276,7 +276,7 @@ export const Pricing = () => {
                     borderRadius="full"
                     bg="brand.500"
                     color="white"
-                    spacing={1.5}
+                    gap={1.5}
                     boxShadow="0 8px 22px -6px rgba(47, 128, 237, 0.55)"
                     zIndex={2}
                   >
@@ -293,7 +293,7 @@ export const Pricing = () => {
                   p={{ base: 5, md: 6 }}
                   pb={{ base: 4, md: 5 }}
                 >
-                  <HStack spacing={3}>
+                  <HStack gap={3}>
                     <Flex
                       w={9}
                       h={9}
@@ -330,7 +330,7 @@ export const Pricing = () => {
                     </Text>
                   </Flex>
                   <Flex justify="space-between" align="flex-start" gap={4}>
-                    <Stack spacing={0.5} flex={1}>
+                    <Stack gap={0.5} flex={1}>
                       <Text
                         fontSize={{ base: "sm", md: "md" }}
                         fontWeight="700"
@@ -370,7 +370,7 @@ export const Pricing = () => {
                   <Text fontSize="sm" fontWeight="800" letterSpacing="0.14em" color="text.primary">
                     {t("pricing.totalLabel")}
                   </Text>
-                  <Stack spacing={0.5} align="flex-end">
+                  <Stack gap={0.5} align="flex-end">
                     <Text
                       className="pricing-total"
                       fontSize={{ base: "3xl", md: "4xl" }}
@@ -392,16 +392,18 @@ export const Pricing = () => {
 
                 <Box px={{ base: 5, md: 6 }} pb={{ base: 5, md: 6 }}>
                   <Button
-                    as="a"
-                    href={PLATFORM_URL}
+                    asChild
                     variant={isFeatured ? "solid" : "outline"}
                     w="full"
                     size="lg"
                     h={12}
+                    gap={2}
                     borderRadius="lg"
-                    rightIcon={isFeatured ? <Box as={ArrowUpRight} /> : undefined}
                   >
-                    {t(`pricing.plans.${planKey}.cta`)}
+                    <a href={PLATFORM_URL}>
+                      {t(`pricing.plans.${planKey}.cta`)}
+                      {isFeatured && <Box as={ArrowUpRight} />}
+                    </a>
                   </Button>
                 </Box>
               </Box>
