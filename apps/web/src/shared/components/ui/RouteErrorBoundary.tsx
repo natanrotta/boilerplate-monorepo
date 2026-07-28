@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { Box, Button, Flex, Icon, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Text } from "@chakra-ui/react";
 import { FiAlertTriangle, FiRefreshCw } from "@/shared/components/icons";
 import { isChunkLoadError } from "@/shared/utils/chunkError";
 import { reloadForStaleChunk } from "@/shared/utils/chunkReload";
@@ -71,7 +71,9 @@ export class RouteErrorBoundary extends Component<Props, State> {
             maxW="md"
             w="full"
           >
-            <Icon as={FiAlertTriangle} boxSize={10} color="purple.500" mb={4} />
+            <Box asChild boxSize={10} color="purple.500" mb={4}>
+              <FiAlertTriangle />
+            </Box>
             <Text fontSize="lg" fontWeight="600" color="text.primary" mb={2}>
               {i18n.t("common:errors.pageLoadError")}
             </Text>
@@ -84,10 +86,10 @@ export class RouteErrorBoundary extends Component<Props, State> {
               </Button>
               <Button
                 size="sm"
-                colorScheme="brand"
-                leftIcon={<Icon as={FiRefreshCw} />}
+                colorPalette="brand"
                 onClick={this.handleRetry}
               >
+                <FiRefreshCw />
                 {i18n.t("common:actions.retry")}
               </Button>
             </Flex>

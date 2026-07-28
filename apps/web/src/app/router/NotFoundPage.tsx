@@ -9,7 +9,7 @@ export function NotFoundPage() {
 
   return (
     <Center minH="60vh">
-      <Stack spacing={4} align="center" textAlign="center" maxW="md" px={6}>
+      <Stack gap={4} align="center" textAlign="center" maxW="md" px={6}>
         <Heading size="2xl" color="text.brand">
           404
         </Heading>

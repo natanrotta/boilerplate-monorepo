@@ -124,13 +124,13 @@ export default defineConfig(({ command }) => ({
       output: {
         // Stable vendor chunks: app deploys (route-chunk churn) no longer
         // invalidate the big framework payloads in the browser cache.
-        // framer-motion rides with Chakra (hard peer dep — same graph).
+        // `motion` rides with Chakra (animation layer — same graph).
         // Heavy leaf libs (jspdf, tiptap, qrcode, react-datepicker) are NOT
         // listed: they reach the browser only via dynamic import / React.lazy
         // and must keep their own lazy chunks.
         manualChunks: {
           "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-chakra": ["@chakra-ui/react", "@emotion/react", "@emotion/styled", "framer-motion"],
+          "vendor-chakra": ["@chakra-ui/react", "@emotion/react", "motion"],
           "vendor-query": ["@tanstack/react-query", "axios"],
           "vendor-i18n": ["i18next", "react-i18next", "i18next-browser-languagedetector"],
         },

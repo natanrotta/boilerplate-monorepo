@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Button, Flex, HStack, IconButton, Tooltip, VStack } from "@chakra-ui/react";
+import { Box, Button, Flex, HStack, IconButton, VStack } from "@chakra-ui/react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
+import { Tooltip } from "@/components/ui/tooltip";
 import { BrandMark } from "@/components/BrandMark";
 import { ColorModeToggle } from "@/components/ColorModeToggle";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -303,10 +304,7 @@ export const Header = () => {
           boxShadow="0 12px 40px -12px rgba(15, 23, 42, 0.18), 0 4px 16px -8px rgba(15, 23, 42, 0.12)"
         >
           <Box
-            as="button"
-            type="button"
-            onClick={() => goTo("topo")}
-            aria-label={t("nav.topo")}
+            asChild
             display="flex"
             alignItems="center"
             borderRadius="full"
@@ -321,7 +319,9 @@ export const Header = () => {
               outlineOffset: "2px",
             }}
           >
-            <BrandMark size="sm" />
+            <button type="button" onClick={() => goTo("topo")} aria-label={t("nav.topo")}>
+              <BrandMark size="sm" />
+            </button>
           </Box>
           <Box w="1px" h={6} bg="border.subtle" mx={2} />
           <Box ref={navRef} position="relative">
@@ -334,36 +334,37 @@ export const Header = () => {
               h={10}
               w={10}
               borderRadius="full"
-              bgGradient="linear(135deg, brand.500, accent.500)"
+              bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
               opacity={0}
               pointerEvents="none"
               boxShadow="0 6px 16px -4px rgba(47, 128, 237, 0.45)"
               zIndex={0}
               willChange="transform, width"
             />
-            <HStack spacing={0.5} position="relative" zIndex={1}>
+            <HStack gap={0.5} position="relative" zIndex={1}>
               {PRIMARY_NAV.map((item) => {
                 const isActive = activeId === item.id;
                 return (
                   <Tooltip
                     key={item.id}
-                    label={t(`nav.${item.id}`)}
-                    placement="top"
-                    hasArrow
-                    bg="bg.elevated"
-                    color="text.primary"
-                    px={3}
-                    py={1.5}
-                    borderRadius="md"
-                    fontSize="xs"
-                    fontWeight="600"
-                    boxShadow="shadow.panel"
+                    content={t(`nav.${item.id}`)}
+                    positioning={{ placement: "top" }}
+                    showArrow
                     openDelay={isActive ? 9999 : 0}
+                    contentProps={{
+                      bg: "bg.elevated",
+                      color: "text.primary",
+                      px: 3,
+                      py: 1.5,
+                      borderRadius: "md",
+                      fontSize: "xs",
+                      fontWeight: "600",
+                      boxShadow: "shadow.panel",
+                    }}
                   >
                     <IconButton
                       aria-label={t(`nav.${item.id}`)}
                       data-nav-id={item.id}
-                      icon={<Box as={item.icon} fontSize="lg" />}
                       variant="ghost"
                       borderRadius="full"
                       w={10}
@@ -380,7 +381,9 @@ export const Header = () => {
                       _active={{ bg: "transparent" }}
                       transition="color 280ms ease"
                       onClick={() => goTo(item.id)}
-                    />
+                    >
+                      <Box as={item.icon} fontSize="lg" />
+                    </IconButton>
                   </Tooltip>
                 );
               })}
@@ -390,15 +393,13 @@ export const Header = () => {
           <LanguageSwitcher />
           <ColorModeToggle />
           <Button
-            as="a"
-            href={PLATFORM_URL}
+            asChild
             variant="solid"
             h={9}
             px={3.5}
+            gap={1.5}
             fontSize="xs"
             fontWeight="700"
-            iconSpacing={1.5}
-            rightIcon={<Box as={ArrowUpRight} fontSize="sm" />}
             textDecoration="none"
             letterSpacing="0.02em"
             _hover={{
@@ -407,7 +408,10 @@ export const Header = () => {
               transform: "translateY(-1px)",
             }}
           >
-            {t("nav.acessar")}
+            <a href={PLATFORM_URL}>
+              {t("nav.acessar")}
+              <Box as={ArrowUpRight} fontSize="sm" />
+            </a>
           </Button>
         </Flex>
 
@@ -424,7 +428,7 @@ export const Header = () => {
           zIndex={1}
         >
           <VStack
-            spacing={1.5}
+            gap={1.5}
             p={2}
             bg="bg.topbar"
             border="1px solid"
@@ -440,7 +444,6 @@ export const Header = () => {
                   key={item.id}
                   className="nav-pop-item"
                   aria-label={t(`nav.${item.id}`)}
-                  icon={<Box as={item.icon} fontSize="xl" />}
                   variant="ghost"
                   borderRadius="full"
                   w={12}
@@ -448,8 +451,8 @@ export const Header = () => {
                   minW={12}
                   px={0}
                   color={isActive ? "white" : "text.secondary"}
-                  bg={isActive ? "transparent" : "transparent"}
-                  bgGradient={isActive ? "linear(135deg, brand.500, accent.500)" : undefined}
+                  bg="transparent"
+                  bgImage={isActive ? "linear-gradient(135deg, #2f80ed, #1eb28a)" : undefined}
                   boxShadow={isActive ? "0 6px 16px -4px rgba(47, 128, 237, 0.45)" : undefined}
                   _hover={{
                     bg: isActive ? undefined : "bg.brand.subtle",
@@ -457,7 +460,9 @@ export const Header = () => {
                   }}
                   _active={{ transform: "scale(0.94)" }}
                   onClick={() => goTo(item.id)}
-                />
+                >
+                  <Box as={item.icon} fontSize="xl" />
+                </IconButton>
               );
             })}
 
@@ -490,10 +495,7 @@ export const Header = () => {
           boxShadow="0 12px 40px -12px rgba(15, 23, 42, 0.18)"
         >
           <Box
-            as="button"
-            type="button"
-            onClick={() => goTo("topo")}
-            aria-label={t("nav.topo")}
+            asChild
             display="flex"
             alignItems="center"
             borderRadius="full"
@@ -508,33 +510,37 @@ export const Header = () => {
               outlineOffset: "2px",
             }}
           >
-            <BrandMark size="sm" />
+            <button type="button" onClick={() => goTo("topo")} aria-label={t("nav.topo")}>
+              <BrandMark size="sm" />
+            </button>
           </Box>
-          <HStack spacing={1}>
+          <HStack gap={1}>
             <Button
-              as="a"
-              href={PLATFORM_URL}
+              asChild
               variant="solid"
               h={9}
               px={4}
+              gap={1.5}
               fontSize="xs"
               fontWeight="600"
-              iconSpacing={1.5}
-              rightIcon={<Box as={ArrowUpRight} fontSize="sm" />}
               textDecoration="none"
               _hover={{ textDecoration: "none", bg: "bg.brand.solid-hover" }}
             >
-              {t("nav.plataforma")}
+              <a href={PLATFORM_URL}>
+                {t("nav.plataforma")}
+                <Box as={ArrowUpRight} fontSize="sm" />
+              </a>
             </Button>
             <IconButton
               aria-label={mobileMenuOpen ? t("nav.fecharMenu") : t("nav.abrirMenu")}
               data-mobile-toggle="true"
-              icon={mobileMenuOpen ? <X /> : <Menu />}
               variant="ghost"
               size="sm"
               borderRadius="full"
               onClick={() => setMobileMenuOpen((v) => !v)}
-            />
+            >
+              {mobileMenuOpen ? <X /> : <Menu />}
+            </IconButton>
           </HStack>
         </Flex>
       </Box>

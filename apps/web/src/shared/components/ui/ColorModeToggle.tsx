@@ -1,5 +1,7 @@
 import { memo } from "react";
-import { Box, Flex, Icon, Tooltip, useColorMode } from "@chakra-ui/react";
+import { Box, ClientOnly, Flex, Skeleton, chakra } from "@chakra-ui/react";
+import { Tooltip } from "@/components/ui/tooltip";
+import { useColorMode } from "@/components/ui/color-mode";
 import { FiMoon, FiSun } from "@/shared/components/icons";
 import { useTranslation } from "react-i18next";
 
@@ -53,9 +55,19 @@ function ColorModeToggleComponent({ size = "sm" }: ColorModeToggleProps) {
         };
 
   return (
-    <Tooltip label={label} placement="bottom" hasArrow openDelay={300}>
-      <Box
-        as="button"
+    // ClientOnly: next-themes resolves the mode only after mount, so guard the
+    // first client tick with a same-size skeleton to avoid a flash of the wrong
+    // (light) state for users whose stored/OS preference is dark.
+    <ClientOnly
+      fallback={<Skeleton w={dims.trackW} h={dims.trackH} borderRadius="full" flexShrink={0} />}
+    >
+      <Tooltip
+        content={label}
+        positioning={{ placement: "bottom" }}
+        showArrow
+        openDelay={300}
+      >
+      <chakra.button
         type="button"
         onClick={toggleColorMode}
         role="switch"
@@ -69,9 +81,9 @@ function ColorModeToggleComponent({ size = "sm" }: ColorModeToggleProps) {
         borderColor="border.subtle"
         // Track gradient — barely-there in light, more present in dark
         // so the night side reads as "atmosphere".
-        bgGradient={
-          isDark ? "linear(to-br, gray.800, gray.900)" : "linear(to-br, bg.muted, bg.sunken)"
-        }
+        bgGradient="to-br"
+        gradientFrom={isDark ? "gray.800" : "bg.muted"}
+        gradientTo={isDark ? "gray.900" : "bg.sunken"}
         cursor="pointer"
         flexShrink={0}
         overflow="hidden"
@@ -101,7 +113,9 @@ function ColorModeToggleComponent({ size = "sm" }: ColorModeToggleProps) {
           transition="opacity 0.3s ease"
           pointerEvents="none"
         >
-          <Icon as={FiSun} boxSize={dims.decoBox} />
+          <Box asChild boxSize={dims.decoBox}>
+            <FiSun />
+          </Box>
         </Flex>
         <Flex
           position="absolute"
@@ -115,7 +129,9 @@ function ColorModeToggleComponent({ size = "sm" }: ColorModeToggleProps) {
           transition="opacity 0.3s ease"
           pointerEvents="none"
         >
-          <Icon as={FiMoon} boxSize={dims.decoBox} />
+          <Box asChild boxSize={dims.decoBox}>
+            <FiMoon />
+          </Box>
         </Flex>
 
         {/* Thumb — slides + rotates 360° during travel. The two icons
@@ -146,8 +162,8 @@ function ColorModeToggleComponent({ size = "sm" }: ColorModeToggleProps) {
           transition="transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease, color 0.25s ease, box-shadow 0.3s ease"
         >
           <Box position="relative" w="100%" h="100%">
-            <Icon
-              as={FiSun}
+            <Box
+              asChild
               boxSize={dims.thumbIcon}
               position="absolute"
               top="50%"
@@ -159,9 +175,11 @@ function ColorModeToggleComponent({ size = "sm" }: ColorModeToggleProps) {
                   : "translate(-50%, -50%) rotate(0deg) scale(1)"
               }
               transition="opacity 0.25s ease, transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)"
-            />
-            <Icon
-              as={FiMoon}
+            >
+              <FiSun />
+            </Box>
+            <Box
+              asChild
               boxSize={dims.thumbIcon}
               position="absolute"
               top="50%"
@@ -173,11 +191,14 @@ function ColorModeToggleComponent({ size = "sm" }: ColorModeToggleProps) {
                   : "translate(-50%, -50%) rotate(180deg) scale(0.4)"
               }
               transition="opacity 0.25s ease, transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)"
-            />
+            >
+              <FiMoon />
+            </Box>
           </Box>
         </Flex>
-      </Box>
-    </Tooltip>
+      </chakra.button>
+      </Tooltip>
+    </ClientOnly>
   );
 }
 

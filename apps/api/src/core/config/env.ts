@@ -78,13 +78,25 @@ const envSchema = z.object({
 
   // ── Rate limiting ─────────────────────────────────────────────────────────
   // `.min(1)` floors prevent a misconfigured 0 from silently disabling a limiter.
-  RATE_LIMIT_GLOBAL_WINDOW_MS: z.coerce.number().min(1).default(5 * 60 * 1000),
+  RATE_LIMIT_GLOBAL_WINDOW_MS: z.coerce
+    .number()
+    .min(1)
+    .default(5 * 60 * 1000),
   RATE_LIMIT_GLOBAL_MAX: z.coerce.number().min(1).default(1000),
-  RATE_LIMIT_USER_WINDOW_MS: z.coerce.number().min(1).default(60 * 1000),
+  RATE_LIMIT_USER_WINDOW_MS: z.coerce
+    .number()
+    .min(1)
+    .default(60 * 1000),
   RATE_LIMIT_USER_MAX: z.coerce.number().min(1).default(200),
-  RATE_LIMIT_AUTH_WINDOW_MS: z.coerce.number().min(1).default(15 * 60 * 1000),
+  RATE_LIMIT_AUTH_WINDOW_MS: z.coerce
+    .number()
+    .min(1)
+    .default(15 * 60 * 1000),
   RATE_LIMIT_AUTH_MAX: z.coerce.number().min(1).default(10),
-  RATE_LIMIT_PUBLIC_WINDOW_MS: z.coerce.number().min(1).default(15 * 60 * 1000),
+  RATE_LIMIT_PUBLIC_WINDOW_MS: z.coerce
+    .number()
+    .min(1)
+    .default(15 * 60 * 1000),
   RATE_LIMIT_PUBLIC_MAX: z.coerce.number().min(1).default(30),
 });
 

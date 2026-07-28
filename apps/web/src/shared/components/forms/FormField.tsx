@@ -1,12 +1,5 @@
 import { memo } from "react";
-import {
-  FormControl,
-  FormErrorMessage,
-  FormHelperText,
-  FormLabel,
-  Input,
-  type InputProps,
-} from "@chakra-ui/react";
+import { Field, Input, type InputProps } from "@chakra-ui/react";
 
 interface FormFieldProps extends Omit<InputProps, "onChange"> {
   label?: string;
@@ -26,16 +19,28 @@ export const FormField = memo(function FormField({
   ...props
 }: FormFieldProps) {
   return (
-    <FormControl isInvalid={Boolean(error)}>
-      {label && <FormLabel>{label}</FormLabel>}
+    <Field.Root invalid={Boolean(error)}>
+      {label && (
+        <Field.Label
+          fontSize="xs"
+          fontWeight="600"
+          color="text.secondary"
+          mb={1}
+          letterSpacing="0.01em"
+        >
+          {label}
+        </Field.Label>
+      )}
       <Input value={value} onChange={(event) => onChange(event.target.value)} {...props} />
       {error ? (
-        <FormErrorMessage>{error}</FormErrorMessage>
+        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
+          {error}
+        </Field.ErrorText>
       ) : helperText ? (
-        <FormHelperText fontSize="xs" color="text.secondary">
+        <Field.HelperText fontSize="xs" color="text.secondary">
           {helperText}
-        </FormHelperText>
+        </Field.HelperText>
       ) : null}
-    </FormControl>
+    </Field.Root>
   );
 });

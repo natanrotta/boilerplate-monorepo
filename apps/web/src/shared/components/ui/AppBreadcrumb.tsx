@@ -1,10 +1,5 @@
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  type BreadcrumbProps,
-  Icon,
-} from "@chakra-ui/react";
+import { Fragment } from "react";
+import { Breadcrumb } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 import { FiChevronRight } from "@/shared/components/icons";
 
@@ -14,14 +9,13 @@ export interface BreadcrumbEntry {
   isCurrentPage?: boolean;
 }
 
-interface AppBreadcrumbProps extends BreadcrumbProps {
+interface AppBreadcrumbProps extends Breadcrumb.RootProps {
   items: BreadcrumbEntry[];
 }
 
 export function AppBreadcrumb({ items, ...props }: AppBreadcrumbProps) {
   return (
-    <Breadcrumb
-      separator={<Icon as={FiChevronRight} boxSize={3.5} />}
+    <Breadcrumb.Root
       fontSize={{ base: "xs", md: "sm" }}
       color="text.secondary"
       overflowX="auto"
@@ -29,11 +23,10 @@ export function AppBreadcrumb({ items, ...props }: AppBreadcrumbProps) {
       css={{
         "&::-webkit-scrollbar": { display: "none" },
         scrollbarWidth: "none",
-        // Chakra's separator is a plain <span role="presentation"> (no class)
-        // whose text strut lifts the chevron above the label. Flex-center the
-        // icon and zero the line-height to drop the strut, so it sits on the
-        // label's midline.
-        "& [role='presentation']": {
+        // The separator wrapper's text strut lifts the chevron above the
+        // label. Flex-center the icon and zero the line-height to drop the
+        // strut, so it sits on the label's midline.
+        "& [data-scope='breadcrumb'][data-part='separator']": {
           display: "flex",
           alignItems: "center",
           lineHeight: 0,
@@ -41,22 +34,31 @@ export function AppBreadcrumb({ items, ...props }: AppBreadcrumbProps) {
       }}
       {...props}
     >
-      {items.map((item) => (
-        <BreadcrumbItem
-          key={`${item.label}_${item.href ?? "current"}`}
-          isCurrentPage={item.isCurrentPage}
-        >
-          {item.href ? (
-            <BreadcrumbLink as={RouterLink} to={item.href} color="text.secondary">
-              {item.label}
-            </BreadcrumbLink>
-          ) : (
-            <BreadcrumbLink color="text.primary" fontWeight="600">
-              {item.label}
-            </BreadcrumbLink>
-          )}
-        </BreadcrumbItem>
-      ))}
-    </Breadcrumb>
+      <Breadcrumb.List>
+        {items.map((item, index) => {
+          const last = index === items.length - 1;
+          return (
+            <Fragment key={`${item.label}_${item.href ?? "current"}`}>
+              <Breadcrumb.Item>
+                {item.href ? (
+                  <Breadcrumb.Link asChild color="text.secondary">
+                    <RouterLink to={item.href}>{item.label}</RouterLink>
+                  </Breadcrumb.Link>
+                ) : (
+                  <Breadcrumb.CurrentLink color="text.primary" fontWeight="600">
+                    {item.label}
+                  </Breadcrumb.CurrentLink>
+                )}
+              </Breadcrumb.Item>
+              {!last && (
+                <Breadcrumb.Separator>
+                  <FiChevronRight size={14} />
+                </Breadcrumb.Separator>
+              )}
+            </Fragment>
+          );
+        })}
+      </Breadcrumb.List>
+    </Breadcrumb.Root>
   );
 }

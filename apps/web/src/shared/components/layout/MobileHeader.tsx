@@ -30,13 +30,14 @@ export const MobileHeader = memo(function MobileHeader({ onOpenSidebar }: Mobile
       <Flex align="center" gap={3}>
         <IconButton
           aria-label={t("layout.openMenu")}
-          icon={<FiMenu />}
           variant="ghost"
           size="sm"
           onClick={onOpenSidebar}
           minW="40px"
           minH="40px"
-        />
+        >
+          <FiMenu />
+        </IconButton>
         <Flex align="center" gap={2}>
           <Image
             src="/boilerplate-icon.png"
@@ -55,17 +56,18 @@ export const MobileHeader = memo(function MobileHeader({ onOpenSidebar }: Mobile
 
       <Flex align="center" gap={1}>
         {user && (
-          <Avatar
+          <Avatar.Root
             size="sm"
-            name={user.name}
-            src={user.avatarUrl || undefined}
             bg="brand.500"
             color="text.onBrand"
             fontSize="xs"
             fontWeight="700"
             w={8}
             h={8}
-          />
+          >
+            <Avatar.Image src={user.avatarUrl || undefined} />
+            <Avatar.Fallback name={user.name} />
+          </Avatar.Root>
         )}
       </Flex>
     </Flex>

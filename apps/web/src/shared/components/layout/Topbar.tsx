@@ -3,9 +3,7 @@ import {
   Flex,
   IconButton,
   Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
+  Portal,
   Text,
   useBreakpointValue,
 } from "@chakra-ui/react";
@@ -43,19 +41,20 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
         {shouldShowMenuButton ? (
           <IconButton
             aria-label="Open navigation"
-            icon={<FiMenu />}
             variant="ghost"
             size="sm"
             onClick={onOpenSidebar}
-          />
+          >
+            <FiMenu />
+          </IconButton>
         ) : null}
       </Flex>
 
       <Flex align="center" gap={2}>
         <ColorModeToggle size="sm" />
-        <Menu>
-          <MenuButton>
-            <Flex align="center" gap={3}>
+        <Menu.Root>
+          <Menu.Trigger asChild>
+            <Flex align="center" gap={3} cursor="pointer">
               <Text
                 display={{ base: "none", md: "block" }}
                 fontWeight="500"
@@ -64,24 +63,33 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
               >
                 {user?.name}
               </Text>
-              <Avatar
-                size="sm"
-                src={user?.avatarUrl}
-                name={user?.name}
-                bg="brand.500"
-                color="text.onBrand"
-              />
+              <Avatar.Root size="sm" bg="brand.500" color="text.onBrand">
+                <Avatar.Image src={user?.avatarUrl} />
+                <Avatar.Fallback name={user?.name} />
+              </Avatar.Root>
             </Flex>
-          </MenuButton>
-          <MenuList>
-            <MenuItem as={RouterLink} to={ROUTE_PATHS.profile} icon={<FiUser />}>
-              {t("topbar.myProfile")}
-            </MenuItem>
-            <MenuItem icon={<FiLogOut />} onClick={() => void signOut()} isDisabled={isSubmitting}>
-              {t("topbar.signOut")}
-            </MenuItem>
-          </MenuList>
-        </Menu>
+          </Menu.Trigger>
+          <Portal>
+            <Menu.Positioner>
+              <Menu.Content>
+                <Menu.Item value="profile" asChild>
+                  <RouterLink to={ROUTE_PATHS.profile}>
+                    <FiUser />
+                    {t("topbar.myProfile")}
+                  </RouterLink>
+                </Menu.Item>
+                <Menu.Item
+                  value="signOut"
+                  onClick={() => void signOut()}
+                  disabled={isSubmitting}
+                >
+                  <FiLogOut />
+                  {t("topbar.signOut")}
+                </Menu.Item>
+              </Menu.Content>
+            </Menu.Positioner>
+          </Portal>
+        </Menu.Root>
       </Flex>
     </Flex>
   );

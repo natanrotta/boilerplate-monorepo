@@ -64,7 +64,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               <Text color="text.secondary" mb={6}>
                 {i18n.t("common:errors.reloadDescription")}
               </Text>
-              <Button colorScheme="brand" onClick={this.handleReload}>
+              <Button colorPalette="brand" onClick={this.handleReload}>
                 {i18n.t("common:actions.reload")}
               </Button>
             </Box>

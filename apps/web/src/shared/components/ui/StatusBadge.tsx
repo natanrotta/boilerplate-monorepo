@@ -42,7 +42,7 @@ const statusStyles: Record<
   },
 };
 
-interface StatusBadgeProps extends Omit<BadgeProps, "colorScheme"> {
+interface StatusBadgeProps extends Omit<BadgeProps, "colorPalette"> {
   status: StatusType;
   label: string;
 }

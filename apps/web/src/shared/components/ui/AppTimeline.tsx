@@ -1,4 +1,4 @@
-import { Box, Flex, Icon, Stack, Text } from "@chakra-ui/react";
+import { Box, Flex, Stack, Text } from "@chakra-ui/react";
 import { FiCircle } from "@/shared/components/icons";
 import type { IconType } from "@/shared/components/icons";
 import type { ReactNode } from "react";
@@ -23,8 +23,10 @@ interface AppTimelineProps {
 
 export function AppTimeline({ items }: AppTimelineProps) {
   return (
-    <Stack spacing={0}>
-      {items.map((item, index) => (
+    <Stack gap={0}>
+      {items.map((item, index) => {
+        const ItemIcon = item.icon ?? FiCircle;
+        return (
         <Flex
           key={item.id}
           data-cy="timeline-item"
@@ -49,22 +51,26 @@ export function AppTimeline({ items }: AppTimelineProps) {
               color={item.iconBg ? "text.onBrand" : "text.brand"}
               flexShrink={0}
             >
-              <Icon as={item.icon ?? FiCircle} boxSize={4} />
+              <Box asChild boxSize={4}>
+                <ItemIcon />
+              </Box>
             </Flex>
             {index < items.length - 1 && (
               <Box
                 w="2px"
                 flex={1}
                 minH="24px"
-                bgGradient="linear(to-b, brand.200, brand.100)"
+                bgGradient="to-b"
+                gradientFrom="brand.200"
+                gradientTo="brand.100"
                 mt={1}
                 borderRadius="full"
               />
             )}
           </Flex>
-          <Stack spacing={1} flex={1} pb={index < items.length - 1 ? 2 : 0}>
+          <Stack gap={1} flex={1} pb={index < items.length - 1 ? 2 : 0}>
             <Flex align="center" gap={2} minW={0}>
-              <Text fontWeight="600" fontSize="sm" noOfLines={1}>
+              <Text fontWeight="600" fontSize="sm" lineClamp={1}>
                 {item.title}
               </Text>
               {item.badge}
@@ -75,7 +81,7 @@ export function AppTimeline({ items }: AppTimelineProps) {
               </Text>
             )}
             {item.description && (
-              <Box fontSize="sm" color="text.secondary" noOfLines={2}>
+              <Box fontSize="sm" color="text.secondary" lineClamp={2}>
                 {item.description}
               </Box>
             )}
@@ -106,7 +112,8 @@ export function AppTimeline({ items }: AppTimelineProps) {
             </Box>
           )}
         </Flex>
-      ))}
+        );
+      })}
     </Stack>
   );
 }

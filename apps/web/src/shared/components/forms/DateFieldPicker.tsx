@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
-import { FormControl, FormErrorMessage, FormLabel, Input, type InputProps } from "@chakra-ui/react";
+import { Field, Input, type InputProps } from "@chakra-ui/react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale/pt-BR";
 import { parse, format, isValid } from "date-fns";
@@ -40,8 +40,18 @@ function DateFieldComponent({
   const validDate = selected && isValid(selected) ? selected : null;
 
   return (
-    <FormControl isInvalid={Boolean(error)}>
-      {label && <FormLabel>{label}</FormLabel>}
+    <Field.Root invalid={Boolean(error)}>
+      {label && (
+        <Field.Label
+          fontSize="xs"
+          fontWeight="600"
+          color="text.secondary"
+          mb={1}
+          letterSpacing="0.01em"
+        >
+          {label}
+        </Field.Label>
+      )}
       <DatePicker
         selected={validDate}
         onChange={(date: Date | null) => {
@@ -63,8 +73,12 @@ function DateFieldComponent({
         dropdownMode="select"
         disabled={isReadOnly}
       />
-      {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
-    </FormControl>
+      {error ? (
+        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
+          {error}
+        </Field.ErrorText>
+      ) : null}
+    </Field.Root>
   );
 }
 

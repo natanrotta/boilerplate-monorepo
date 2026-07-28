@@ -1,16 +1,23 @@
-import {
-  Button,
-  Flex,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-} from "@chakra-ui/react";
+import { Button, CloseButton, Dialog, Flex, Portal } from "@chakra-ui/react";
+import type { DialogRootProps } from "@chakra-ui/react";
 import type { PropsWithChildren, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+
+type DialogSize = NonNullable<DialogRootProps["size"]>;
+
+/**
+ * Chakra v3's Dialog dropped the `2xl`/`3xl` sizes it accepted in v2. Keep the
+ * public prop shape backward-compatible and clamp the removed sizes down to the
+ * widest supported size (`xl`).
+ */
+const SIZE_MAP: Record<AppModalProps["size"] & string, DialogSize> = {
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  xl: "xl",
+  "2xl": "xl",
+  "3xl": "xl",
+};
 
 interface AppModalProps extends PropsWithChildren {
   isOpen: boolean;
@@ -60,35 +67,51 @@ export function AppModal({
   const { t } = useTranslation("common");
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={size} scrollBehavior={scrollBehavior} isCentered>
-      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(2px)" />
-      <ModalContent borderRadius={borderRadius} mx={{ base: 3, md: 0 }}>
-        <ModalHeader fontSize={{ base: "md", md: "lg" }}>{title}</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>{children}</ModalBody>
-        <ModalFooter flexDirection={{ base: "column-reverse", sm: "row" }} gap={2}>
-          {footerLeft && <Flex mr="auto">{footerLeft}</Flex>}
-          <Button
-            variant="ghost"
-            onClick={onCancelAction ?? onClose}
-            isLoading={isCancelLoading}
-            w={{ base: "full", sm: "auto" }}
-          >
-            {cancelActionLabel ?? t("actions.cancel")}
-          </Button>
-          {primaryActionLabel && onPrimaryAction ? (
-            <Button
-              colorScheme={primaryColorScheme}
-              onClick={onPrimaryAction}
-              isLoading={isPrimaryLoading}
-              isDisabled={isPrimaryDisabled}
-              w={{ base: "full", sm: "auto" }}
-            >
-              {primaryActionLabel}
-            </Button>
-          ) : null}
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(e) => {
+        if (!e.open) onClose();
+      }}
+      size={size ? SIZE_MAP[size] : undefined}
+      scrollBehavior={scrollBehavior}
+      placement="center"
+    >
+      <Portal>
+        <Dialog.Backdrop bg="blackAlpha.300" backdropFilter="blur(2px)" />
+        <Dialog.Positioner>
+          <Dialog.Content borderRadius={borderRadius} mx={{ base: 3, md: 0 }}>
+            <Dialog.Header fontSize={{ base: "md", md: "lg" }}>
+              <Dialog.Title>{title}</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.CloseTrigger asChild>
+              <CloseButton size="sm" />
+            </Dialog.CloseTrigger>
+            <Dialog.Body>{children}</Dialog.Body>
+            <Dialog.Footer flexDirection={{ base: "column-reverse", sm: "row" }} gap={2}>
+              {footerLeft && <Flex mr="auto">{footerLeft}</Flex>}
+              <Button
+                variant="ghost"
+                onClick={onCancelAction ?? onClose}
+                loading={isCancelLoading}
+                w={{ base: "full", sm: "auto" }}
+              >
+                {cancelActionLabel ?? t("actions.cancel")}
+              </Button>
+              {primaryActionLabel && onPrimaryAction ? (
+                <Button
+                  colorPalette={primaryColorScheme}
+                  onClick={onPrimaryAction}
+                  loading={isPrimaryLoading}
+                  disabled={isPrimaryDisabled}
+                  w={{ base: "full", sm: "auto" }}
+                >
+                  {primaryActionLabel}
+                </Button>
+              ) : null}
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
   );
 }

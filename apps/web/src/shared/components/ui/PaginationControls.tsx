@@ -1,17 +1,6 @@
 import { memo } from "react";
 import { useMemo } from "react";
-import {
-  Button,
-  Flex,
-  HStack,
-  Icon,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Text,
-} from "@chakra-ui/react";
+import { Box, Button, Flex, HStack, IconButton, Menu, Portal, Text } from "@chakra-ui/react";
 import { FiChevronDown, FiChevronLeft, FiChevronRight } from "@/shared/components/icons";
 import { useTranslation } from "react-i18next";
 
@@ -70,17 +59,20 @@ function PaginationControlsComponent({
       flexWrap="wrap"
       gap={3}
     >
-      <HStack spacing={1}>
+      <HStack gap={1}>
         <IconButton
           aria-label={t("pagination.previousPage")}
-          icon={<Icon as={FiChevronLeft} boxSize={4} />}
           size="sm"
           variant="ghost"
           color="text.secondary"
-          isDisabled={page <= 1}
+          disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
           _hover={{ bg: "bg.hover" }}
-        />
+        >
+          <Box asChild boxSize={4}>
+            <FiChevronLeft />
+          </Box>
+        </IconButton>
 
         {pages.map((p, i) =>
           p === "ellipsis" ? (
@@ -94,7 +86,7 @@ function PaginationControlsComponent({
               minW={8}
               h={8}
               variant={p === page ? "solid" : "ghost"}
-              colorScheme={p === page ? "brand" : undefined}
+              colorPalette={p === page ? "brand" : undefined}
               color={p === page ? undefined : "gray.600"}
               fontWeight={p === page ? "700" : "500"}
               fontSize="sm"
@@ -108,46 +100,57 @@ function PaginationControlsComponent({
 
         <IconButton
           aria-label={t("pagination.nextPage")}
-          icon={<Icon as={FiChevronRight} boxSize={4} />}
           size="sm"
           variant="ghost"
           color="text.secondary"
-          isDisabled={page >= totalPages}
+          disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
           _hover={{ bg: "bg.hover" }}
-        />
+        >
+          <Box asChild boxSize={4}>
+            <FiChevronRight />
+          </Box>
+        </IconButton>
       </HStack>
 
-      <HStack spacing={2}>
+      <HStack gap={2}>
         <Text fontSize="xs" color="text.secondary">
           {t("pagination.itemsPerPage")}
         </Text>
         {onPageSizeChange ? (
-          <Menu>
-            <MenuButton
-              as={Button}
-              size="xs"
-              variant="ghost"
-              rightIcon={<Icon as={FiChevronDown} boxSize={3} />}
-              color="text.secondary"
-              fontWeight="600"
-              _hover={{ bg: "bg.hover" }}
-            >
-              {pageSize}
-            </MenuButton>
-            <MenuList minW="80px" fontSize="sm">
-              {pageSizeOptions.map((option) => (
-                <MenuItem
-                  key={option}
-                  fontWeight={option === pageSize ? "700" : "400"}
-                  color={option === pageSize ? "brand.600" : undefined}
-                  onClick={() => onPageSizeChange(option)}
-                >
-                  {option}
-                </MenuItem>
-              ))}
-            </MenuList>
-          </Menu>
+          <Menu.Root>
+            <Menu.Trigger asChild>
+              <Button
+                size="xs"
+                variant="ghost"
+                color="text.secondary"
+                fontWeight="600"
+                _hover={{ bg: "bg.hover" }}
+              >
+                {pageSize}
+                <Box asChild boxSize={3}>
+                  <FiChevronDown />
+                </Box>
+              </Button>
+            </Menu.Trigger>
+            <Portal>
+              <Menu.Positioner>
+                <Menu.Content minW="80px" fontSize="sm">
+                  {pageSizeOptions.map((option) => (
+                    <Menu.Item
+                      key={option}
+                      value={String(option)}
+                      fontWeight={option === pageSize ? "700" : "400"}
+                      color={option === pageSize ? "brand.600" : undefined}
+                      onClick={() => onPageSizeChange(option)}
+                    >
+                      {option}
+                    </Menu.Item>
+                  ))}
+                </Menu.Content>
+              </Menu.Positioner>
+            </Portal>
+          </Menu.Root>
         ) : (
           <Text fontSize="xs" fontWeight="600" color="text.secondary">
             {pageSize}

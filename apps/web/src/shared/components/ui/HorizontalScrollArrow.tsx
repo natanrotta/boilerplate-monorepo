@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Flex, Icon } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import { FiChevronRight } from "@/shared/components/icons";
 
 interface HorizontalScrollArrowProps {
@@ -46,12 +46,14 @@ export const HorizontalScrollArrow = memo(function HorizontalScrollArrow({
         _hover={{ bg: "bg.sunken", boxShadow: "md" }}
         transition="all 0.15s ease"
       >
-        <Icon
-          as={FiChevronRight}
+        <Box
+          asChild
           boxSize={3.5}
           color="text.secondary"
           transform={isLeft ? "rotate(180deg)" : undefined}
-        />
+        >
+          <FiChevronRight />
+        </Box>
       </Flex>
     </Flex>
   );

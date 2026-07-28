@@ -12,3 +12,5 @@ The ledger feeds the **recurring-violations surfacing** pass: codes that appear 
 
 | Date | Code | Fixed-by | Context |
 | ---- | ---- | -------- | ------- |
+| 2026-07-28 | F-M17 | code-reviewer | AppTabs v3 (value-based) sem defaultValue quando syncWithUrl=false — machine inicia em null, nenhuma aba selecionada; fixado (defaultValue sempre) |
+| 2026-07-28 | F-M18 | code-reviewer | boxShadow="card-hover" (kebab) não mapeia pro CSS var; token correto é shadow.cardHover — popover Country/Phone sem sombra; fixado |

@@ -1,14 +1,5 @@
 import { memo } from "react";
-import {
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Text,
-  type InputProps,
-} from "@chakra-ui/react";
+import { Field, Input, InputGroup, Text, type InputProps } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { formatMonetary, unformatMonetary } from "@/shared/utils/monetary";
 
@@ -29,14 +20,26 @@ function MonetaryFieldComponent({ label, error, value, onChange, ...props }: Mon
   }
 
   return (
-    <FormControl isInvalid={Boolean(error)}>
-      {label && <FormLabel>{label}</FormLabel>}
-      <InputGroup>
-        <InputLeftElement pointerEvents="none">
+    <Field.Root invalid={Boolean(error)}>
+      {label && (
+        <Field.Label
+          fontSize="xs"
+          fontWeight="600"
+          color="text.secondary"
+          mb={1}
+          letterSpacing="0.01em"
+        >
+          {label}
+        </Field.Label>
+      )}
+      <InputGroup
+        startElement={
           <Text fontSize="sm" color="text.muted" fontWeight="500">
             {t("forms.currencySymbol")}
           </Text>
-        </InputLeftElement>
+        }
+        startElementProps={{ pointerEvents: "none" }}
+      >
         <Input
           value={displayValue}
           onChange={handleChange}
@@ -45,8 +48,12 @@ function MonetaryFieldComponent({ label, error, value, onChange, ...props }: Mon
           {...props}
         />
       </InputGroup>
-      {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
-    </FormControl>
+      {error ? (
+        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
+          {error}
+        </Field.ErrorText>
+      ) : null}
+    </Field.Root>
   );
 }
 

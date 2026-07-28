@@ -1,15 +1,15 @@
 import { forwardRef } from "react";
-import { Badge, Button, Icon, type ButtonProps } from "@chakra-ui/react";
+import { Badge, Box, Button, type ButtonProps } from "@chakra-ui/react";
 import type { IconType } from "@/shared/components/icons";
 
-interface FilterButtonProps extends Omit<ButtonProps, "leftIcon" | "rightIcon"> {
+interface FilterButtonProps extends ButtonProps {
   icon?: IconType;
   label: string;
   count?: number;
 }
 
 export const FilterButton = forwardRef<HTMLButtonElement, FilterButtonProps>(function FilterButton(
-  { icon, label, count, children, ...rest },
+  { icon: Icon, label, count, children, ...rest },
   ref
 ) {
   return (
@@ -17,7 +17,6 @@ export const FilterButton = forwardRef<HTMLButtonElement, FilterButtonProps>(fun
       ref={ref}
       size="sm"
       variant="ghost"
-      leftIcon={icon ? <Icon as={icon} boxSize={4} color="text.muted" /> : undefined}
       h={{ base: "40px", md: "36px" }}
       borderRadius="sm"
       bg="bg.surface"
@@ -31,9 +30,14 @@ export const FilterButton = forwardRef<HTMLButtonElement, FilterButtonProps>(fun
       _expanded={{ borderColor: "border.focus", boxShadow: "input-focus" }}
       {...rest}
     >
+      {Icon ? (
+        <Box asChild boxSize={4} color="text.muted">
+          <Icon />
+        </Box>
+      ) : null}
       {label}
       {count != null && count > 0 && (
-        <Badge ml={1.5} colorScheme="brand" borderRadius="full" fontSize="2xs">
+        <Badge ml={1.5} colorPalette="brand" borderRadius="full" fontSize="2xs">
           {count}
         </Badge>
       )}

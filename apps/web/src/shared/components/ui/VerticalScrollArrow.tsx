@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Flex, Icon } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import { FiChevronDown } from "@/shared/components/icons";
 
 interface VerticalScrollArrowProps {
@@ -35,7 +35,11 @@ export const VerticalScrollArrow = memo(function VerticalScrollArrow({
       cursor="pointer"
       role="button"
       aria-label="Scroll to bottom"
-      bgGradient="linear(to-t, bg.surface, bg.surface 50%, transparent)"
+      // 3-stop fade (solid bottom half → transparent) via gradientVia.
+      bgGradient="to-t"
+      gradientFrom="bg.surface"
+      gradientVia="bg.surface"
+      gradientTo="transparent"
     >
       <Flex
         align="center"
@@ -51,7 +55,9 @@ export const VerticalScrollArrow = memo(function VerticalScrollArrow({
         transition="all 0.15s ease"
         pointerEvents="none"
       >
-        <Icon as={FiChevronDown} boxSize={3.5} color="text.secondary" />
+        <Box asChild boxSize={3.5} color="text.secondary">
+          <FiChevronDown />
+        </Box>
       </Flex>
     </Flex>
   );

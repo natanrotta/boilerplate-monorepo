@@ -17,7 +17,7 @@ export function SectionCardSkeleton({ lines = 4, height }: SectionCardSkeletonPr
       h={height}
     >
       <Skeleton h="16px" w="40%" mb={4} borderRadius="md" />
-      <VStack spacing={3} align="stretch">
+      <VStack gap={3} align="stretch">
         {Array.from({ length: lines }).map((_, i) => (
           <Skeleton key={i} h="14px" w={i % 2 === 0 ? "90%" : "70%"} borderRadius="md" />
         ))}

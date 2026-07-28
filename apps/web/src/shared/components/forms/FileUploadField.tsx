@@ -1,15 +1,4 @@
-import {
-  Button,
-  Flex,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
-  HStack,
-  Icon,
-  Input,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Button, Field, Flex, HStack, Icon, Input, Stack, Text } from "@chakra-ui/react";
 import { useCallback, useId, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { FiUploadCloud, FiX } from "@/shared/components/icons";
@@ -167,10 +156,20 @@ export function FileUploadField({
   };
 
   return (
-    <FormControl isInvalid={Boolean(error || internalError)}>
-      {label && <FormLabel>{label}</FormLabel>}
+    <Field.Root invalid={Boolean(error || internalError)}>
+      {label && (
+        <Field.Label
+          fontSize="xs"
+          fontWeight="600"
+          color="text.secondary"
+          mb={1}
+          letterSpacing="0.01em"
+        >
+          {label}
+        </Field.Label>
+      )}
 
-      <Stack spacing={3}>
+      <Stack gap={3}>
         <Input
           id={id}
           ref={inputRef}
@@ -185,7 +184,6 @@ export function FileUploadField({
           <Button
             size="sm"
             variant="outline"
-            leftIcon={<Icon as={FiUploadCloud} boxSize={4} />}
             onClick={() => inputRef.current?.click()}
             w="100%"
             borderStyle="dashed"
@@ -194,6 +192,7 @@ export function FileUploadField({
             fontWeight="500"
             _hover={{ borderColor: "border.brand", color: "brand.500", bg: "bg.brand.subtle" }}
           >
+            <Icon as={FiUploadCloud} boxSize={4} />
             {helperText ?? t("forms.fileUpload.addFile")}
           </Button>
         ) : (
@@ -246,7 +245,7 @@ export function FileUploadField({
           // pushing the modal (and its footer/submit button) past the viewport.
           // `pr` reserves room so the scrollbar never overlaps the remove button.
           <Stack
-            spacing={2}
+            gap={2}
             maxH="17rem"
             overflowY="auto"
             pr={selectedFiles.length > 4 ? 1 : 0}
@@ -262,16 +261,16 @@ export function FileUploadField({
                 bg="bg.surface"
                 flexShrink={0}
               >
-                <Text fontSize="sm" color="text.primary" noOfLines={1}>
+                <Text fontSize="sm" color="text.primary" lineClamp={1}>
                   {file.name}
                 </Text>
                 <Button
                   size="xs"
                   variant="ghost"
-                  leftIcon={<FiX />}
                   onClick={() => removeFile(getFileKey(file))}
                   color="text.secondary"
                 >
+                  <FiX />
                   {t("forms.fileUpload.remove")}
                 </Button>
               </HStack>
@@ -281,8 +280,10 @@ export function FileUploadField({
       </Stack>
 
       {error || internalError ? (
-        <FormErrorMessage>{error ?? internalError}</FormErrorMessage>
+        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
+          {error ?? internalError}
+        </Field.ErrorText>
       ) : null}
-    </FormControl>
+    </Field.Root>
   );
 }

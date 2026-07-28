@@ -21,7 +21,7 @@ export const BrandMark = ({ showWordmark = true, size = "md", ...rest }: Props) 
         borderRadius={s.radius}
         align="center"
         justify="center"
-        bgGradient="linear(135deg, brand.500, accent.500)"
+        bgImage="linear-gradient(135deg, #2f80ed, #1eb28a)"
         boxShadow="0 8px 18px -8px rgba(47, 128, 237, 0.5)"
         aria-hidden
       >
