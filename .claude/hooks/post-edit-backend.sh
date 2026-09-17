@@ -59,6 +59,13 @@ if grep -nE '\bconsole\.(log|error|warn|info|debug)\b' "$file" >/dev/null; then
   warn "B-H12: console.* detected — use ILoggerProvider (Pino) instead. Lines: $lines"
 fi
 
+# B-C13: Direct LLM API calls (must go through the ILlmProvider port — R23)
+if grep -nE '(api\.openai\.com|api\.anthropic\.com|fetch\(.*openai|fetch\(.*anthropic|from "openai"|from "@anthropic-ai/|from "@langchain/)' "$file" >/dev/null; then
+  if ! echo "$file" | grep -qE 'core/provider/llm/'; then
+    warn "B-C13: direct LLM API/SDK usage detected — go through the ILlmProvider port (impl lives in core/provider/llm/; see /ai-backend)."
+  fi
+fi
+
 # B-C7: Raw SQL with string interpolation
 if grep -nE '\$queryRawUnsafe\(' "$file" >/dev/null; then
   warn "B-C7: \$queryRawUnsafe detected — sanitize via parameterized \$queryRaw\`...\` with template literal placeholders."
@@ -88,6 +95,21 @@ case "$file" in
   */modules/*/domain/*|*/modules/*/application/*)
     if grep -nE 'from[[:space:]]+["'\''](\.\./)*infrastructure/|from[[:space:]]+["'\'']@core/(provider|database|service)/|from[[:space:]]+["'\'']@modules/[^"'\'']*/infrastructure/' "$file" >/dev/null; then
       warn "B-C10: domain/application file imports an infrastructure impl (own infrastructure/, @core/{provider,database,service}, or another module's infrastructure/) — invert the dependency (port in domain/shared, impl in core/infrastructure)."
+    fi
+    ;;
+esac
+
+# B-C14: auth/scope middleware FACTORY passed without being invoked
+# (`router.use(authMiddleware)` instead of `router.use(authMiddleware())`).
+# Express calls the factory as if it were the handler: it returns a function
+# and never calls next() → every request on that router hangs AND the guard is
+# not applied. Single-line form only (the vitest guard route-mount.spec.ts
+# parses the multi-line form).
+case "$file" in
+  */route/*|*/routes/*|*/http/app.ts)
+    if grep -nE '\.(use|get|post|put|patch|delete|all)\([^)]*\b(authMiddleware|emailVerificationAuthMiddleware|rejectScopedTokens|requireScope|bearerFromQueryToken)\b[[:space:]]*[,)]' "$file" >/dev/null; then
+      lines="$(grep -nE '\.(use|get|post|put|patch|delete|all)\([^)]*\b(authMiddleware|emailVerificationAuthMiddleware|rejectScopedTokens|requireScope|bearerFromQueryToken)\b[[:space:]]*[,)]' "$file" | head -3)"
+      warn "B-C14: middleware factory passed without being CALLED — write authMiddleware() (with parentheses); as written every request on this router hangs. Lines: $lines"
     fi
     ;;
 esac

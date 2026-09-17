@@ -29,6 +29,7 @@ function FilterBarComponent({ searchPlaceholder, searchValue, onSearchChange }: 
           searchValue ? (
             <Box
               as="button"
+              aria-label={t("actions.clear")}
               onClick={() => onSearchChange("")}
               color="text.muted"
               _hover={{ color: "text.secondary" }}
@@ -44,7 +45,9 @@ function FilterBarComponent({ searchPlaceholder, searchValue, onSearchChange }: 
         }
       >
         <Input
+          data-cy="filter-search"
           type="text"
+          aria-label={t("filter.searchLabel")}
           placeholder={searchPlaceholder ?? t("filter.searchPlaceholder")}
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}

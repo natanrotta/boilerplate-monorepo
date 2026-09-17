@@ -83,7 +83,7 @@ describe("error-reporter", () => {
       },
     );
 
-    it("starts Bugsnag with the key and PHI-hardening config when set", async () => {
+    it("starts Bugsnag with the key and PII-hardening config when set", async () => {
       mockEnv.BUGSNAG_API_KEY = "test-key";
       const { initErrorReporter } = await loadModule();
 
@@ -93,6 +93,11 @@ describe("error-reporter", () => {
       const config = mockBugsnag.start.mock.calls[0]![0];
       expect(config.apiKey).toBe("test-key");
       expect(config.collectUserIp).toBe(false);
+      // The lifecycle owns process exit — the SDK must not race it.
+      expect(config.enabledErrorTypes).toEqual({
+        unhandledExceptions: false,
+        unhandledRejections: false,
+      });
       expect(config.onError).toBeTypeOf("function");
       expect(config.onBreadcrumb).toBeTypeOf("function");
     });
@@ -108,7 +113,7 @@ describe("error-reporter", () => {
     });
   });
 
-  describe("onError PHI scrubbing", () => {
+  describe("onError PII scrubbing", () => {
     it("drops auth headers + request body and reduces the user to an opaque id", async () => {
       mockEnv.BUGSNAG_API_KEY = "test-key";
       const { initErrorReporter } = await loadModule();
@@ -122,7 +127,7 @@ describe("error-reporter", () => {
       const event = {
         request: {
           headers: { authorization: "Bearer x", cookie: "s=1", "x-keep": "ok" },
-          body: { patientName: "Ana" },
+          body: { name: "Ana" },
         },
         getUser: () => ({ id: "u1", email: "ana@example.com", name: "Ana" }),
         setUser,
@@ -135,7 +140,7 @@ describe("error-reporter", () => {
       expect(event.request.headers).not.toHaveProperty("cookie");
       expect(event.request.headers).toHaveProperty("x-keep", "ok");
       expect(event.request).not.toHaveProperty("body");
-      // Only the opaque id is kept — email/name (a patient name risk) dropped.
+      // Only the opaque id is kept — e-mail and display name are dropped.
       expect(setUser).toHaveBeenCalledWith("u1");
     });
   });
@@ -168,6 +173,7 @@ describe("error-reporter", () => {
       expect(mockBugsnag.notify).toHaveBeenCalledWith(
         error,
         expect.any(Function),
+        expect.any(Function),
       );
     });
 
@@ -196,7 +202,7 @@ describe("error-reporter", () => {
         .onBreadcrumb as (b: { metadata: Record<string, unknown> }) => boolean;
 
       expect(onBreadcrumb({ metadata: { url: "/healthz" } })).toBe(false);
-      expect(onBreadcrumb({ metadata: { url: "/api/patients" } })).toBe(true);
+      expect(onBreadcrumb({ metadata: { url: "/api/auth/me" } })).toBe(true);
     });
   });
 

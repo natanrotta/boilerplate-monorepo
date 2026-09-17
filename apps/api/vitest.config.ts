@@ -14,7 +14,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    setupFiles: ["reflect-metadata"],
+    setupFiles: ["reflect-metadata", "./src/test/setup-env.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
@@ -40,7 +40,6 @@ export default defineConfig({
         "src/modules/**/infrastructure/route/**",
         "src/modules/**/infrastructure/repository/**",
         "src/modules/**/application/interface/**",
-        "src/modules/ai/infrastructure/prompts/**",
       ],
     },
     include: ["src/**/*.{test,spec}.ts"],

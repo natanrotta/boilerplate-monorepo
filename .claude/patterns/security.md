@@ -9,7 +9,7 @@ It is consumed by:
 
 It **defers** to: `BASELINE.md` (R1–R28), `code-review-checklist.md` (B-/F-/X-/SC- codes — many are already security codes), `/devops` + `.claude/knowledge/devops.md` (infra). It cross-references those codes instead of duplicating them.
 
-> **Namespace:** security codes are **`SEC-*`**. `S-*` is reserved for apps/site. Never mint an `S-*` security code.
+> **Namespace:** security codes are **`SEC-*`**. The bare `S-*` prefix is reserved — never mint an `S-*` security code.
 >
 > **Anchors drift.** Any `file:line` below is a hint, not a fact. Re-grep the symbol by name before quoting it — files move, line numbers rot.
 
@@ -21,7 +21,7 @@ Classify the data your feature touches and handle each tier accordingly:
 
 | Tier | Examples | Rule |
 |---|---|---|
-| **Secret** | JWT secret, DB/Redis creds, third-party API keys, encryption keys | Env-only (validated config), `chmod 600` on the server, never in logs/commits/images/front. `R22`, `SEC-C4`. |
+| **Secret** | `JWT_SECRET`, DB/Redis creds, `RESEND_API_KEY`, `AWS_*`, `BUGSNAG_API_KEY`, `GITHUB_ACTIONS_TOKEN`, `GOOGLE_CLIENT_ID`, password-reset / e-mail-verification tokens (stored hashed) | Env-only (validated config), `chmod 600` on the server, never in logs/commits/images/front/responses. `R22`, `SEC-C4`. |
 | **PII** | user name/email/phone, any personal data you add | Never logged (`R5`/`SEC-C7`), never in URLs/referrers (`F-C4`), never returned to a different owner (`SEC-C2`), redacted in pino. |
 | **Operational** | ids, timestamps, counts, status | Normal handling; still owner-scoped where applicable. |
 
@@ -47,48 +47,50 @@ Each boundary is a place to ask "what does the other side control, and what am I
 
 ## 2. Identity & authentication
 
-- **JWT** — `jsonwebtoken`, **HS256 pinned** on verify (alg-confusion defense) — `core/provider/jwt/*`. Secret `env.JWT_SECRET` (min 32 chars, `core/config/env.ts`). Short-lived access TTL + longer refresh TTL.
+- **JWT** — `jsonwebtoken`, **HS256 pinned** on verify (alg-confusion defense) — `core/provider/jwt/`. Secret `env.JWT_SECRET` (min 32 chars, composed from `core/config/schema/auth.schema.ts`). Access TTL `JWT_EXPIRES_IN` (default `15m`), refresh `REFRESH_TOKEN_EXPIRES_IN` (default `30d`).
 - **Token revocation** — a `tokenVersion` claim must match the user row; bump it on password reset / logout-all → invalidates all live JWTs. `auth.middleware.ts`.
-- **Scoped tokens** — capability JWTs (e.g. `email:verify`) minted via a `signScoped()` helper; gated by `requireScope()` / `rejectScopedTokens()`.
-- **Passwords** — bcrypt — `core/provider/hash/*`. Strength enforced in the auth DTO (8+, upper/lower/digit/special).
-- **Middleware ladder** — `authMiddleware()` (full token) plus any narrower variants you add (e.g. an email-verification middleware). All in `core/http/middlewares/`.
-- **Cookies** — httpOnly session/refresh cookie + a JS-readable CSRF cookie. Prod: `secure` + `sameSite=strict`. `core/http/helpers/auth-cookies.ts`.
+- **Scoped tokens** — capability JWTs (`email:verify`) minted via `signScoped()`; gated by `requireScope()` / `rejectScopedTokens()`; `bearerFromQueryToken()` promotes a query token only where a browser can't set headers. `modules/auth/constant/jwt-scopes.ts`.
+- **Passwords** — bcrypt — `core/provider/hash/`. Strength enforced in `modules/auth/application/dto/` (8+, upper/lower/digit/special). Google sign-in via `GOOGLE_CLIENT_ID`.
+- **Middleware ladder** — `authMiddleware()` (full session token), `emailVerificationAuthMiddleware()` (scoped PIN routes), plus `requireScope()` / `rejectScopedTokens()`. All exported from `core/http/middlewares/index.ts`. **Every one of them is a factory — mount it CALLED** (`authMiddleware()`, not `authMiddleware`): passed uncalled, Express runs it as the handler, the request hangs and the guard is absent (`B-C14`, `core/http/routes/route-mount.spec.ts`).
+- **Cookies** — `boilerplate_at` (httpOnly session), `boilerplate_rt` (httpOnly refresh, scoped path), `boilerplate_csrf` (JS-readable, path `/`). Prod: `secure` + `sameSite=strict`, optional `COOKIE_DOMAIN`. `core/http/helpers/auth-cookies.ts`.
 
 ## 3. Authorization & resource ownership
 
-- **Ownership isolation** — every repository query on an owned table filters by the owner column (`user_id` today; `account_id` once you add tenancy); entities fetched then checked via an ownership policy (`ensureOwner(entity, ownerId, notFoundCode)`, throws `NotFoundError`). This is the #1 invariant (`R1`/`R3`).
-- **RBAC** — add a `requireRole(...roles)` middleware when you introduce roles; admin ≠ authenticated.
-- **Request context** — `req.auth` (userId, role, language, scope). Use cases receive `{ userId }` as DTO fields — never `req` (`R7`/`B-C9`).
+- **Ownership isolation** — every request-driven repository method takes the owner id and scopes the query; a miss returns `null` → `NotFoundError`. There is **no `ensureOwner()` helper** in the tree — the scoping lives in the repository signature, which is what makes it un-forgettable. **System-triggered** methods (`*Internal`, `listAll`) have no caller and must never be reachable from a user request; never launder their owner id into a scoped call (confused deputy). This is the #1 invariant (`R1`/`R3`). `account_id` multi-tenancy is the documented upgrade path — the same rules apply verbatim with `accountId` from `req.auth`.
+- **RBAC** — there are no roles yet (single user per account). Add `requireRole(...)` in `core/http/middlewares/` the day a second role appears; admin ≠ authenticated.
+- **Request context** — `req.auth` (userId, language, scope?). Use cases receive `userId` as an argument — never `req` (`R7`/`B-C9`).
 
 ## 4. HTTP hardening (`core/http/app.ts`)
 
 - **helmet** — HSTS + preload, frameguard deny, referrer strict-origin; **CSP** (`defaultSrc 'self'`, `scriptSrc 'self'`, `objectSrc 'none'`, `frameAncestors 'none'`). `/admin/*` (BullBoard) uses a CSP-relaxed variant.
 - **CORS** — origin allowlist from `ALLOWED_ORIGIN` (strips `*` in prod), `credentials: true`.
-- **CSRF** — double-submit (CSRF cookie ↔ `X-CSRF-Token` header); safe methods + Bearer-only routes skip. `csrf.middleware.ts` (`B-C12`).
-- **Rate limiting (layered)** — a global limiter/IP plus tighter limiters on auth (per IP) and per-user routes. Webhooks skipped.
-- **Body limits** — small default (e.g. 10KB); raise per-route only where a payload legitimately needs it (uploads, webhooks).
+- **CSRF** — double-submit (`boilerplate_csrf` cookie ↔ `X-CSRF-Token` header); safe methods + Bearer-only routes skip. `csrf.middleware.ts` (`B-C12`).
+- **Rate limiting (layered, Redis store)** — global `RATE_LIMIT_GLOBAL_MAX`/`_WINDOW_MS` per IP; auth `RATE_LIMIT_AUTH_MAX` per IP (`authRateLimit`); user `RATE_LIMIT_USER_MAX` per userId (`userRateLimit`, mounted at the aggregator for every authenticated surface below it); public `RATE_LIMIT_PUBLIC_MAX` per IP (`publicRateLimit`). The store lives in `core/http/middlewares/rate-limit-store.ts` and is torn down by the shutdown plan.
+- **Body limits** — default `10kb` (`express.json`); raise per-route only where a payload legitimately needs it (uploads).
 - **Validation** — Zod via `validateRequest` middleware on params/query/body (`B-C6`). `trust proxy: 1`.
-- **Errors** — central handler; `{ ok:false, error:{ message, code, debug? } }`, stack only non-prod, query strings stripped from error reports. `error-handler.middleware.ts`.
+- **Errors** — central handler; `{ ok:false, error:{ message, code, debug? } }`, stack only non-prod, query strings stripped from Bugsnag reports. `error-handler.middleware.ts`. The `ErrorCode` catalog is the wire contract in `@boilerplate/shared-types` — a new code ships with its 3 locales (`error-codes.spec.ts` gates parity).
 
 ## 5. Data layer, secrets, logging
 
 - **Prisma** — no `$queryRaw`/`$executeRaw` template injection; any `$queryRawUnsafe` must use **positional `$1` placeholders + a separate params array** (parameterized, not injectable). Soft delete (`deleted_at: null`, `R2`). `mapPrismaError` on catches (`B-H3`). Cross-owner mutations fail-closed (zero rows).
-- **Secrets** — single validated config `core/config/env.ts` (Zod); **no scattered `process.env`**. Any dev-default secret must be a real value in prod. Provider tokens stored encrypted at rest (AES-256-GCM) if you persist them.
-- **Logging** — pino with a `redact` list (`core/http/logger.ts`): authorization, cookies, csrf, password/token/refreshToken/credentials, and any personal fields you add. **Redaction is defense-in-depth, not a license to log PII** (`R5`/`SEC-C7`). A new sensitive field in a payload must be added to the redact list (`SEC-M2`).
+- **Secrets** — a single validated config (`core/config/env.ts` composed from `core/config/schema/*.schema.ts`, Zod, fail-loud); **no scattered `process.env`**. `env-example.spec.ts` fails the build when `apps/api/.env.example` or `infra/.env.prod.example` drifts from the schema in either direction (`X-H4`). Any dev-default secret must be a real value in prod. There is **no at-rest encryption primitive** in the tree today — the first provider-issued secret that must be persisted brings one in, in `core/service/`, behind a `shared/provider` port.
+- **Logging** — pino with a generated `redact` list (`core/http/logger.ts`): `SENSITIVE_HEADERS` (authorization, cookie, x-api-key, x-csrf-token) + `SENSITIVE_BODY_FIELDS` (password, token, refreshToken, credential, email, …) applied to **both** `req.*` and the `request.*` mirror. **Redaction is defense-in-depth, not a license to log PII** (`R5`/`SEC-C7`). A new sensitive field in a payload must be added to the list (`SEC-M2`).
 
 ## 6. Integrations
 
-- **Webhooks** — mount the handler before the JSON parser with `express.raw` (raw body intact) and verify the signature (`constructEvent(rawBody, sig, SECRET)` style) → 4xx on failure. Any new webhook MUST follow this pattern (`SEC-C3`).
-- **File upload / S3** — gate MIME + size per type, strip codecs, sanitize the filename, use an owner-scoped S3 key (`{ownerId}/{uuid}-{name}`), signed URLs with a short TTL, compensating delete on failure. `upload.middleware.ts`, `s3-storage-provider.ts`.
-- **Providers** — email (transactional), Redis (cache), and whatever you add. All env-keyed via the validated config, reached through a provider port — never a hardcoded client in a use case.
+- **Webhooks (inbound)** — none ship today. The first one MUST mount before the JSON parser with `express.raw` (raw body intact) and verify the signature (`constructEvent(rawBody, sig, SECRET)` style) → 4xx on failure (`SEC-C3`).
+- **Outbound fetch** — the app makes no server-side fetch to a user-supplied URL today. The day it does (an outbound webhook, an avatar import, a link preview), it is an **SSRF surface by construction**: `http(s)` only, resolve the host at **every** attempt right before the fetch (DNS rebinding), reject every private range (loopback, RFC 1918, link-local/cloud metadata, CGNAT, ULA, multicast, and every IPv4-embedding IPv6 form), `redirect: "manual"` with any 3xx a final rejection, and never echo the response body to logs (`SEC-C6`).
+- **File upload / S3** — gate MIME + size per type (`shared/constant/image-upload.ts` + `ALLOWED_IMAGE_MIME_TYPES`/`MAX_IMAGE_UPLOAD_BYTES` in `@boilerplate/shared-types`), derive the stored extension and the S3 `ContentType` from the **allowlisted MIME**, never from `originalname`; owner-scoped key, signed URLs with a short TTL, compensating delete on failure (`safeS3Delete`). `upload.middleware.ts`, `core/provider/storage/`. Media lives in S3 and is **outside** the `pg_dump` backup scope.
+  **Known residual risk (accepted):** the allowlist checks the *client-declared* multipart `Content-Type`, not the bytes. A client can upload arbitrary content labelled `image/png`; it is stored with that `ContentType` on the bucket's own domain, where helmet's headers do not apply. Blast radius is bounded — the uploader can only shadow their **own** avatar key, there is no cross-owner or auth impact — and modern browser sniffing rules close most of the execution path. Close it properly when uploads matter to your product: verify magic bytes server-side (e.g. `file-type` over the buffer) before trusting `file.mimetype`, and/or serve the bucket behind `X-Content-Type-Options: nosniff` + `Content-Disposition: attachment`.
+- **Providers** — Resend (mail), S3 (storage), Redis (cache / rate-limit store / event bus), Bugsnag (errors — see `patterns/bugsnag.md` for the PII posture there), GitHub Actions token (read-only CI status). All env-keyed via the validated config, reached through a provider port — never a hardcoded client in a use case. LLMs, when they arrive, only via `ILlmProvider` (`R23`/`B-C13`).
 
 ## 7. Deploy security (defer to `/devops`; summary here)
 
-Authoritative: `.claude/knowledge/devops.md`. Security-relevant invariants:
-- **Golden rule** — the database/Redis host never exposes its ports to the internet; app↔DB only over a private network / tunnel.
-- **Edge** — proxy in front of the origin (hides origin IP) + a valid TLS cert; the origin should accept 80/443 only from the proxy.
-- **Secrets** — `.env.prod` on the server (`chmod 600`), not in the image (except the stamped `APP_VERSION`).
-- **Backup** — encrypted offsite, private key off the data host; verify with a restore-drill before you trust it.
+Authoritative: `.claude/knowledge/devops.md` + `infra/`. Security-relevant invariants:
+- **Golden rule** — the data host never exposes `5432`/`6379` to the internet; app↔DB only over the private network / WireGuard tunnel (`infra/wireguard/`).
+- **Edge** — proxy in front of the origin (hides origin IP) + a valid TLS cert (`infra/app/Caddyfile`); the origin should accept 80/443 only from the proxy.
+- **Secrets** — `infra/.env.prod` on the server (`chmod 600`, gitignored), not in the image (except the stamped `APP_VERSION`/`GIT_COMMIT` build args). `infra/deploy.env` (operator targets) is gitignored too — `infra/deploy.env.example` is the template.
+- **Backup** — `infra/backup/`: encrypted offsite dumps + dead-man switch, private key off the data host; only "real" after a restore drill.
 - **Rotate any secret that ever passed through a chat/log.**
 
 ---
@@ -101,26 +103,26 @@ Same rubric as `code-review-checklist.md`: **Critical** blocks merge, **High** f
 
 | # | Anti-pattern | Why |
 |---|--------------|-----|
-| SEC-C1 | **Broken authentication** — a route accepting input/returning data mounted without `authMiddleware()` (or the right scope variant) and not in the documented public allowlist in `routes/index.ts` | Anyone can call it (⊃ `B-C11`) |
-| SEC-C2 | **Broken object-level auth / IDOR** — entity fetched by id without owner scoping AND without an `ensureOwner(...)` check; or `ForbiddenError` used (reveals existence) | Cross-owner data leak (`R1`/`R3`, ⊃ `B-C1`/`B-C3`/`B-H16`) |
+| SEC-C1 | **Broken authentication** — a route accepting input/returning data mounted without `authMiddleware()` (or the right scope variant), mounted with the factory **uncalled** (`B-C14`), or not in the documented public allowlist in `routes/index.ts` (`/health`, `/auth/*`) | Anyone can call it, or every request hangs (⊃ `B-C11`, `B-C14`) |
+| SEC-C2 | **Broken object-level auth / IDOR** — entity fetched by id through an unscoped read (`*Internal`/`listAll`) from a user request, or a scoped method missing the owner column in `where`; or `ForbiddenError` used (reveals existence) | Cross-owner data leak (`R1`/`R3`, ⊃ `B-C1`/`B-C3`/`B-H16`) |
 | SEC-C3 | **Unverified webhook / inbound** — webhook handler without signature verification, or JSON body parser placed before the raw-body route (breaks signature verification) | Forged events; follow the raw-body + verify pattern |
 | SEC-C4 | **Secret exposed** — credential committed, hardcoded, read outside the validated config, baked into an image, or sent to the front | Immediate revocation needed (`R22`, ⊃ `X-C4`) |
-| SEC-C5 | **Injection into an interpreter/sink** — untrusted input reaching a shell, an eval, a template, or (if you add one) an LLM prompt with tool-calling, without sanitization/fencing | Command/prompt hijack → data exfil / unauthorized actions |
-| SEC-C6 | **Injection** — raw SQL with string interpolation, shell exec with user input, SSRF (server fetch to a user-controlled URL), or unsafe deserialization | Classic RCE/injection (⊃ `B-C7`) |
-| SEC-C7 | **PII leak** — personal data logged, returned in an error to the client, placed in a URL/query/referrer, or emitted to a different owner | Privacy incident (`R5`, ⊃ `B-C5`/`F-C4`) |
+| SEC-C5 | **Injection into an interpreter/sink** — untrusted input (user text, an uploaded file's contents, a third-party response) reaching a shell, an eval, a template, or an LLM prompt with tool-calling, without sanitization/fencing | Command/prompt hijack → data exfil / unauthorized actions (`R23`) |
+| SEC-C6 | **Injection / SSRF** — raw SQL with string interpolation, shell exec with user input, a server fetch to a user-controlled URL without the guard described in §6 (scheme + private ranges + IPv4-embedding IPv6 forms + per-attempt resolution + `redirect: "manual"`), or unsafe deserialization | Classic RCE/injection (⊃ `B-C7`) |
+| SEC-C7 | **PII / secret leak** — personal data or a secret logged, reported to Bugsnag, returned in an error to the client, placed in a URL/query/referrer, or emitted to a different owner | Privacy incident (`R5`, ⊃ `B-C5`/`F-C4`, `BS-C2`) |
 
 ### High (should fix)
 
 | # | Anti-pattern | Fix |
 |---|--------------|-----|
 | SEC-H1 | Route accepts input without `validateRequest(...)` (Zod) | Add the schema + middleware (`B-C6`) |
-| SEC-H2 | Sensitive/unauthenticated endpoint (auth, password reset, public share, file upload) without rate limiting | Add the right limiter (`auth`/`user`/`public`) |
-| SEC-H3 | Privileged action without a role gate (`requireRole`) | Add the gate; admin ≠ authenticated |
+| SEC-H2 | Sensitive/unauthenticated endpoint (auth, password reset, e-mail verification, public share, file upload) without rate limiting | Add the right limiter (`authRateLimit` / `userRateLimit` / `publicRateLimit`) |
+| SEC-H3 | Privileged action (a system-triggered repository method, `listAll`, an admin UI) reachable from a user request, or — once roles exist — without a role gate | Keep system paths unreachable; add `requireRole` when roles land |
 | SEC-H4 | State-changing cookie-auth route bypassing CSRF | Keep it under the CSRF middleware (`B-C12`) |
 | SEC-H5 | Weak token/crypto — JWT alg not pinned, no expiry, predictable/guessable token, missing `tokenVersion` revocation, password not bcrypt, MD5/SHA1 for secrets | Mirror the JWT/bcrypt providers |
-| SEC-H6 | File upload trusting client MIME/filename, or missing size/type gate, or unsanitized path | Gate via `upload.middleware.ts`; sanitize filename; owner-scoped key |
+| SEC-H6 | File upload trusting client MIME/filename (extension or `ContentType` derived from `originalname`), or missing size/type gate, or unsanitized path | Gate via `upload.middleware.ts` + `shared/constant/image-upload.ts`; derive extension + `ContentType` from the allowlisted MIME; owner-scoped key. Note that an allowlist on the declared header is **not** content verification — see the residual risk in §6 before treating a new upload surface as safe |
 | SEC-H7 | Permissive CORS (`*` with credentials) or weakened/removed security header / CSP `unsafe-eval` | Keep the allowlist + helmet/CSP posture |
-| SEC-H8 | New secret added without env validation + rotation path, or a dev-default secret left in prod | Register in `env.ts`; require a real value in prod (`X-H4`) |
+| SEC-H8 | New secret added without env validation + rotation path, a dev-default secret left in prod, or a provider-issued secret persisted in clear | Register it in the right `core/config/schema/*.schema.ts` **and** in both `.env.example` templates (`env-example.spec.ts` gates it); require a real value in prod (`X-H4`); encrypt at rest (bring the primitive in `core/service/` behind a port — none exists today) |
 
 ### Medium (recommended)
 
@@ -129,7 +131,7 @@ Same rubric as `code-review-checklist.md`: **Critical** blocks merge, **High** f
 | SEC-M1 | Error response leaks internals (stack, SQL, file path, dependency version) to the client in prod | Map to an `AppError`+`ErrorCode`; debug only non-prod |
 | SEC-M2 | New sensitive/personal field in a request/response payload not added to the pino `redact` list | Add the path to `logger.ts` |
 | SEC-M3 | No refresh-token rotation / session-fixation defense on long-lived sessions | Rotate on refresh where feasible; document trade-off |
-| SEC-M4 | Sensitive admin/impersonation action without an audit trail | Log the actor + action (no PII) for forensics |
+| SEC-M4 | Sensitive action (password reset, e-mail change, account deletion, admin/impersonation) without an audit trail | Log the actor + action (no PII) for forensics |
 | SEC-M5 | Dependency with a known CVE / no `yarn npm audit` consideration on a new dep | Pin/upgrade; note in the spec Decisions log |
 | SEC-M6 | Token promoted from query (`?access_token=`) for SSE/download without proxy stripping it from access logs | Document the proxy requirement; prefer header |
 
@@ -147,7 +149,7 @@ When you spot something real that no `SEC-*` code covers, report it as **`Issue 
 
 ## Analysis techniques (how the specialist reasons)
 
-1. **Threat-model the change, not the whole app.** For the diff, ask STRIDE-lite per touched boundary: *Spoofing* (auth ok?), *Tampering* (validation/signature?), *Repudiation* (audit trail?), *Information disclosure* (owner scope + PII in logs/errors?), *DoS* (rate limit + pagination + body cap?), *Elevation* (role gate + IDOR?).
-2. **Follow the data.** Trace untrusted input from the boundary to where it's trusted (DB query, shell, file path, response). Every hop is a SEC checkpoint.
-3. **Per change-type checklist** — *new route* → SEC-C1/H1/H2/H3 + C2; *new webhook/integration* → SEC-C3/C4; *touches auth/JWT/crypto* → SEC-H5; *new env/secret* → SEC-C4/H8; *logging/new field* → SEC-C7/M2; *file upload* → SEC-H6; *infra/deploy* → defer to `/devops` golden rules (§7).
-4. **Prefer existing primitives.** The repo ships the secure way (the ownership policy, `validateRequest`, the limiters, the JWT/bcrypt providers, the redact list, the raw-body webhook pattern). A security fix is usually "use the existing primitive", not "invent crypto".
+1. **Threat-model the change, not the whole app.** For the diff, ask STRIDE-lite per touched boundary: *Spoofing* (auth ok? the factory actually called?), *Tampering* (validation/signature?), *Repudiation* (audit trail?), *Information disclosure* (owner scope + PII in logs/errors/Bugsnag?), *DoS* (rate limit + pagination + body cap?), *Elevation* (system path reachable? IDOR? role gate?).
+2. **Follow the data.** Trace untrusted input from the boundary to where it's trusted (DB query, outbound fetch, shell, S3 key, response, prompt). Every hop is a SEC checkpoint. The uploaded file's declared MIME and any future user-supplied URL are the two hops people forget.
+3. **Per change-type checklist** — *new route* → SEC-C1/H1/H2/H3 + C2 (+ `B-C14`); *new webhook/integration/outbound fetch* → SEC-C3/C4/C6; *touches auth/JWT/tokens/crypto* → SEC-H5; *new env/secret* → SEC-C4/H8; *logging/new field* → SEC-C7/M2; *file upload* → SEC-H6; *LLM/prompt* → SEC-C5; *infra/deploy* → defer to `/devops` golden rules (§7).
+4. **Prefer existing primitives.** The repo ships the secure way (owner-scoped repository signatures, `validateRequest`, the limiters, the JWT/bcrypt providers, the redact list, the upload MIME gate). A security fix is usually "use the existing primitive", not "invent crypto".

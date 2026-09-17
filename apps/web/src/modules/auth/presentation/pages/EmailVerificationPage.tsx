@@ -6,16 +6,16 @@ import {
   HStack,
   Heading,
   Link,
-  PinInput,
   Stack,
   Text,
 } from "@chakra-ui/react";
 import { motion } from "motion/react";
+import { PinInput } from "@/components/ui/pin-input";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { ROUTE_PATHS } from "@/app/router/RoutePaths";
-import { useAuth } from "@/modules/auth/presentation/hooks/useAuth";
+import { useAuth } from "@/modules/auth/presentation/context/useAuth";
 import { getPostAuthDestination } from "@/modules/auth/presentation/utils/postAuthDestination";
 import { useNotify } from "@/shared/hooks/useNotify";
 import { LanguageSelector } from "@/shared/components/ui/LanguageSelector";
@@ -123,7 +123,7 @@ export function EmailVerificationPage() {
 
       <Stack gap={6}>
         <HStack justify="center" gap={{ base: 2, md: 3 }}>
-          <PinInput.Root
+          <PinInput
             otp
             type="numeric"
             count={PIN_LENGTH}
@@ -133,14 +133,7 @@ export function EmailVerificationPage() {
             disabled={isSubmitting}
             size="lg"
             autoFocus
-          >
-            <PinInput.HiddenInput />
-            <PinInput.Control>
-              {Array.from({ length: PIN_LENGTH }).map((_, i) => (
-                <PinInput.Input key={i} index={i} />
-              ))}
-            </PinInput.Control>
-          </PinInput.Root>
+          />
         </HStack>
 
         <Button

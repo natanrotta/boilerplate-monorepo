@@ -171,7 +171,7 @@ export class BullMQQueueProvider implements IQueueProvider {
       );
       // Terminal failure = the job dead-lettered after all retries. That must
       // reach the error tracker, not just the log stream. Only opaque ids in
-      // the metadata — job payloads can carry PHI.
+      // the metadata — job payloads can carry PII.
       if (terminal) {
         errorReporter.notify(error, (event) => {
           event.severity = "error";

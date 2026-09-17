@@ -14,6 +14,7 @@ function SaveButtonComponent({ isDirty, isSaving, onClick, label }: SaveButtonPr
   const resolvedLabel = label ?? t("actions.save");
   return (
     <Button
+      data-cy="save-button"
       size="sm"
       colorPalette="brand"
       loading={isSaving}

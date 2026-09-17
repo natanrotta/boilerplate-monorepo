@@ -1,8 +1,9 @@
-import { memo } from "react";
-import { Field, Textarea, type TextareaProps } from "@chakra-ui/react";
+import { memo, type ReactNode } from "react";
+import { Textarea, type TextareaProps } from "@chakra-ui/react";
+import { Field } from "@/components/ui/field";
 
 interface TextAreaFieldProps extends Omit<TextareaProps, "onChange" | "value"> {
-  label?: string;
+  label?: ReactNode;
   value: string;
   error?: string;
   /** Optional helper copy rendered under the textarea when no error is present. */
@@ -19,27 +20,14 @@ function TextAreaFieldComponent({
   ...props
 }: TextAreaFieldProps) {
   return (
-    <Field.Root invalid={Boolean(error)}>
-      {label && (
-        <Field.Label
-          fontSize="xs"
-          fontWeight="600"
-          color="text.secondary"
-          mb={1}
-          letterSpacing="0.01em"
-        >
-          {label}
-        </Field.Label>
-      )}
+    <Field
+      invalid={Boolean(error)}
+      label={label}
+      errorText={error}
+      helperText={error ? undefined : helperText}
+    >
       <Textarea value={value} onChange={(event) => onChange(event.target.value)} {...props} />
-      {error ? (
-        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
-          {error}
-        </Field.ErrorText>
-      ) : helperText ? (
-        <Field.HelperText>{helperText}</Field.HelperText>
-      ) : null}
-    </Field.Root>
+    </Field>
   );
 }
 

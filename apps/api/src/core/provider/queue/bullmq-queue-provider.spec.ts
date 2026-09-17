@@ -153,16 +153,16 @@ describe("BullMQQueueProvider", () => {
 
       await sut.addJob(
         "test-queue",
-        "delete-patients",
+        "purge-expired-tokens",
         { ids: ["a"] },
-        { deduplicationId: "delete-patients-abc123" },
+        { deduplicationId: "purge-expired-tokens-abc123" },
       );
 
       expect(mockQueueAdd).toHaveBeenCalledWith(
-        "delete-patients",
+        "purge-expired-tokens",
         { ids: ["a"] },
         expect.objectContaining({
-          deduplication: { id: "delete-patients-abc123" },
+          deduplication: { id: "purge-expired-tokens-abc123" },
         }),
       );
     });

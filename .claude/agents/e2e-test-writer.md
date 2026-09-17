@@ -22,11 +22,11 @@ Always-required:
 
 Always-required when writing UI tests:
 4. **`apps/web/playwright.config.ts`** — confirms which Playwright project the new spec belongs to (default: `chromium` — the only module-spec project today).
-5. **`apps/web/e2e/global.setup.ts`** + **`apps/web/e2e/fixtures/auth.fixture.ts`** + **`apps/web/e2e/fixtures/test-data.ts`** — the fixture surface you must reuse.
-6. **`apps/web/e2e/fixtures/api-client.ts`** — authenticated REST helper for non-assertion setup/cleanup. Read it before adding API calls; extend its per-module helpers (`userApi`, etc.) rather than inlining `fetch` in specs.
-7. **A signed synthetic-webhook fixture** (if the app has an inbound webhook) — required reading for any spec that exercises webhook side effects. See `patterns/e2e.md` § Webhooks.
+5. **`apps/web/e2e/global.setup.ts`** + **`apps/web/e2e/fixtures/auth.fixture.ts`** + **`apps/web/e2e/fixtures/visual.ts`** — the fixture surface you must reuse. (`test-data.ts` does not exist yet — create it with the first `createUnique<Entity>()` a module spec needs.)
+6. **`apps/web/e2e/fixtures/api-client.ts`** — authenticated REST helper for non-assertion setup/cleanup. Read it before adding API calls; extend its per-module helpers (add the first typed `<entity>Api` block) rather than inlining `fetch` in specs.
+7. **A signed synthetic-webhook fixture** (create it if a spec ever needs an inbound webhook) — see `patterns/e2e.md` § Webhooks.
 8. **`apps/web/e2e/fixtures/preflight.ts`** — env preflight (web up? API up? seed account?). Don't bypass it.
-9. **The `auth` module specs (`apps/web/e2e/tests/auth/*` + `apps/web/e2e/pages/LoginPage.ts`)** — the **canonical reference implementation**. New module coverage must mirror its shape (POM structure, spec skeleton, cleanup loop, bilingual assertions). When in doubt, re-read the sign-in + password-reset specs; they cover happy paths, negative paths, and a `browser.newContext()` mobile case.
+9. **The existing specs (`apps/web/e2e/tests/auth.spec.ts` + `e2e/tests/design-system/styleguide-visual.spec.ts`)** — today the only ones, and the template for the skeleton + bilingual assertions. There are no Page Objects yet: the first module you cover creates `e2e/pages/<Module>Page.ts` + `e2e/tests/<module>/` per `patterns/e2e.md` and becomes the canonical reference from then on. Never bundle flows into one file to "match" `auth.spec.ts` — the flat single file is the boilerplate seed, not the convention.
 
 Always-required when targeting a specific module:
 7. **`apps/web/src/modules/<module>/`** — list pages, components, hooks. Read `presentation/pages/` to find route URLs and on-screen titles. Read `presentation/components/` to discover modal/form structure. Read `presentation/hooks/` to learn debounce values, optimistic update behaviour, list paging.
@@ -59,7 +59,7 @@ You receive one of these scopes via the orchestrator's prompt or `$ARGUMENTS`:
 
 | Scope | Example | Behavior |
 |---|---|---|
-| **Cover module** | "cover the `settings` module" | Plan + write the full flow set from the coverage rubric (`patterns/e2e.md` § "Coverage rubric"). Skip flows the UI doesn't support; explain why. |
+| **Cover module** | "cover the `settings` module" | Plan + write the full flow set from the coverage rubric (`patterns/e2e.md` § "Coverage rubric"). Skip flows the UI doesn't support (an e-mail PIN cannot be read back — assert the form + error state, not the verification); explain why. |
 | **Add flow** | "add a `profile-edit.spec.ts` to settings" | Write one focused spec + add any missing POM methods. |
 | **Fix flaky spec** | "fix `sign-in.spec.ts` — it fails on CI intermittently" | Read the failing spec + the POM + the source page; diagnose; minimal patch. |
 | **Expand POM only** | "add a theme-toggle helper to `SettingsPage`" | POM-only change, no new spec file. |
@@ -87,7 +87,7 @@ Internally:
 3. Decide:
    - **Which flow files** to add (vs. extend existing).
    - **Which POM** to add or extend; if no POM exists for the module, create one before the first spec.
-   - **Which fixtures** to extend (`test-data.ts` only — never duplicate `auth.fixture.ts`).
+   - **Which fixtures** to extend (`test-data.ts` only, creating it on first use — never duplicate `auth.fixture.ts`).
 4. Map the on-screen text in both `pt-BR/<module>.json` and `en/<module>.json` so every bilingual regex is grounded in real strings (not invented).
 5. Map the route(s) via `ROUTE_PATHS.<key>` — POM `goto()` calls use the literal path.
 
@@ -97,9 +97,10 @@ Output **one paragraph** (≤6 lines): files you'll create/edit, the flow set yo
 
 Order:
 1. **Fixtures first**:
-   - Extend `test-data.ts` if a new `createUnique<Entity>()` is needed.
-   - Extend `api-client.ts` if the spec needs API-driven setup/cleanup — add a typed `<entity>Api` block following the `userApi` example. Never inline raw `fetch` in a spec.
-   - Reach for a signed synthetic-webhook fixture only when testing webhook side effects.
+   - Create/extend `test-data.ts` if a new `createUnique<Entity>()` is needed (the file does not exist until the first module spec needs it).
+   - Extend `api-client.ts` if the spec needs API-driven setup/cleanup — add a typed `<entity>Api` block. Never inline raw `fetch` in a spec.
+   - Reach for a signed synthetic-webhook fixture only when testing inbound-webhook side effects.
+   - Test ids are **`data-cy`** (`testIdAttribute` in `playwright.config.ts`) — never `data-testid`. The shared primitives already carry the sanctioned ones (see `patterns/e2e.md` § Selectors).
 2. **POM second** (new file or surgical method additions). Locators come straight from the POM skeleton in `patterns/e2e.md`. Build the locators by reading the on-screen text in the locale JSONs — never guess strings.
 3. **Specs last**, one flow per file. Each spec:
    - Imports `test, expect` from `../../fixtures/auth.fixture`.
@@ -212,7 +213,7 @@ No "let me know if you'd like changes" tail. The orchestrator owns the loop.
 ## Hard rules
 
 1. **One flow per spec file.** Splitting later is more work than starting split. → `E-H4`
-2. **Reuse before invent.** Before adding a POM method, grep the existing POMs — many "new" actions already exist (`clickAdd`, `search`, `clearSearch`, `deleteFromList`, ...). Before adding a fixture factory, grep `test-data.ts`. → `E-M1`
+2. **Reuse before invent.** Before adding a POM method, grep the existing POMs — many "new" actions already exist (`clickAdd`, `search`, `clearSearch`, `deleteFromList`, ...). Before adding a fixture factory, grep `test-data.ts` (absent until a module spec creates it). → `E-M1`
 3. **Auth comes from `global.setup.ts`.** Never log in from a spec. For anon flows, build a fresh `browser.newContext({ storageState: { cookies: [], origins: [] } })`. → `E-C2`
 4. **Locators by role/label/text/placeholder/testid — in that order.** Never CSS classes, never xpath, never `nth/first/last` to fix ambiguity. → `E-C1`, `E-H2`
 5. **Bilingual regex always.** `/pt-BR|en/i`. → `E-H1`

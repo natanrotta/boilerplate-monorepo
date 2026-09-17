@@ -3,13 +3,13 @@ import pinoHttp from "pino-http";
 import crypto from "node:crypto";
 import { env } from "../config";
 
-// PHI/secret redaction. Pino redacts each path to "[REDACTED]" before
+// PII/secret redaction. Pino redacts each path to "[REDACTED]" before
 // serializing the log record. Two log shapes carry request data and BOTH must
 // be covered, because pino's fast-redact matches exact path strings:
 //   - the pino-http built-in serializer keys: `req.*` / `res.*`
 //   - the `customProps` block below, which mirrors the request under `request.*`
 //     on a 4xx/5xx. Without the `request.*` mirror, every failed request logged
-//     the Authorization header, cookies, the CSRF token, and clinical PHI in
+//     the Authorization header, cookies, the CSRF token, and free-text PII in
 //     plaintext (the original SEC-C7 leak this list closes).
 //
 // Single source of truth: the sensitive field names live here once and the
@@ -24,10 +24,13 @@ const SENSITIVE_HEADERS = [
   "x-csrf-token",
 ];
 
-// Body fields carrying secrets (auth/OAuth) or free-form clinical text (PHI).
-// Adding a new clinical field to any payload requires adding it here (SEC-M2).
+// Body fields carrying secrets (auth/OAuth), identity (e-mail), or free-form
+// user content (message text). Adding a new field of any of those kinds to a
+// payload requires adding it here (SEC-M2). Defense in depth — the rule is
+// still "never put PII in a log line" (R5), the redact list is the net.
 const SENSITIVE_BODY_FIELDS = [
   "password",
+  "email",
   "token",
   "refreshToken",
   "credential",
@@ -76,8 +79,8 @@ export const logger = pino({
     env.NODE_ENV !== "production" ? { target: "pino-pretty" } : undefined,
 });
 
-// Drop the query string from a logged URL — query params can carry PHI/PII
-// (e.g. ?search=<patient name>) or a token (?access_token=). Mirrors the
+// Drop the query string from a logged URL — query params can carry PII
+// (e.g. ?search=<person name>) or a token (?access_token=). Mirrors the
 // error-handler's pathOnly() so logs and Bugsnag agree.
 export function pathOnly(url: string | undefined): string | undefined {
   return url?.split("?")[0];
@@ -100,8 +103,8 @@ export const httpLogger = pinoHttp({
       return {
         request: {
           method: req.method,
-          // Query string stripped (PHI/token); structured `query` intentionally
-          // NOT echoed — it carries the same PHI the URL would.
+          // Query string stripped (PII/token); structured `query` intentionally
+          // NOT echoed — it carries the same PII the URL would.
           url: pathOnly(req.url),
           params: expressReq["params"],
           // headers/body are redacted via the `request.*` paths above.

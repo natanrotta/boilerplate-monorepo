@@ -1,12 +1,14 @@
-import type { ErrorCode } from "./errorCodes";
+import type { ErrorCode } from "@boilerplate/shared-types";
 
 /**
  * Domain-shaped error class for the frontend. Wraps any backend or network
- * failure with a typed `code` field that pages/hooks can branch on.
+ * failure with the typed `code` the API put on the wire, so pages and hooks can
+ * branch on it instead of on a message.
  *
- * `code` is typed as `ErrorCode | string` because the backend emits ~110
- * codes and the frontend only catalogs the ones it cares about. Unknown
- * codes still flow through — they just don't auto-complete in `===` checks.
+ * `code` is typed as `ErrorCode | string` because a transport failure (offline,
+ * a proxy 502, a gateway timeout) produces an error that never reached the API
+ * catalog. Unknown codes still flow through — they just don't auto-complete in
+ * `===` checks and fall back to the generic error toast.
  */
 export class AppError extends Error {
   public readonly code: ErrorCode | string;

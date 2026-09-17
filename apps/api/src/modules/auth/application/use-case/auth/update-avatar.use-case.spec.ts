@@ -7,7 +7,7 @@ import {
 import { makeUser } from "@test/factories";
 import { NotFoundError, BadRequestError } from "@shared/error";
 import { ErrorCodes } from "@shared/error/error-codes";
-import { AuthProfileBuilder } from "@modules/auth/application/service/auth/auth-profile.builder";
+import { AuthProfileBuilder } from "@modules/auth/application/service/auth-profile.builder";
 
 vi.mock("@shared/util/extract-s3-key", () => ({
   extractS3Key: vi.fn((url: string) => `key-from-${url}`),
@@ -84,5 +84,41 @@ describe("UpdateAvatarUseCase", () => {
     await expect(
       sut.execute("user-1", undefined as unknown as Express.Multer.File),
     ).rejects.toThrow(BadRequestError);
+  });
+
+  it("derives the key extension and ContentType from the MIME, never from originalname (SEC-H6)", async () => {
+    const user = makeUser({ avatarUrl: null });
+    userRepository.findById.mockResolvedValue(user);
+    storageProvider.upload.mockResolvedValue({
+      url: "https://s3/new-avatar.png",
+      key: "key",
+    });
+    userRepository.updateAvatarUrl.mockResolvedValue(
+      makeUser({ id: user.id, avatarUrl: "https://s3/new-avatar.png" }),
+    );
+
+    // A client-controlled filename that would otherwise land in the object key.
+    await sut.execute(user.id, {
+      ...file,
+      originalname: "evil.svg",
+    } as Express.Multer.File);
+
+    expect(storageProvider.upload).toHaveBeenCalledWith(
+      file.buffer,
+      `avatars/${user.id}.png`,
+      "image/png",
+    );
+  });
+
+  it("refuses a MIME type outside the allowlist even without the middleware", async () => {
+    userRepository.findById.mockResolvedValue(makeUser());
+
+    await expect(
+      sut.execute("user-1", {
+        ...file,
+        mimetype: "image/svg+xml",
+      } as Express.Multer.File),
+    ).rejects.toMatchObject({ code: ErrorCodes.FILE_INVALID_TYPE });
+    expect(storageProvider.upload).not.toHaveBeenCalled();
   });
 });

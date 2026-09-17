@@ -21,5 +21,7 @@ module.exports = {
     "@typescript-eslint/no-explicit-any": "warn",
     "no-console": "warn",
   },
-  ignorePatterns: ["node_modules/", "dist/", "coverage/"],
+  // `src/generated/` is the Prisma client (gitignored, rewritten by
+  // `prisma generate`). Linting it only made `--fix` rewrite generated code.
+  ignorePatterns: ["node_modules/", "dist/", "coverage/", "src/generated/"],
 };

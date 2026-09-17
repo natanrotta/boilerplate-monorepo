@@ -89,7 +89,7 @@ export function make{Entity}(overrides: Partial<{Entity}Props> = {}): {Entity} {
 }
 ```
 
-**Existing factories:** `makeUser` (in `modules/user/test/`). Add one `make<Entity>` per new entity, co-located in that module's `test/` folder.
+**Existing factories:** `makeUser` (`modules/user/test/user.factory.ts`). Add one `make<Entity>` per new entity, co-located in that module's `test/` folder. When the behavior under test is **stateful** (a status transition, an idempotent retry, a counter), prefer an in-memory double (`in-memory-<entity>.repository.ts` in that module's `test/`) over a pile of `vi.fn()` return-value stubs.
 
 **Rules:**
 - `Partial<EntityProps>` for overrides
@@ -122,8 +122,8 @@ export function mock{Entity}Repository(): MockOf<I{Entity}Repository> {
 ```
 
 **Existing mocks:**
-- **Repositories:** `mockUserRepository` (add one `mock<Entity>Repository` per new repo).
-- **Providers:** mockHashProvider, mockJwtProvider, mockCacheProvider, mockStorageProvider, mockQueueProvider, mockLoggerProvider
+- **Repositories:** `mockUserRepository`, `mockPasswordResetTokenRepository`, `mockEmailVerificationPinRepository` (add one `mock<Entity>Repository` per new repo, or an `in-memory-*.repository.ts` in the module's `test/`).
+- **Providers:** `mockHashProvider`, `mockJwtProvider`, `mockCacheProvider`, `mockStorageProvider`, `mockQueueProvider`, `mockLoggerProvider`, `mockMailProvider`, `mockAppConfig`, `mockDatabaseStatusProvider`, `mockNodeExporterMetricsProvider`
 
 ---
 

@@ -56,7 +56,7 @@ You receive one of these scopes (in `$ARGUMENTS` or via the orchestrator):
 | Scope | Example | Behavior |
 |---|---|---|
 | **Diff** | `git diff origin/develop...HEAD` or list of changed files | Default. Audit only changed files. |
-| **Single file** | `apps/api/src/.../create-user.use-case.ts` | Full deep read. |
+| **Single file** | `apps/api/src/modules/auth/application/use-case/auth/sign-in.use-case.ts` | Full deep read. |
 | **Module** | `apps/api/src/modules/user` | Walk every file; aggregate. |
 | **Mode hint** | `mode=quick` (Critical+High only) or `mode=full` (all severities) | Default `mode=full`. |
 
@@ -218,7 +218,7 @@ If you noticed the auditor missed something you caught — that's signal the aud
 
 ## Hard rules
 
-1. **Read-only.** Never `Edit`, `Write`, or run modifying Bash. If the user asks you to apply a fix, refuse and tell them to invoke `/backend`, `/frontend`, `/fullstack`.
+1. **Read-only.** Never `Edit`, `Write`, or run modifying Bash. If the user asks you to apply a fix, refuse and tell them to invoke `/backend`, `/frontend`, `/fullstack`, or `/ai-backend`.
 2. **Don't duplicate the auditor.** If a finding is a literal regex match (`throw new Error`, hex literal, raw `fetch`), assume the auditor caught it. If it didn't, that's a bug in the auditor — note it under `Proposed checklist additions`.
 3. **Severity matches the rubric.** Inflation kills trust.
 4. **Cap effort proportional to scope.** Single file: under a minute. Module: a couple of minutes. Whole PR (<40 files): under five.

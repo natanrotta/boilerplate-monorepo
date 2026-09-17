@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Avatar, Box, Button, Flex, Grid, Icon, Spinner, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Grid, Icon, Spinner, Text } from "@chakra-ui/react";
+import { Avatar } from "@/components/ui/avatar";
 import { FiCamera, FiLock } from "@/shared/components/icons";
 import { useTranslation } from "react-i18next";
 import { SectionCard } from "@/shared/components/ui/SectionCard";
@@ -129,10 +130,13 @@ export function ProfileTab() {
             aria-label={t("profile.changeAvatar")}
             flexShrink={0}
           >
-            <Avatar.Root size="xl" bg="brand.500" color="white">
-              <Avatar.Fallback name={user?.name} />
-              <Avatar.Image src={avatarPreview || user?.avatarUrl || undefined} />
-            </Avatar.Root>
+            <Avatar
+              size="xl"
+              bg="brand.500"
+              color="white"
+              name={user?.name}
+              src={avatarPreview || user?.avatarUrl || undefined}
+            />
             <Flex
               position="absolute"
               inset={0}

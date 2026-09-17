@@ -1,4 +1,12 @@
-import { Avatar, Box, Flex, Icon, IconButton, Image, Menu, Portal, Text } from "@chakra-ui/react";
+import { Box, Flex, Icon, IconButton, Image, Text } from "@chakra-ui/react";
+import { Avatar } from "@/components/ui/avatar";
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuSeparator,
+  MenuTrigger,
+} from "@/components/ui/menu";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useColorMode } from "@/components/ui/color-mode";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -55,7 +63,7 @@ export function SidebarNav({ forceExpanded, onNavigate }: SidebarNavProps) {
           h={9}
           borderRadius="22%"
           objectFit="cover"
-          boxShadow="0 2px 8px rgba(47, 128, 237, 0.30)"
+          boxShadow="shadow.brandMarkXs"
           flexShrink={0}
         />
         <Box
@@ -204,15 +212,16 @@ export function SidebarNav({ forceExpanded, onNavigate }: SidebarNavProps) {
           py={2}
           mx={isCollapsed ? 0 : -1}
         >
-          <Menu.Root positioning={{ placement: "top-start" }}>
+          <MenuRoot positioning={{ placement: "top-start" }}>
             <Tooltip
               content={isCollapsed ? user.name : ""}
               positioning={{ placement: "right" }}
               showArrow
               disabled={!isCollapsed}
             >
-              <Menu.Trigger asChild>
+              <MenuTrigger asChild>
                 <Box
+                  data-cy="user-menu-trigger"
                   cursor="pointer"
                   borderRadius="lg"
                   _hover={{ bg: "bg.hover" }}
@@ -223,17 +232,16 @@ export function SidebarNav({ forceExpanded, onNavigate }: SidebarNavProps) {
                   py={1}
                 >
                   <Flex align="center" gap={3} justify={isCollapsed ? "center" : "flex-start"}>
-                    <Avatar.Root
+                    <Avatar
                       size="sm"
                       bg="brand.500"
                       color="text.onBrand"
                       fontSize="xs"
                       fontWeight="700"
                       flexShrink={0}
-                    >
-                      <Avatar.Image src={user.avatarUrl || undefined} />
-                      <Avatar.Fallback name={user.name} />
-                    </Avatar.Root>
+                      name={user.name}
+                      src={user.avatarUrl || undefined}
+                    />
                     <Box
                       flex={1}
                       minW={0}
@@ -272,37 +280,34 @@ export function SidebarNav({ forceExpanded, onNavigate }: SidebarNavProps) {
                     )}
                   </Flex>
                 </Box>
-              </Menu.Trigger>
+              </MenuTrigger>
             </Tooltip>
-            <Portal>
-              <Menu.Positioner>
-                <Menu.Content fontSize="sm">
-                  <Menu.Item value="settings" onClick={() => navigate(ROUTE_PATHS.settings)}>
-                    <Icon as={FiSettings} boxSize={4} />
-                    {t("nav.settings")}
-                  </Menu.Item>
-                  <Menu.Item value="toggleTheme" onClick={toggleColorMode} closeOnSelect={false}>
-                    <Icon as={isDark ? FiSun : FiMoon} boxSize={4} />
-                    {isDark ? t("theme.switchToLight") : t("theme.switchToDark")}
-                  </Menu.Item>
-                  <Menu.Separator />
-                  {/* Icon rendered as a child (not the `icon` prop) so the row's
-                   *  children are direct flex items — lets <AppVersion ml="auto">
-                   *  push the version to the far right. */}
-                  <Menu.Item
-                    value="signOut"
-                    color="status.error.fg"
-                    onClick={signOut}
-                    disabled={isSubmitting}
-                  >
-                    <Icon as={FiLogOut} boxSize={4} me={3} aria-hidden />
-                    {t("actions.signOut")}
-                    <AppVersion ml="auto" pl={3} />
-                  </Menu.Item>
-                </Menu.Content>
-              </Menu.Positioner>
-            </Portal>
-          </Menu.Root>
+            <MenuContent fontSize="sm">
+              <MenuItem value="settings" onClick={() => navigate(ROUTE_PATHS.settings)}>
+                <Icon as={FiSettings} boxSize={4} />
+                {t("nav.settings")}
+              </MenuItem>
+              <MenuItem value="toggleTheme" onClick={toggleColorMode} closeOnSelect={false}>
+                <Icon as={isDark ? FiSun : FiMoon} boxSize={4} />
+                {isDark ? t("theme.switchToLight") : t("theme.switchToDark")}
+              </MenuItem>
+              <MenuSeparator />
+              {/* Icon rendered as a child (not the `icon` prop) so the row's
+               *  children are direct flex items — lets <AppVersion ml="auto">
+               *  push the version to the far right. */}
+              <MenuItem
+                data-cy="user-menu-sign-out"
+                value="signOut"
+                color="status.error.fg"
+                onClick={signOut}
+                disabled={isSubmitting}
+              >
+                <Icon as={FiLogOut} boxSize={4} me={3} aria-hidden />
+                {t("actions.signOut")}
+                <AppVersion ml="auto" pl={3} />
+              </MenuItem>
+            </MenuContent>
+          </MenuRoot>
         </Flex>
       )}
     </Flex>

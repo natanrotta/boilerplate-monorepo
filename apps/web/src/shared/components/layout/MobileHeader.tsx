@@ -1,5 +1,6 @@
 import { memo } from "react";
-import { Avatar, Flex, IconButton, Image, Text } from "@chakra-ui/react";
+import { Flex, IconButton, Image, Text } from "@chakra-ui/react";
+import { Avatar } from "@/components/ui/avatar";
 import { FiMenu } from "@/shared/components/icons";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/modules/auth";
@@ -56,7 +57,7 @@ export const MobileHeader = memo(function MobileHeader({ onOpenSidebar }: Mobile
 
       <Flex align="center" gap={1}>
         {user && (
-          <Avatar.Root
+          <Avatar
             size="sm"
             bg="brand.500"
             color="text.onBrand"
@@ -64,10 +65,9 @@ export const MobileHeader = memo(function MobileHeader({ onOpenSidebar }: Mobile
             fontWeight="700"
             w={8}
             h={8}
-          >
-            <Avatar.Image src={user.avatarUrl || undefined} />
-            <Avatar.Fallback name={user.name} />
-          </Avatar.Root>
+            name={user.name}
+            src={user.avatarUrl || undefined}
+          />
         )}
       </Flex>
     </Flex>

@@ -1,5 +1,12 @@
 import { memo } from "react";
-import { IconButton, Menu, Portal } from "@chakra-ui/react";
+import { IconButton } from "@chakra-ui/react";
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuSeparator,
+  MenuTrigger,
+} from "@/components/ui/menu";
 import { FiMoreVertical } from "@/shared/components/icons";
 import type { IconType } from "@/shared/components/icons";
 import { useTranslation } from "react-i18next";
@@ -26,8 +33,10 @@ function ActionMenuComponent({ items }: ActionMenuProps) {
   const dangerItems = items.filter((item) => item.isDanger);
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
+    <MenuRoot>
+      {/* v3 drives the trigger with `asChild` instead of v2's `as={IconButton}`,
+          and every item needs a stable `value` (it is the selection key). */}
+      <MenuTrigger asChild>
         <IconButton
           aria-label={t("actions.actions")}
           variant="ghost"
@@ -36,46 +45,44 @@ function ActionMenuComponent({ items }: ActionMenuProps) {
         >
           <FiMoreVertical />
         </IconButton>
-      </Menu.Trigger>
-      <Portal>
-        <Menu.Positioner>
-          <Menu.Content>
-            {normalItems.map((item) => {
-              const ItemIcon = item.icon;
-              return (
-                <Menu.Item
-                  key={item.id ?? item.label}
-                  value={item.id ?? item.label}
-                  onClick={item.onClick}
-                  disabled={item.isDisabled}
-                >
-                  {ItemIcon ? <ItemIcon /> : null}
-                  {item.label}
-                </Menu.Item>
-              );
-            })}
-            {dangerItems.length > 0 && normalItems.length > 0 && <Menu.Separator />}
-            {dangerItems.map((item) => {
-              const ItemIcon = item.icon;
-              return (
-                <Menu.Item
-                  key={item.id ?? item.label}
-                  value={item.id ?? item.label}
-                  onClick={item.onClick}
-                  disabled={item.isDisabled}
-                  color="status.error.fg"
-                  _hover={{ bg: "status.error.bg", color: "status.error.fg" }}
-                >
-                  {/* Icon inherits the item's `status.error.fg` via currentColor. */}
-                  {ItemIcon ? <ItemIcon /> : null}
-                  {item.label}
-                </Menu.Item>
-              );
-            })}
-          </Menu.Content>
-        </Menu.Positioner>
-      </Portal>
-    </Menu.Root>
+      </MenuTrigger>
+      <MenuContent>
+        {normalItems.map((item) => {
+          const ItemIcon = item.icon;
+          return (
+            <MenuItem
+              key={item.id ?? item.label}
+              value={item.id ?? item.label}
+              onClick={item.onClick}
+              disabled={item.isDisabled}
+            >
+              {ItemIcon ? <ItemIcon /> : null}
+              {item.label}
+            </MenuItem>
+          );
+        })}
+        {dangerItems.length > 0 && normalItems.length > 0 && <MenuSeparator />}
+        {dangerItems.map((item) => {
+          const ItemIcon = item.icon;
+          return (
+            <MenuItem
+              key={item.id ?? item.label}
+              value={item.id ?? item.label}
+              onClick={item.onClick}
+              disabled={item.isDisabled}
+              color="status.error.fg"
+              // v3 drives the hovered row with `data-highlighted` (pointer AND
+              // keyboard), so `_highlighted` is what has to be overridden here.
+              _highlighted={{ bg: "status.error.bg", color: "status.error.fg" }}
+            >
+              {/* Icon inherits the item's `status.error.fg` via currentColor. */}
+              {ItemIcon ? <ItemIcon /> : null}
+              {item.label}
+            </MenuItem>
+          );
+        })}
+      </MenuContent>
+    </MenuRoot>
   );
 }
 

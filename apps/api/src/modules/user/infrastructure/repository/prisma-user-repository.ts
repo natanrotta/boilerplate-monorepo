@@ -12,7 +12,7 @@ import { prisma } from "@core/database/prisma/prisma-client";
 import { mapPrismaError } from "@core/database/prisma/prisma-error-mapper";
 import { executeSignUpTransaction } from "./user-signup.transaction";
 import { user as PrismaUser } from "@generated/prisma/client";
-import type { UserStatusType } from "@shared/type/enums";
+import type { UserStatus } from "@modules/user/domain/value-object/user-status";
 
 @injectable()
 export class PrismaUserRepository implements IUserRepository {
@@ -23,7 +23,7 @@ export class PrismaUserRepository implements IUserRepository {
       email: data.email,
       password: data.password,
       googleId: data.google_id,
-      status: data.status as UserStatusType,
+      status: data.status as UserStatus,
       emailVerified: data.email_verified,
       avatarUrl: data.avatar_url,
       language: data.language,
@@ -41,16 +41,6 @@ export class PrismaUserRepository implements IUserRepository {
     try {
       const user = await prisma.user.findUnique({ where: { id } });
       return user ? this.toEntity(user) : null;
-    } catch (error) {
-      throw mapPrismaError(error);
-    }
-  }
-
-  async findByIds(ids: string[]): Promise<User[]> {
-    if (ids.length === 0) return [];
-    try {
-      const users = await prisma.user.findMany({ where: { id: { in: ids } } });
-      return users.map((u) => this.toEntity(u));
     } catch (error) {
       throw mapPrismaError(error);
     }
@@ -87,17 +77,6 @@ export class PrismaUserRepository implements IUserRepository {
     }
   }
 
-  async findAll(): Promise<User[]> {
-    try {
-      const users = await prisma.user.findMany({
-        orderBy: { created_at: "desc" },
-      });
-      return users.map((u) => this.toEntity(u));
-    } catch (error) {
-      throw mapPrismaError(error);
-    }
-  }
-
   async create(data: CreateUserData): Promise<User> {
     try {
       const user = await prisma.user.create({
@@ -129,14 +108,6 @@ export class PrismaUserRepository implements IUserRepository {
         },
       });
       return this.toEntity(user);
-    } catch (error) {
-      throw mapPrismaError(error);
-    }
-  }
-
-  async delete(id: string): Promise<void> {
-    try {
-      await prisma.user.delete({ where: { id } });
     } catch (error) {
       throw mapPrismaError(error);
     }

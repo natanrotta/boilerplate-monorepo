@@ -30,7 +30,7 @@ export function initErrorReporter(): void {
   if (!apiKey) {
     // Fail-open: a missing key disables reporting rather than crashing the app.
     // But in a DEPLOYED stage that silence is the bug that left BOILERPLATE API PROD
-    // empty — the prod VPS wasn't injecting BUGSNAG_API_KEY. Surface it at WARN
+    // empty — the deployed host was not injecting BUGSNAG_API_KEY. Surface it at WARN
     // (visible in pino / the admin status panel) for production/staging, while
     // local/dev/test stay quiet (no key there is expected).
     const deployedStage =
@@ -57,33 +57,36 @@ export function initErrorReporter(): void {
     // expressRequestHandler + app.ts) — never its errorHandler, which would
     // double-report on top of errorHandlerMiddleware.
     plugins: [BugsnagPluginExpress],
-    // autoDetectErrors stays at its default (true): besides the errors funneled
-    // through errorHandlerMiddleware, this captures process-level
-    // uncaughtException / unhandledRejection from BullMQ workers and cron jobs
-    // that never reach the HTTP error handler. This is parity with the old
-    // Sentry setup — @sentry/node's default integrations installed the same
-    // process-level handlers — kept here by relying on Bugsnag's default.
-    // PHI hardening: this API moves patient data. Bugsnag must never collect
-    // the caller IP, and any header/metadata key that could carry a bearer
-    // token, session cookie, or free-text patient data is redacted before the
-    // payload leaves the process. Never rely on the default capture.
+    // Process-level capture is OFF on purpose: the SDK's own uncaughtException /
+    // unhandledRejection listeners report and then `process.exit(1)` as soon as
+    // the delivery lands — racing the staged teardown in core/service/lifecycle
+    // (HTTP drain, queues, Redis clients). The lifecycle owns those two events:
+    // it calls `errorReporter.notify` (awaited, bounded) and only then exits.
+    // Errors inside HTTP requests still reach Bugsnag through
+    // errorHandlerMiddleware.
+    enabledErrorTypes: {
+      unhandledExceptions: false,
+      unhandledRejections: false,
+    },
+    // PII hardening: Bugsnag must never collect the caller IP, and any
+    // header/metadata key that could carry a bearer token, session cookie, or
+    // free-text personal data is redacted before the payload leaves the
+    // process. Never rely on the default capture.
     collectUserIp: false,
     redactedKeys: [
       /^authorization$/i,
       /^cookie$/i,
       "password",
-      // Free-text / identifying PHI keys. redactedKeys applies across event
+      // Free-text / identifying PII keys. redactedKeys applies across event
       // metadata AND breadcrumbs, so this also covers the logger context that
       // PinoLoggerProvider spreads into breadcrumbs. Opaque structural ids
-      // (patientId, accountId) are intentionally KEPT for triage/grouping —
-      // the same posture as retaining the opaque user id above. Logging
-      // free-text PHI into logger context remains a call-site discipline.
+      // (userId) are intentionally KEPT for triage/grouping. Keeping free-text
+      // PII out of logger context remains a call-site discipline.
       "email",
-      "patientName",
-      "cpf",
+      "name",
       "phone",
+      "document",
       "notes",
-      "transcript",
       "content",
     ],
     onError: (event: Event) => {
@@ -95,8 +98,8 @@ export function initErrorReporter(): void {
       }
       delete event.request["body"];
 
-      // Keep only the opaque user id. Dropping email prevents patient names
-      // (a legitimate display name) from reaching Bugsnag.
+      // Keep only the opaque user id. Dropping the e-mail and display name
+      // keeps personal data out of the report.
       const user = event.getUser();
       if (user?.id) {
         event.setUser(user.id);
@@ -142,11 +145,25 @@ export function expressRequestHandler(): RequestHandler {
 }
 
 export const errorReporter = {
-  notify(error: Error, onError?: (event: ErrorReportEvent) => void): void {
-    if (!started) return;
-    Bugsnag.notify(error, (event) => {
-      onError?.(event);
-      return true;
+  /**
+   * Resolves once the report was delivered (or refused) — never rejects, so a
+   * caller can await it on a crash path without a second failure. Resolves
+   * immediately while the reporter is disabled.
+   */
+  notify(
+    error: Error,
+    onError?: (event: ErrorReportEvent) => void,
+  ): Promise<void> {
+    if (!started) return Promise.resolve();
+    return new Promise((resolve) => {
+      Bugsnag.notify(
+        error,
+        (event) => {
+          onError?.(event);
+          return true;
+        },
+        () => resolve(),
+      );
     });
   },
 

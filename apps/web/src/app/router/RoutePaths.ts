@@ -10,4 +10,7 @@ export const ROUTE_PATHS = {
   profile: "/profile",
 
   notFound: "/404",
+
+  /** DEV-only design-system gallery — never mounted in a production build. */
+  styleguide: "/dev/styleguide",
 } as const;

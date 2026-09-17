@@ -8,12 +8,12 @@
  *   3. Apply migrations against the E2E DB.
  *   4. Run `prisma/seed.ts`.
  *   5. Start the API on :3334.
- *   6. Run Playwright (which spawns Vite on :3001).
+ *   6. Run Playwright (which spawns Vite on :3002).
  *   7. Stop the API.
  *   8. Tear the stack down again.
  *
  * Dev backend on :3333/:5432/:6379 is never touched — you can run this while
- * `yarn start` is up.
+ * `yarn start` is up, and `apps/site` keeps :3001 to itself.
  *
  * Flags
  *   --keep      Skip the final teardown (and the initial down-v). Useful for
@@ -41,7 +41,7 @@ const API_HEALTH_URL = "http://localhost:3334/healthz";
 // suite always talks to the same endpoints. The downside is that a crashed run
 // from ANY worktree leaves orphans that block the next bring-up — handled by
 // killPortListeners() below.
-const E2E_PORTS = [3334, 3001] as const;
+const E2E_PORTS = [3334, 3002] as const;
 
 const args = process.argv.slice(2);
 const keep = args.includes("--keep") || args.includes("--ui");
@@ -80,8 +80,16 @@ function parseDotenv(path: string): Record<string, string> {
 
 function buildApiEnv(): NodeJS.ProcessEnv {
   const base = parseDotenv(resolve(API_DIR, ".env"));
-  const override = parseDotenv(resolve(API_DIR, ".env.e2e"));
-  if (Object.keys(override).length === 0) fail("env", "apps/api/.env.e2e not found");
+  // A local `.env.e2e` wins; the committed example serves CI and fresh
+  // checkouts, so a clone can run the suite without hand-writing a file.
+  const localOverride = resolve(API_DIR, ".env.e2e");
+  const overridePath = existsSync(localOverride)
+    ? localOverride
+    : resolve(API_DIR, ".env.e2e.example");
+  const override = parseDotenv(overridePath);
+  if (Object.keys(override).length === 0) {
+    fail("env", "neither apps/api/.env.e2e nor apps/api/.env.e2e.example found");
+  }
   return { ...process.env, ...base, ...override };
 }
 
@@ -145,6 +153,9 @@ async function waitForHttp(url: string, label: string, timeoutMs = 60_000) {
   fail("wait", `${label} not healthy at ${url} within ${timeoutMs}ms`);
 }
 
+// The seed account (apps/api/prisma/seed.ts; mirrored in e2e/fixtures/constants.ts).
+const SEED_USER_EMAIL = "demo@example.com";
+
 function seedUserPresent(): boolean {
   const res = spawnSync(
     "docker",
@@ -161,7 +172,7 @@ function seedUserPresent(): boolean {
       "-d",
       "boilerplate_e2e",
       "-tAc",
-      `SELECT COUNT(*) FROM "user" WHERE email = 'felipe@boilerplate.dev';`,
+      `SELECT COUNT(*) FROM "user" WHERE email = '${SEED_USER_EMAIL}';`,
     ],
     { encoding: "utf8" }
   );
@@ -229,7 +240,7 @@ async function main() {
     // Step 0 — sweep orphan host-side listeners on the E2E ports. `docker
     // compose down` only cleans containers; the API/Vite the runner spawned
     // (possibly from another worktree) survive a crashed run and squat
-    // :3334 / :3001, causing EADDRINUSE on the next start.
+    // :3334 / :3002, causing EADDRINUSE on the next start.
     killPortListeners(E2E_PORTS);
 
     // Step 1 — clean slate (skipped on --keep cold start so the stack lives

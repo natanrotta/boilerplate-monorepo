@@ -1,7 +1,7 @@
-import { memo } from "react";
-import { Field, IconButton, Input, InputGroup } from "@chakra-ui/react";
-import { useState } from "react";
+import { memo, useState } from "react";
+import { IconButton, Input, InputGroup } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
+import { Field } from "@/components/ui/field";
 import { FiEye, FiEyeOff } from "@/shared/components/icons";
 
 interface PasswordFieldProps {
@@ -25,16 +25,7 @@ function PasswordFieldComponent({
   const [isVisible, setIsVisible] = useState(false);
 
   return (
-    <Field.Root invalid={Boolean(error)}>
-      <Field.Label
-        fontSize="xs"
-        fontWeight="600"
-        color="text.secondary"
-        mb={1}
-        letterSpacing="0.01em"
-      >
-        {label}
-      </Field.Label>
+    <Field invalid={Boolean(error)} label={label} errorText={error}>
       <InputGroup
         endElement={
           <IconButton
@@ -56,12 +47,7 @@ function PasswordFieldComponent({
           autoComplete={autoComplete}
         />
       </InputGroup>
-      {error ? (
-        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
-          {error}
-        </Field.ErrorText>
-      ) : null}
-    </Field.Root>
+    </Field>
   );
 }
 

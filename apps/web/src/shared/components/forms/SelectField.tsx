@@ -1,12 +1,17 @@
 import { memo } from "react";
-import { Field, NativeSelect } from "@chakra-ui/react";
+import { Field } from "@/components/ui/field";
+import {
+  NativeSelectField,
+  NativeSelectRoot,
+  type NativeSelectFieldProps,
+} from "@/components/ui/native-select";
 
 export interface SelectOption {
   label: string;
   value: string;
 }
 
-interface SelectFieldProps extends Omit<NativeSelect.FieldProps, "onChange" | "value"> {
+interface SelectFieldProps extends Omit<NativeSelectFieldProps, "onChange" | "value" | "items"> {
   label?: string;
   options: SelectOption[];
   value: string;
@@ -24,22 +29,11 @@ function SelectFieldComponent({
   ...props
 }: SelectFieldProps) {
   return (
-    <Field.Root invalid={Boolean(error)}>
-      {label && (
-        <Field.Label
-          fontSize="xs"
-          fontWeight="600"
-          color="text.secondary"
-          mb={1}
-          letterSpacing="0.01em"
-        >
-          {label}
-        </Field.Label>
-      )}
-      <NativeSelect.Root>
-        <NativeSelect.Field
+    <Field invalid={Boolean(error)} label={label} errorText={error}>
+      <NativeSelectRoot>
+        <NativeSelectField
           value={value}
-          onChange={(event) => onChange(event.currentTarget.value)}
+          onChange={(event) => onChange(event.target.value)}
           cursor="pointer"
           color={value ? undefined : "text.muted"}
           {...props}
@@ -54,15 +48,9 @@ function SelectFieldComponent({
               {option.label}
             </option>
           ))}
-        </NativeSelect.Field>
-        <NativeSelect.Indicator />
-      </NativeSelect.Root>
-      {error ? (
-        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
-          {error}
-        </Field.ErrorText>
-      ) : null}
-    </Field.Root>
+        </NativeSelectField>
+      </NativeSelectRoot>
+    </Field>
   );
 }
 

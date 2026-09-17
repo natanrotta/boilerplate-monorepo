@@ -89,4 +89,24 @@ describe("RequestPasswordResetUseCase", () => {
     expect(tokenRepository.create).not.toHaveBeenCalled();
     expect(mailProvider.send).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["unknown-email", null],
+    ["no-password", makeUser({ password: null })],
+    ["inactive", makeUser({ password: "pw", status: "PENDING" })],
+  ])(
+    "logs the noop with reason=%s and NEVER the e-mail address (SEC-C7)",
+    async (reason, user) => {
+      userRepository.findByEmail.mockResolvedValue(user);
+
+      await sut.execute({ email: "person@example.com" });
+
+      expect(logger.info).toHaveBeenCalledWith(
+        { reason },
+        "Password reset requested for non-eligible account (noop)",
+      );
+      const logged = JSON.stringify(logger.info.mock.calls);
+      expect(logged).not.toContain("person@example.com");
+    },
+  );
 });

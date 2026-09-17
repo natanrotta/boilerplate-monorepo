@@ -83,9 +83,12 @@ During implementation: anything not covered by an AC does not get built (R27). I
 6. **NEVER `throw new Error()`** — always use `AppError` subclasses with `ErrorCodes`
 7. **NEVER access `Request`/`Response` in use cases** — they receive DTOs and return DTOs
 8. **ALWAYS `mapPrismaError(error)`** in every Prisma catch block
-9. **ALWAYS register new dependencies** in the DI container
+9. **ALWAYS register new dependencies** with a `DI_TOKENS` entry (`core/container/tokens.ts`) in the module's `register<Domain>Module()` composed by `core/container/index.ts` — and `@inject(DI_TOKENS.X)` every constructor param, concrete classes included (`tsx` does not emit `design:paramtypes`, so an un-injected param is `undefined` at runtime in dev only)
 10. **ALWAYS add i18n translations for new ErrorCodes** — all 3 locales (pt-BR, en, es)
-11. **ALWAYS use an ownership policy (`ensureOwner(...)`)** instead of an inline check; throw `NotFoundError` on cross-owner access (never `ForbiddenError`)
+11. **ALWAYS scope the read in the repository signature** (`findById(userId, id)`) instead of an inline post-read check; throw `NotFoundError` on a miss (never `ForbiddenError`). There is no `ensureOwner()` helper — if a post-read check is genuinely needed, add one to `shared/policy/`
+12. **ALWAYS call a middleware factory** when you mount it — `router.use(authMiddleware())`, never `router.use(authMiddleware)` (`B-C14`: the request hangs and the guard is absent)
+13. **NEVER call LLM APIs directly** — always via an `ILlmProvider` port (delegate AI work to `/ai-backend`, `R23`/`B-C13`)
+14. **Write before send** — persist the row, THEN call the external service; the id you return must already be committed
 
 ---
 
@@ -96,7 +99,7 @@ During implementation: anything not covered by an AC does not get built (R27). I
 | Scenario | Tx? | Why |
 |----------|-----|-----|
 | Create entity + relation rows | Yes | Partial state = orphans |
-| Multi-table signup (User + Profile + Settings) | Yes | Atomic |
+| Multi-table signup (User + related rows) | Yes | Atomic |
 | Cascading delete | Yes | All-or-nothing |
 | Single-table CRUD | No | Prisma op already atomic |
 | Update + S3 cleanup | No | Cleanup is idempotent (use `safeS3Delete`) |
@@ -109,6 +112,7 @@ During implementation: anything not covered by an AC does not get built (R27). I
 | Bulk delete (>10 items) | Yes | Timeout risk; needs per-item retry |
 | Heavy file ops (S3 cleanup, image processing) | Yes | Slow |
 | Slow/expensive external API call | Yes | Slow + expensive |
+| LLM call / embedding generation | Yes | Slow + expensive (`R23`) |
 | Simple CRUD | No | Fast; user expects immediate response |
 
 ### When to cache (Redis)
@@ -177,7 +181,7 @@ Walk through `.claude/patterns/code-review-checklist.md` for every file you touc
 - [ ] `deleted_at: null` in every read?
 - [ ] owner-column filter in every query on an owned table?
 - [ ] Controller resolves use case from container?
-- [ ] Routes with correct middleware order (auth → module → validate → role → upload → asyncHandler)?
+- [ ] Routes with correct middleware order (auth → validate → upload → asyncHandler), every factory **called** (`B-C14`)?
 
 **Wiring:**
 - [ ] Registered in DI container?

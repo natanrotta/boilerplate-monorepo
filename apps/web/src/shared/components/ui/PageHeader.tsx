@@ -115,7 +115,7 @@ function PageHeaderComponent({
                       transform: "scale(0.98)",
                     }}
                     transition="all 0.15s ease"
-                    data-testid="page-header-primary-action"
+                    data-cy="page-header-primary-action"
                   >
                     <Box asChild boxSize={3.5}>
                       <ActionIcon />

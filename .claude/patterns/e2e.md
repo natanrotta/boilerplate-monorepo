@@ -11,11 +11,11 @@ Authoritative source for Playwright end-to-end tests in this project. Specialist
 | Layer | Tool | Where |
 |---|---|---|
 | Runner | `@playwright/test` v1.58+ | `apps/web/playwright.config.ts` |
-| App under test | React 18 + Chakra UI 2.8 + React Router v6 + TanStack Query v5 | `apps/web/src/` |
+| App under test | React 19 + Chakra UI v3 (+ `@boilerplate/theme`) + React Router v6 + TanStack Query v5 | `apps/web/src/` |
 | Web dev server | Vite on `:3000` (proxies `/api` → `:3333`) | `apps/web/vite.config.ts` |
 | API | Express + Prisma on `:3333` (real backend, no mocks) | `apps/api/src/main.ts` |
-| Database | Postgres seeded with the demo user (`felipe@boilerplate.dev` is the E2E test user) | `apps/api/prisma/seed.ts` |
-| Auth | JWT in `localStorage`, persisted via `storageState` | `apps/web/e2e/global.setup.ts` |
+| Database | Postgres seeded with the demo user (`demo@example.com` / `Demo1234!` — `e2e/fixtures/constants.ts` mirrors it) | `apps/api/prisma/seed.ts` |
+| Auth | Session JWT in the httpOnly `boilerplate_at` cookie + `boilerplate_csrf` double-submit, seeded through the **API** (`apiClient.getSession()`) then persisted via `storageState` | `apps/web/e2e/global.setup.ts` |
 | API client (test) | `fetch`-based, authenticated as the seed user | `apps/web/e2e/fixtures/api-client.ts` |
 | Reports | HTML reporter, trace `on-first-retry`, screenshot `only-on-failure` | `playwright.config.ts` |
 | i18n | `pt-BR` (default), `en`, `es` — assertions match both pt-BR **and** en | `apps/web/src/shared/i18n/locales/` |
@@ -30,14 +30,14 @@ The E2E suite is **fire-and-forget**: a single command brings up an
 ephemeral stack (Postgres + Redis + API), runs the tests, and tears it all
 down at the end. The dev backend (`yarn start`) is never touched — you can
 keep developing on `:3000`/`:3333` while the E2E suite runs in parallel on
-`:3001`/`:3334`.
+`:3002`/`:3334`.
 
 ```
                     Dev (yarn start)        E2E (yarn test:e2e)
 Postgres            :5432                   :5433  (tmpfs / RAM, destroyed at end)
 Redis               :6379                   :6380  (destroyed at end)
 API                 :3333                   :3334  (spawned per run)
-Web                 :3000                   :3001  (Vite proxies /api → :3334)
+Web                 :3000                   :3002  (Vite proxies /api → :3334)
 ```
 
 ### One command for the full cycle
@@ -53,9 +53,9 @@ Internally:
 2. `docker compose up -d --wait` — fresh Postgres (tmpfs) + Redis.
 3. `prisma migrate deploy` — apply all migrations.
 4. `prisma/seed.ts` — populate the seed user (+ any demo data you add).
-5. Spawn API on `:3334` (env merged from `apps/api/.env` + `apps/api/.env.e2e`).
+5. Spawn API on `:3334` (env merged from `apps/api/.env` + `apps/api/.env.e2e`, or the committed `.env.e2e.example`).
 6. Run `npx playwright test --project=chromium`. Playwright's `webServer`
-   brings up Vite on `:3001` with `VITE_API_PROXY_TARGET=http://localhost:3334`.
+   brings up Vite on `:3002` with `VITE_API_PROXY_TARGET=http://localhost:3334`.
 7. Stop API. `docker compose down -v`. Exit with Playwright's status code.
 
 ### Iteration mode (skip the teardown)
@@ -79,14 +79,17 @@ yarn test:e2e:down        # docker compose down -v
 ### Where the env lives
 
 - **`docker-compose.e2e.yml`** (repo root) — Postgres on `:5433` (tmpfs) + Redis on `:6380`.
-- **`apps/api/.env.e2e`** — committed overrides on top of `apps/api/.env` (DB URL, port, origin, JWT secret). Inherits any third-party keys from the dev `.env` so you don't duplicate secrets.
+- **`apps/api/.env.e2e.example`** — committed, test-only overrides on top of `apps/api/.env` (DB URL, port `3334`, origin `http://localhost:3002`, JWT secret). A local, gitignored `apps/api/.env.e2e` wins when present; CI and fresh worktrees fall back to the example. Inherits any third-party keys from the dev `.env` so you don't duplicate secrets.
+- The runner neutralizes third-party side effects for the suite (e.g. an empty mail API key so e-mail goes to the console provider) and raises `RATE_LIMIT_AUTH_MAX` (the auth specs exceed the limiter's dev default).
 - **`apps/web/scripts/e2e-run.ts`** — orchestrator. Reads both env files, merges, spawns API, runs Playwright, tears down.
 
 ### Reliability notes
 
 - `prisma/seed.ts` schema drift breaks the cycle at step 4 — fix the seed
   to match the current schema.
-- The api-client session cache (`e2e/.auth/api-session.json`) probes
+- The api-client session cache (`apps/web/e2e/.auth/api-session.json`,
+  anchored to the fixture file, never the cwd — it's a credential, keep it
+  gitignored: `apps/web/e2e/.auth/` already is) probes
   `/auth/me` on load — if the cached JWT references a `userId` that no
   longer exists, the cache is invalidated and a fresh sign-in runs. So
   a stale cache from a previous DB can't break the next run.
@@ -102,28 +105,31 @@ yarn test:e2e:down        # docker compose down -v
 apps/web/
   playwright.config.ts                    # canonical config — do not duplicate per-project flags
   e2e/
-    .auth/user.json                       # gitignored; written by global.setup; consumed by `chromium`/`docs` projects
+    .auth/user.json                       # gitignored; written by global.setup; consumed by the `chromium` project
     global.setup.ts                       # runs preflight, logs in once, stores auth state
     fixtures/
       auth.fixture.ts                     # base `test` re-export (extensible; do not duplicate `test`/`expect`)
       preflight.ts                        # fail-fast env check (web up? API up? seed account?)
       api-client.ts                       # authenticated fetch client + per-module domain helpers
       test-data.ts                        # `createUniqueXxx()` factories, `uniqueName()` helper
-    pages/                                # Page Objects — one class per routable page
-      <Module>ListPage.ts
-      <Module>DetailPage.ts
+      visual.ts                           # `waitForSettledUi()` — shared by the visual specs
+      screenshot.css                      # stylePath for the visual specs (hides the devtools button)
+    pages/                                # Page Objects — one class per routable page (or the shell)
+      <module>/<Name>.page.ts             # e.g. settings/ProfilePage.page.ts
       components/                         # OPTIONAL — Page Objects for shared widgets (created when reused)
     tests/
       <module>/                           # one folder per module (mirrors apps/web/src/modules/)
         <module>-<flow>.spec.ts           # one flow per file — see "Naming"
+      design-system/                      # visual specs (styleguide gallery)
+      __screenshots__/                    # versioned baselines, `<name>-<platform>.png`
 ```
 
-**Reference module:** `e2e/tests/auth/` + `e2e/pages/LoginPage.ts` are the canonical examples. New module coverage must follow that shape (POM structure, spec skeleton, cleanup loop, bilingual assertions).
+**Reference today:** the flat `e2e/tests/auth.spec.ts` (UI sign-in) ships as the template, plus `e2e/tests/design-system/styleguide-visual.spec.ts`. New module coverage moves to the per-module layout above (POM structure, spec skeleton, cleanup loop, bilingual assertions) — create `e2e/pages/` on first use.
 
 **Hard rules:**
 - Never create a parallel `e2e/__tests__/`, `apps/web/__e2e__/`, or `cypress/` folder.
 - Never co-locate `*.spec.ts` E2E specs inside `apps/web/src/` — those are reserved for Vitest unit tests (`patterns/frontend.md` § Testing).
-- Specs run against the real backend (no request mocks). If a flow genuinely cannot run against the real backend (third-party redirects, etc.) discuss before adding a mock project — the default answer is "use a signed synthetic-webhook fixture or `api-client.ts` instead".
+- Specs run against the real backend by default. A `page.route(...)` mock is allowed only for a state the e2e backend cannot produce — a valid e-mail PIN (stored hashed), a 429, a third-party redirect, or the fixed data of a visual spec — and the spec says why in a comment. Everything else goes through `api-client.ts`.
 
 ---
 
@@ -136,17 +142,17 @@ The config defines three projects and one web server. The e2e-test-writer agent 
 | `setup` | `./e2e` (matches `global.setup.ts`) | n/a — writes auth | Implicit dependency of `chromium`. Never targeted directly. |
 | `chromium` | `./e2e/tests` | `e2e/.auth/user.json` | Default project. Real backend. **All module specs go here.** |
 
-The single `webServer` entry spawns a **dedicated E2E Vite on `:3001`** (`VITE_PORT=3001 VITE_API_PROXY_TARGET=http://localhost:3334 yarn dev`, with `reuseExistingServer: false` — `scripts/e2e-run.ts` sweeps the port first). It is fully isolated from the dev pair on `:3000/:3333`, including the dep-optimizer cache: `vite.config.ts` gives the E2E instance its own `cacheDir` (`node_modules/.vite-e2e`) so its optimizer runs never rewrite the dev server's `node_modules/.vite/deps`. Never point a webServer at `:3000`. If you ever need an isolated project for a mock-based flow, add a project + webServer block but justify it in the PR.
+The single `webServer` entry spawns a **dedicated E2E Vite on `:3002`** (`VITE_PORT=3002 VITE_API_PROXY_TARGET=http://localhost:3334 yarn dev`, with `reuseExistingServer: false` — `apps/web/scripts/e2e-run.ts` sweeps the port first). `:3002` and not `:3001`, because `apps/site` owns `:3001` in dev and the runner kills every listener on the E2E ports before bring-up. It is fully isolated from the dev pair on `:3000/:3333`, including the dep-optimizer cache: `vite.config.ts` gives the E2E instance its own `cacheDir` (`node_modules/.vite-e2e`) so its optimizer runs never rewrite the dev server's `node_modules/.vite/deps`. Never point a webServer at `:3000`. If you ever need an isolated project for a mock-based flow, add a project + webServer block but justify it in the PR.
 
 ---
 
 ## The 5 selector rules (Playwright + Chakra)
 
 1. **`getByRole(...)` first.** Use the ARIA role + accessible name. Chakra exposes the right roles for all interactive primitives.
-2. **`getByLabel(...)` for form fields.** Chakra `<FormControl>` wires `<FormLabel>` → input via `aria-labelledby`. The label text in the regex must match pt-BR **and** en (see "Bilingual assertions").
+2. **`getByLabel(...)` for form fields.** The `field` snippet (`components/ui/field`) wires label → input via `aria-labelledby`, and `getByLabel` also matches a bare `aria-label`. The label text in the regex must match pt-BR **and** en (see "Bilingual assertions").
 3. **`getByText(...)` for static content / empty states / toasts.** Prefer over text-on-element + locator chains.
 4. **`getByPlaceholder(...)` only when the input has no label** (search bars, inline filters).
-5. **`getByTestId(...)` as last resort.** If you reach for this, first try: parent role + `.filter({ hasText: ... })`, or `getByRole(role).getByText(name)`. Add a `data-testid` to the source component only when no semantic option exists and document the reason in the POM.
+5. **`getByTestId(...)` as last resort.** If you reach for this, first try: parent role + `.filter({ hasText: ... })`, or `getByRole(role).getByText(name)`. The test-id attribute in this app is **`data-cy`** (`testIdAttribute: "data-cy"` in `playwright.config.ts`) — never `data-testid`. Shared primitives already carry one where no semantic selector is unique (`app-modal`, `app-modal-primary`, `app-modal-cancel`, `confirm-dialog`, `confirm-confirm`, `confirm-cancel`, `entity-card`, `page-header-primary-action`, `filter-search`, `save-button`, `empty-state-action`, `toast`, `language-<code>`, `user-menu-trigger`, `user-menu-sign-out`, `app-version`, `google-signin`, `not-found-home`, and `styleguide-<section>` in the DEV gallery). `entity-card` and `toast` repeat once per rendered item — scope them (`getByTestId("entity-card").filter({ hasText: name })`) before acting. Add a new one to the source component only when no semantic option exists and document the reason in the POM.
 
 **Forbidden:**
 - CSS class selectors (`.chakra-button`, `.css-xyz`, `[class*="..."]`) → `E-C1` / `F-H17`.
@@ -166,7 +172,7 @@ The single `webServer` entry spawns a **dedicated E2E Vite on `:3001`** (`VITE_P
 | Toast / success message | `getByText(/criado com sucesso\|created successfully/i)` (Chakra toasts have inconsistent roles) |
 | Menu item | `getByRole("menuitem", { name: /.../ })` |
 | Heading (page title) | `getByRole("heading", { name: /painel\|dashboard/i, level: 1 })` |
-| Card row in a list | `page.getByRole("group").filter({ has: page.getByRole("button", { name: /ações\|actions/i }) })` |
+| Card row in a list | `page.getByTestId("entity-card").filter({ hasText: name })` |
 
 ---
 
@@ -241,7 +247,7 @@ Reusable widgets (Sidebar, ConfirmDialog, FilterBar) live in `e2e/pages/componen
 
 ### Authentication — already wired
 
-There is **one** auth path: `global.setup.ts` signs in `felipe@boilerplate.dev / 123456` and writes `e2e/.auth/user.json`. The `chromium` and `docs` projects consume that file via `storageState`. Every spec inherits an authenticated page — **do not** re-login in `beforeEach`. → `E-C2`
+There is **one** auth path: `global.setup.ts` runs the preflight, calls `apiClient.getSession()` (API sign-in as `demo@example.com`), seeds the `boilerplate_at` + `boilerplate_csrf` cookies and the language key, and writes `e2e/.auth/user.json`. The `chromium` project consumes that file via `storageState`. It goes through the API on purpose — a UI sign-in races the cookie write against navigation and produces flaky signed-out specs. Every spec inherits an authenticated page — **do not** re-login in `beforeEach`. → `E-C2`
 
 If a test needs an **unauthenticated** page (sign-in flows, public routes), use a fresh context:
 
@@ -264,7 +270,7 @@ Add new factories here when a new module ships; never inline test data in the sp
 
 ### API client — `fixtures/api-client.ts`
 
-Authenticated REST client over `fetch`. Signs in once with the seed user (`felipe@boilerplate.dev`), caches the JWT for the suite, and exposes `apiClient.{get,post,put,patch,delete}` plus per-module helpers (`tagApi.create()`, etc.). Add a new helper block when a module ships its first spec that needs API-side setup.
+Authenticated REST client over `fetch`. Signs in once with the seed user (`demo@example.com`), caches the session for the suite, and exposes `apiClient.{get,post,put,patch,delete}` plus per-module helpers. Add a new helper block when a module ships its first spec that needs API-side setup.
 
 **Use it when:**
 - A spec needs an existing entity to assert against (search results, list with ≥N items, edit/delete tests) and creating one through the UI would just slow the suite down.
@@ -272,21 +278,21 @@ Authenticated REST client over `fetch`. Signs in once with the seed user (`felip
 - Setting up cross-module fixtures the UI can't easily build (a state the seed user can't represent).
 
 **Don't use it when:**
-- The UI flow IS the thing under test. `user-create.spec.ts` exercises the modal — never replace its first `createUser()` UI call with `userApi.create()`, you'd be testing the wrong contract.
+- The UI flow IS the thing under test. `item-create.spec.ts` exercises the modal — never replace its first `createItem()` UI call with `itemApi.create()`, you'd be testing the wrong contract.
 
 ```ts
-import { userApi } from "../../fixtures/api-client";
+import { itemApi } from "../../fixtures/api-client";
 
 // Seed: 5 rows so the search test has results to filter.
 const seeded = await Promise.all(
-  Array.from({ length: 5 }, (_, i) => userApi.create({ name: `Seed ${i}`, email: `seed${i}@boilerplate.dev` }))
+  Array.from({ length: 5 }, (_, i) => itemApi.create({ name: `Seed ${i}` }))
 );
 test.afterEach(async () => {
-  for (const u of seeded) await userApi.delete(u.id).catch(() => {});
+  for (const item of seeded) await itemApi.delete(item.id).catch(() => {});
 });
 ```
 
-Mocks (`page.route(...)`) are **not** part of the current model — re-introduce that pattern only when no real-backend path exists, and document the reason in the PR.
+Mocks (`page.route(...)`) follow the rule in § File layout: only for a state the e2e backend cannot produce, with the reason in a comment.
 
 ---
 
@@ -387,7 +393,7 @@ E2E specs touch Postgres **only through the running API**. There is no direct Pr
 2. **API helpers for non-assertion setup.** When the spec needs an entity to exist but its creation is not under test, call `apiClient` (see Fixtures § API client). Faster, deterministic, and contractually identical to the UI path (both go through the same controller → use case).
 3. **Cleanup is best-effort, never blocking.** The `afterEach` loop searches + deletes each `createdNames[]` entry via the UI; failures are swallowed (`E-H5`). If you need a hard guarantee, do the cleanup via `apiClient.delete()` inside `try/catch`.
 4. **State leaks across specs.** Because workers=1 and there's no DB reset, an entity created in one spec will exist when the next spec runs unless cleanup succeeded. Always use `createUnique<Entity>()` factories so collisions don't bite, and treat the seed (`yarn seed`) as the only stable baseline.
-5. **The seed is your reference data.** `apps/api/prisma/seed.ts` provisions the demo user (`felipe@boilerplate.dev`) plus any demo data you add. Treat existing seeded rows as fixtures you can read but should not modify or delete from a test.
+5. **The seed is your reference data.** `apps/api/prisma/seed.ts` provisions the demo user (`demo@example.com`) plus any demo data you add. Treat existing seeded rows as fixtures you can read but should not modify or delete from a test.
 
 **When you need a fresh account** (a state the seed user can't represent): use `apiClient.post("/auth/sign-up", ...)`, then `apiClient.signIn()` with the new credentials, then teardown via `apiClient.delete(...)`. Document the rationale in the spec — most flows are achievable on the seed user.
 
@@ -414,7 +420,7 @@ await expect(modal).not.toBeVisible({ timeout: 10000 });
 2. `page.waitForURL("**/dashboard", { timeout: 15000 })` — after navigation.
 3. `page.waitForLoadState("networkidle")` — **legacy in this project**; tolerated only because TanStack Query background refetches confuse simpler waits in lists with infinite scroll. New POMs should prefer `expect(itemCards.first()).toBeVisible()` and add `networkidle` only when a real race is observed. Document the reason in a code comment when you keep it. → `E-M3`
 4. `page.waitForTimeout(<n>)` — **only** for two project-tolerated cases:
-   - **`500`** — search debounce. The dominant pattern (`waitForTimeout(500)` after `search()`). Source of truth: `apps/web/src/shared/hooks/useDebouncedValue.ts` (verify the value before changing the test convention). → `E-C3` if any other value appears in a fresh search-debounce context.
+   - **`500`** — search debounce. The dominant pattern (`waitForTimeout(500)` after `search()`). Source of truth: `apps/web/src/shared/hooks/useDebounce.ts` — individual call sites pass their own delay, so 500 is a safe upper bound, not necessarily the literal value (verify before changing the test convention). → `E-C3` if any other value appears in a fresh search-debounce context.
    - **`300`** — popover/animation settle after a Chakra popover/modal closes. Must come with a one-line comment explaining the race (the hook does not enforce that, the reviewer does). → `E-M3` if introduced without the comment.
 
    Any other value (`200`, `1000`, `1700`, `2000`...) is forbidden in new code. → `E-C3`
@@ -482,6 +488,13 @@ npx playwright test -g "happy path"    # narrow by test title grep
 ```
 
 When iterating, prefer `--ui` — it gives you the locator picker, time-travel, and a watch loop.
+
+### Visual regression (design system)
+
+`e2e/tests/design-system/styleguide-visual.spec.ts` screenshots every section of the DEV-only `/dev/styleguide` gallery (plus the modal, the confirmation dialog and the toasts) in light and dark, against baselines versioned in `e2e/tests/__screenshots__/…/<name>-<platform>.png`. The config pins `animations: "disabled"`, a tight `threshold: 0.02` / `maxDiffPixelRatio: 0.002` (Playwright's 0.2 default lets a subtle token change pass) and a `stylePath` (`e2e/fixtures/screenshot.css`) that hides the TanStack devtools button. Wait for finite animations with `document.getAnimations()` (`e2e/fixtures/visual.ts` → `waitForSettledUi()`) — never a sleep.
+
+- A design change is **expected** to fail these specs: review the diff in the HTML report, then `yarn test:e2e --update-snapshots`, and commit the new PNGs with the change.
+- Baselines are per platform: the `darwin` files come from a Mac. Until a `linux` set exists (generated in the Playwright Docker image), `ignoreSnapshots` is on outside macOS, so CI drives these specs without comparing pixels.
 
 ---
 

@@ -1,87 +1,127 @@
-import { z } from "zod";
+import { envSchema } from "./schema";
 
-// We test the schema directly, not the parsed env (which calls process.exit)
-// Recreate the schema to test it in isolation
-const envSchema = z.object({
-  NODE_ENV: z
-    .enum(["local", "development", "staging", "production"])
-    .default("local"),
-  API_PORT: z.coerce.number().default(3333),
-  ALLOWED_ORIGIN: z.string().default("*"),
-  PROJECT_NAME: z.string().default("boilerplate-rest-api"),
-  LOG_LEVEL: z
-    .enum(["fatal", "error", "warn", "info", "debug", "trace"])
-    .default("info"),
-  DATABASE_URL: z.string(),
-  BUGSNAG_API_KEY: z.string().optional(),
-  REDIS_HOST: z.string().default("localhost"),
-  REDIS_PORT: z.coerce.number().default(6379),
-  REDIS_PASSWORD: z.string().optional(),
-  REDIS_DB: z.coerce.number().default(0),
-  JWT_SECRET: z.string(),
-  JWT_EXPIRES_IN: z.string().default("15m"),
-  REFRESH_TOKEN_EXPIRES_IN: z.string().default("30d"),
-  AWS_REGION: z.string().default("us-east-1"),
-  AWS_ACCESS_KEY_ID: z.string().optional(),
-  AWS_SECRET_ACCESS_KEY: z.string().optional(),
-  AWS_S3_BUCKET: z.string().optional(),
-  GOOGLE_CLIENT_ID: z.string().optional(),
-});
-
+// The REAL contract (schema/index.ts) — not a hand-copied replica. A 32-char
+// JWT_SECRET is the floor the auth schema enforces.
 const VALID_ENV = {
   DATABASE_URL: "postgresql://localhost:5432/test",
-  JWT_SECRET: "test-secret",
+  JWT_SECRET: "0123456789abcdef0123456789abcdef",
 };
 
 describe("envSchema", () => {
-  it("should pass with minimal required fields + defaults", () => {
+  it("passes with the two required fields and fills every default", () => {
     const result = envSchema.safeParse(VALID_ENV);
     expect(result.success).toBe(true);
-    expect(result.data?.NODE_ENV).toBe("local");
-    expect(result.data?.API_PORT).toBe(3333);
-    expect(result.data?.LOG_LEVEL).toBe("info");
-    expect(result.data?.REDIS_HOST).toBe("localhost");
-    expect(result.data?.JWT_EXPIRES_IN).toBe("15m");
+    expect(result.data).toMatchObject({
+      NODE_ENV: "local",
+      API_PORT: 3333,
+      ALLOWED_ORIGIN: "*",
+      LOG_LEVEL: "info",
+      SHUTDOWN_TIMEOUT_MS: 30_000,
+      REDIS_HOST: "localhost",
+      REDIS_PORT: 6379,
+      REDIS_DB: 0,
+      JWT_EXPIRES_IN: "15m",
+      REFRESH_TOKEN_EXPIRES_IN: "30d",
+      FRONTEND_URL: "http://localhost:3000",
+      PASSWORD_RESET_TOKEN_TTL_MINUTES: 60,
+      EMAIL_VERIFICATION_PIN_TTL_MINUTES: 15,
+      MAIL_FROM: "Boilerplate <no-reply@example.com>",
+      AWS_REGION: "us-east-1",
+      GITHUB_REPO: "owner/repo",
+      RATE_LIMIT_AUTH_MAX: 10,
+    });
   });
 
-  it("should reject invalid NODE_ENV", () => {
-    const result = envSchema.safeParse({ ...VALID_ENV, NODE_ENV: "test" });
-    expect(result.success).toBe(false);
+  it.each(["local", "development", "staging", "production", "test"])(
+    "accepts NODE_ENV=%s",
+    (NODE_ENV) => {
+      expect(envSchema.safeParse({ ...VALID_ENV, NODE_ENV }).success).toBe(
+        true,
+      );
+    },
+  );
+
+  it("rejects an unknown NODE_ENV and an unknown LOG_LEVEL", () => {
+    expect(
+      envSchema.safeParse({ ...VALID_ENV, NODE_ENV: "prod" }).success,
+    ).toBe(false);
+    expect(
+      envSchema.safeParse({ ...VALID_ENV, LOG_LEVEL: "verbose" }).success,
+    ).toBe(false);
   });
 
-  it("should accept all valid NODE_ENV values", () => {
-    for (const env of ["local", "development", "staging", "production"]) {
-      const result = envSchema.safeParse({ ...VALID_ENV, NODE_ENV: env });
-      expect(result.success).toBe(true);
-    }
+  it("requires DATABASE_URL and a JWT_SECRET of at least 32 characters", () => {
+    expect(
+      envSchema.safeParse({ JWT_SECRET: VALID_ENV.JWT_SECRET }).success,
+    ).toBe(false);
+    expect(
+      envSchema.safeParse({ DATABASE_URL: VALID_ENV.DATABASE_URL }).success,
+    ).toBe(false);
+    expect(
+      envSchema.safeParse({ ...VALID_ENV, JWT_SECRET: "too-short" }).success,
+    ).toBe(false);
   });
 
-  it("should fail when DATABASE_URL is missing", () => {
-    const result = envSchema.safeParse({ JWT_SECRET: "s" });
-    expect(result.success).toBe(false);
-  });
-
-  it("should fail when JWT_SECRET is missing", () => {
-    const result = envSchema.safeParse({ DATABASE_URL: "pg://localhost" });
-    expect(result.success).toBe(false);
-  });
-
-  it("should coerce API_PORT from string to number", () => {
-    const result = envSchema.safeParse({ ...VALID_ENV, API_PORT: "4000" });
+  it("coerces numeric strings", () => {
+    const result = envSchema.safeParse({
+      ...VALID_ENV,
+      API_PORT: "4000",
+      REDIS_PORT: "6389",
+      PASSWORD_RESET_TOKEN_TTL_MINUTES: "120",
+    });
     expect(result.success).toBe(true);
     expect(result.data?.API_PORT).toBe(4000);
+    expect(result.data?.REDIS_PORT).toBe(6389);
+    expect(result.data?.PASSWORD_RESET_TOKEN_TTL_MINUTES).toBe(120);
   });
 
-  it("should accept all optional fields as undefined", () => {
+  it("leaves every optional integration unset (fail-open)", () => {
     const result = envSchema.safeParse(VALID_ENV);
-    expect(result.success).toBe(true);
     expect(result.data?.BUGSNAG_API_KEY).toBeUndefined();
     expect(result.data?.AWS_ACCESS_KEY_ID).toBeUndefined();
+    expect(result.data?.AWS_S3_BUCKET).toBeUndefined();
     expect(result.data?.GOOGLE_CLIENT_ID).toBeUndefined();
+    expect(result.data?.RESEND_API_KEY).toBeUndefined();
+    expect(result.data?.COOKIE_DOMAIN).toBeUndefined();
   });
 
-  it("should reject invalid LOG_LEVEL", () => {
-    const result = envSchema.safeParse({ ...VALID_ENV, LOG_LEVEL: "verbose" });
-    expect(result.success).toBe(false);
+  it("rejects a non-URL FRONTEND_URL and non-URL metrics endpoints", () => {
+    expect(
+      envSchema.safeParse({ ...VALID_ENV, FRONTEND_URL: "not-a-url" }).success,
+    ).toBe(false);
+    expect(
+      envSchema.safeParse({ ...VALID_ENV, METRICS_APP_URL: "10.8.0.1/metrics" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("refuses a 0 rate-limit window/max (would silently disable the limiter)", () => {
+    expect(
+      envSchema.safeParse({ ...VALID_ENV, RATE_LIMIT_AUTH_MAX: "0" }).success,
+    ).toBe(false);
+    expect(
+      envSchema.safeParse({ ...VALID_ENV, RATE_LIMIT_GLOBAL_WINDOW_MS: "0" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("refuses a non-positive TTL (0 would expire every token instantly)", () => {
+    expect(
+      envSchema.safeParse({
+        ...VALID_ENV,
+        EMAIL_VERIFICATION_PIN_TTL_MINUTES: "0",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("caps SHUTDOWN_TIMEOUT_MS at the container stop grace (60 s)", () => {
+    expect(
+      envSchema.safeParse({ ...VALID_ENV, SHUTDOWN_TIMEOUT_MS: "60001" })
+        .success,
+    ).toBe(false);
+    expect(
+      envSchema.safeParse({ ...VALID_ENV, SHUTDOWN_TIMEOUT_MS: "60000" })
+        .success,
+    ).toBe(true);
   });
 });

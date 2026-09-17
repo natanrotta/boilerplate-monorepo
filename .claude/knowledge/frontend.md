@@ -13,5 +13,11 @@
 ## Cache / Query Insights
 - (none yet)
 
+## Styling Gotchas
+- (none yet)
+
+## Testing Gotchas
+- (none yet)
+
 ## Dead Ends
 - (none yet)
