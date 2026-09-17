@@ -82,10 +82,10 @@ Classify before coding.
 
 | Feature Type | Backend Pattern | Frontend Hooks | Key Components |
 |---|---|---|---|
-| Simple CRUD | Standard 5 use cases + search endpoint | `useListPageController` + `useDetailPageController` + `useEntityDetail` | `ListPageLayout`, `EntityCard`, `ProfileHeader`, `EditableInfoGrid` |
-| With relations | Sub-resource routes + link/unlink use cases | Above + relation queries + link/unlink mutations | `LinkEntityModal`, `AppTabs` with relation sections |
+| Simple CRUD | Standard 5 use cases + search endpoint | module hooks (`useXList`, `useXDetail`) + `useDetailPageController` | `PageHeader`, `FilterBar`, `EntityCard`, `SectionCard` |
+| With relations | Sub-resource routes + link/unlink use cases | Above + relation queries + link/unlink mutations | `AppModal` + a relation `SectionCard` per resource |
 | With dynamic fields | Field-values endpoints on parent entity | Above + `useAutoSave` for field values | `DynamicFieldRenderer`, field section grid |
-| Read-only dashboard | Aggregation use cases, no writes | `useQuery` directly | `StatCard`, `DataTable`, charts |
+| Read-only dashboard | Aggregation use cases, no writes | a module hook wrapping `useQuery` (`F-H29`) | `StatCard`, `SectionCard`, charts |
 | Background job / async | BullMQ queue + processor + status endpoint | Polling via `refetchInterval` or SSE | Progress indicators, status badges |
 | Nested sub-entity | Scoped under parent | Parent context + child CRUD hooks | Nested routes, breadcrumbs |
 
@@ -154,10 +154,9 @@ Follow `.claude/patterns/frontend.md` § "Adding a New CRUD Module — Order of 
 **Hook decision (cross-reference `patterns/frontend.md` for the full table):**
 
 ```
-LIST page (bulk + delete confirm + create modal)?  → useListPageController
-LIST page (paginated only)?                         → useServerListPage
-DETAIL page editable (auto-save)?                   → useDetailPageController + useEntityDetail
-DETAIL page read-only?                              → useEntityDetail
+LIST page?                                          → the module's useXList() hook
+DETAIL page editable (auto-save)?                   → useDetailPageController + useXDetail()
+DETAIL page read-only?                              → the module's useXDetail() hook
 CREATE modal (simple)?                              → AppModal + useFormState + useMutation
 CREATE full page (complex)?                         → useDetailPageController createMode
 RELATIONS?                                          → useQuery for linked + useMutation for link/unlink
@@ -186,7 +185,7 @@ Walk these checks **before** invoking `/finish-task`:
 ### Write (auto-save edit)
 
 ```
-User edits field in EditableInfoGrid
+User edits a field in the detail page
   → handleFieldChange(key, value)
   → useDetailPageController updates localData, isDirty=true
   → after 1500ms inactivity, useAutoSave triggers onSave(localData)
@@ -208,8 +207,8 @@ User edits field in EditableInfoGrid
 ### Read (paginated list with search)
 
 ```
-User types in SearchField (FilterBar)
-  → setSearch(value) in useListPageController
+User types in the FilterBar search input
+  → setSearch(value) in the page's search state
   → useDebounce(300ms)
   → page resets to 1
   → query key: [...search(), { page: 1, limit: 12, search: "term", tagIds }]
@@ -222,7 +221,7 @@ User types in SearchField (FilterBar)
   → returns { data: Entity[], meta: { total, totalPages } }
   → res.status(200).json({ ok: true, data: result })
   → Axios unwraps → TanStack Query caches (with keepPreviousData → no flash)
-  → ListPageLayout renders EntityCard grid
+  → the page renders the EntityCard grid
 ```
 
 ---
@@ -273,7 +272,7 @@ Frontend mutation
 ### Relations (EntityA ↔ EntityB)
 
 - **Backend:** link/unlink use cases that validate both entities exist + same owner
-- **Frontend:** `queryKeys.entityA.linkedEntityB(id)`, link/unlink mutations invalidate that key only, `LinkEntityModal` + `AppTabs` section
+- **Frontend:** `queryKeys.entityA.linkedEntityB(id)`, link/unlink mutations invalidate that key only, `AppModal` + a relation `SectionCard`
 
 ### Dynamic Fields
 
@@ -283,12 +282,12 @@ Frontend mutation
 ### Bulk Operations
 
 - **Backend:** `DELETE /entities/bulk` with `{ ids: string[] }`; processor handles partial failures
-- **Frontend:** `useListPageController` already exposes `bulk` selection + `handleBulkDelete`; `BulkActionBar` + `ConfirmDialog`
+- **Frontend:** selection state in the page's module hook (a `Set<string>` of ids) + `ConfirmDialog` for the destructive step
 
 ### File Uploads
 
-- **Backend:** Multer middleware + `IStorageProvider` (S3); response includes `fileUrl`
-- **Frontend:** `FileUploadField` (drag-and-drop); `httpClient` interceptor auto-removes `Content-Type` for `FormData`
+- **Backend:** the `uploadImage` multer middleware (MIME + size gate from `shared/constant/image-upload.ts`) + `IStorageProvider` (S3); the stored extension and the S3 `ContentType` come from the **validated** MIME, never from `originalname`; the response includes the file URL
+- **Frontend:** a hidden `<input type="file">` behind a styled trigger (the avatar upload in `modules/settings` is the reference — there is no shared `FileUploadField`); `httpClient`'s interceptor auto-removes `Content-Type` for `FormData`
 
 ---
 
@@ -320,7 +319,7 @@ Frontend mutation
 
 ```
 - [ ] modules/{feature}/domain/entities/{Entity}.ts
-- [ ] modules/{feature}/domain/repositories/{Entity}Repository.ts (extends CrudRepository)
+- [ ] modules/{feature}/domain/repositories/{Entity}Repository.ts (purpose-built contract — no CRUD base class)
 - [ ] modules/{feature}/infrastructure/repositories/Http{Entity}Repository.ts
 - [ ] modules/{feature}/presentation/hooks/use{Entity}.ts        (detail)
 - [ ] modules/{feature}/presentation/hooks/use{Entities}.ts      (list, if custom)
@@ -330,7 +329,7 @@ Frontend mutation
 - [ ] core/di/repositories.ts                                 → register
 - [ ] core/query/queryKeys.ts                                 → factory
 - [ ] app/router/RoutePaths.ts
-- [ ] app/router/AppRouter.tsx                                → withAppShell + lazy
+- [ ] app/router/AppRouter.tsx                                → <Route> under ProtectedLayout + lazyWithRetry
 - [ ] shared/i18n/locales/{pt-BR,en,es}/{feature}.json
 - [ ] shared/i18n/index.ts                                    → register namespace
 - [ ] sidebar nav item (if top-level)

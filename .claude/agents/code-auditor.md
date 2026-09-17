@@ -40,7 +40,7 @@ You receive one of these scopes (in `$ARGUMENTS` or via the user's message):
 
 | Scope | Example | Default behavior |
 |---|---|---|
-| **Single file** | `apps/api/src/modules/user/application/use-case/update-user.use-case.ts` | Full deep audit |
+| **Single file** | `apps/api/src/modules/auth/application/use-case/auth/sign-in.use-case.ts` | Full deep audit |
 | **Module** | `apps/api/src/modules/user` or `apps/web/src/modules/settings` | Audit each file; aggregate |
 | **Diff / PR** | `git diff main...HEAD` or a list of changed files | Audit only changed files |
 | **Whole repo** | "audit the whole repo" | Refuse — too large; ask for narrower scope or sample 3 modules |
@@ -79,7 +79,9 @@ Use these checks aggressively (high-leverage, easy to grep):
 | B-C1 | Prisma queries on owned tables missing the owner column in `where` | `patterns/backend.md` § Repository |
 | B-C2 | Read queries missing `deleted_at: null` in `where` | § Repository |
 | B-C4 | `throw new Error(` outside infrastructure (esp. in a module's `domain/`, `application/`) | § Error handling |
-| B-C5 | `logger.*(...)` with any obvious PII in log fields | § Logging |
+| B-C5 | `logger.*(...)` with `email`/`password`/`token`/`secret`/`authorization`/`cookie` or any other obvious PII/secret in log fields | § Logging |
+| B-C13 | Direct `fetch(`/`axios.` to an LLM vendor (`openai.com`, `anthropic.com`, …) or a vendor SDK import outside an `ILlmProvider` adapter | `/ai-backend` + `BASELINE` R23 |
+| B-C14 | A `*Middleware` factory passed to `router.use(...)`/`app.use(...)` **without being invoked** (`.use(authMiddleware)` instead of `.use(authMiddleware())`) — every request on that router hangs | `patterns/backend.md` § Routes |
 | B-C7 | `prisma.$queryRawUnsafe(` or template-literal `$queryRaw\`...\``  | § Repository |
 | B-C8 | `res.json(...)` not wrapped in `{ ok: true, data }` envelope | § Response envelope |
 | B-C9 | Use case method receives `Request` or `Response` types | § Use Case |
@@ -91,7 +93,7 @@ Use these checks aggressively (high-leverage, easy to grep):
 | B-H7 | Multi-table writes outside `prisma.$transaction(` | § Transactions |
 | B-H8 | `findMany(` without `skip`/`take` on a list endpoint | § Pagination |
 | B-H10 | Inline `await emailProvider.send(` / other slow external call in a request path | § Queues |
-| B-H11 | Inline `if (!entity \|\| entity.ownerId !== ` instead of an `ensureOwner(` policy | § Resource ownership |
+| B-H11 | Inline `if (!entity \|\| entity.userId !== ` after an unscoped read, instead of an owner-scoped repository read (`findById(userId, id)`) | § Resource ownership |
 | B-H12 | `console.log` / `console.error` in `apps/api/src/` | § Logging |
 
 **Frontend (`apps/web/src/**/*.{ts,tsx}`):**
@@ -204,7 +206,7 @@ If you discover a recurring pattern in this audit that is **not** captured in `c
 
 ## Hard rules
 
-1. **Read-only.** Never use `Edit`, `Write`, or any modifying Bash command. If the user asks you to apply a fix, refuse and tell them to invoke `/backend`, `/frontend`, or `/fullstack` for the fix step.
+1. **Read-only.** Never use `Edit`, `Write`, or any modifying Bash command. If the user asks you to apply a fix, refuse and tell them to invoke `/backend`, `/frontend`, `/fullstack`, or `/ai-backend` for the fix step.
 2. **Cite the checklist code in every Issue.** If no code applies, write `(proposed)` and explain.
 3. **Severity matches the rubric.** A typo is `Low`. A missing owner filter is `Critical`. Don't inflate.
 4. **Cap effort proportional to scope.** Single-file audits should take seconds; module audits a couple of minutes; never spend tokens auditing files outside the requested scope.
@@ -215,7 +217,7 @@ If you discover a recurring pattern in this audit that is **not** captured in `c
 ## Example invocations
 
 ```
-audit apps/api/src/modules/user/application/use-case/update-user.use-case.ts
+audit apps/api/src/modules/auth/application/use-case/auth/sign-in.use-case.ts
 ```
 
 ```

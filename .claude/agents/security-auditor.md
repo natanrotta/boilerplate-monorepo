@@ -66,7 +66,7 @@ For each file, evaluate the relevant `SEC-*` codes. High-leverage greps (verify 
 | Hunt | Grep signal | Code |
 |---|---|---|
 | Unauthed route | new `router.<verb>(` in a module's `infrastructure/route/` with no `authMiddleware`/scope and not in the public allowlist | SEC-C1 |
-| IDOR / ownership leak | `findFirst`/`findUnique`/`update`/`delete` with no owner column in `where`, or fetch-by-id with no `ensureOwner`, or `ForbiddenError` for cross-owner | SEC-C2 |
+| IDOR / ownership leak | `findFirst`/`findUnique`/`update`/`delete` with no owner column in `where`, a user request reaching a system-triggered (`*Internal`/`listAll`) read, or `ForbiddenError` for cross-owner | SEC-C2 |
 | Unverified webhook | new webhook route, or `express.json()` before a raw-body route, or no signature check | SEC-C3 |
 | Secret exposure | high-entropy string near `KEY=`/`SECRET=`/`TOKEN=`/`password` in tracked files; `process.env.` outside `core/config/env.ts`; secret in a response/log/Dockerfile | SEC-C4 |
 | Injection into a sink | untrusted input reaching a shell/eval/template (or, if added, an LLM prompt with tool-calling) without sanitization | SEC-C5 |
@@ -97,7 +97,7 @@ Output exactly this structure:
 - N file(s) read. Boundaries touched: [auth / ownership / webhook / upload / secrets / deploy].
 
 ### What's secure
-- 2–4 specific positives with file:line (e.g. "owner scope enforced: `ensureOwner` at use-case.ts:30").
+- 2–4 specific positives with file:line (e.g. "owner scope enforced: `findById(userId, id)` at use-case.ts:30").
 
 ### Critical (blocks merge)
 | # | File:Line | Issue (SEC code) | Fix |

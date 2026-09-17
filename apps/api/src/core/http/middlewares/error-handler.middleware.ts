@@ -22,9 +22,9 @@ function translateError(
   return translated !== key ? translated : fallback;
 }
 
-// Query strings can carry PHI (e.g. `?search=<patient-name>`). Keep only the
-// path when attaching the URL to a report so no patient-identifying data
-// reaches the error reporter.
+// Query strings can carry PII (e.g. `?search=<person-name>`). Keep only the
+// path when attaching the URL to a report so no identifying data reaches
+// the error reporter.
 function pathOnly(url: string): string {
   return url.split("?")[0] ?? url;
 }
@@ -43,7 +43,7 @@ export function errorHandlerMiddleware(
     const errorContext = {
       errorCode: err.code,
       statusCode: err.statusCode,
-      // SEC-C7: strip the query string — it can carry PHI (`?search=<name>`)
+      // SEC-C7: strip the query string — it can carry PII (`?search=<name>`)
       // and must not land in the pino log, same as the reporter below.
       url: pathOnly(req.originalUrl),
       method: req.method,
@@ -87,7 +87,7 @@ export function errorHandlerMiddleware(
   }
 
   const errorMessage = err instanceof Error ? err.message : "Unknown error";
-  // SEC-C7: query string stripped from the logged URL (PHI safety).
+  // SEC-C7: query string stripped from the logged URL (PII safety).
   log.error(
     { url: pathOnly(req.originalUrl), method: req.method, error: errorMessage },
     "Unhandled error",

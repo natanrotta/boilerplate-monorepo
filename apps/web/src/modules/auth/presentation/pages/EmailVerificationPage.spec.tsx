@@ -17,7 +17,7 @@ vi.mock("react-router-dom", async () => {
 
 const sendVerificationPinMock = vi.fn().mockResolvedValue(undefined);
 const verifyEmailPinMock = vi.fn();
-vi.mock("@/modules/auth/presentation/hooks/useAuth", () => ({
+vi.mock("@/modules/auth/presentation/context/useAuth", () => ({
   useAuth: () => ({
     sendVerificationPin: sendVerificationPinMock,
     verifyEmailPin: verifyEmailPinMock,

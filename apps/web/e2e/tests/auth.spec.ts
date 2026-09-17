@@ -22,7 +22,9 @@ test.describe("auth", () => {
     await expect(page).toHaveURL(/\/sign-in/);
 
     await page.getByRole("textbox", { name: /e-?mail/i }).fill(DEMO_USER.email);
-    await page.getByLabel(/senha|password/i).fill(DEMO_USER.password);
+    // Anchored: the field sits next to a "Mostrar senha" reveal button, whose
+    // accessible name also contains "senha".
+    await page.getByLabel(/^(senha|password)$/i).fill(DEMO_USER.password);
     await page.getByRole("button", { name: /^entrar$|^sign in$/i }).click();
 
     // Successful sign-in redirects into the authenticated app shell.

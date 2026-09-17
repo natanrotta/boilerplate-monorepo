@@ -27,7 +27,8 @@
     "unlink": "Desvincular",
     "reload": "Recarregar página",
     "selectAll": "Selecionar tudo",
-    "actions": "Ações"
+    "actions": "Ações",
+    "clear": "Limpar"
   },
   "avatar": {
     "change": "Alterar foto",
@@ -162,7 +163,8 @@
     "tagSearch": "Buscar tag...",
     "noTagsFound": "Nenhuma tag encontrada",
     "noTagsAvailable": "Nenhuma tag disponível",
-    "clearFilters": "Limpar filtros"
+    "clearFilters": "Limpar filtros",
+    "searchLabel": "Campo de busca"
   },
   "list": {
     "deleteTitle": "Confirmar exclusão",

@@ -1,4 +1,4 @@
-# Backup do Postgres (VPS-DATA) — Nível 1
+# Backup do Postgres (host de DATA) — Nível 1
 
 Dump lógico **2x/dia (03:30 e 15:30)** → criptografado client-side (`age`) →
 offsite (Cloudflare R2) → dead-man switch (healthchecks.io). Retenção do tier
@@ -17,7 +17,7 @@ de longo prazo, em prefixos separados — não contam no limite dos 5.
 | `backup-promote.sh` | promove diário → weekly/monthly (GFS) |
 | `backup-check.sh` | confere a invariante de retenção (0 < count ≤ 5) — read-only, sai != 0 em erro |
 | `restore-drill.sh` | restaura o último dump num container descartável (**não toca prod**) |
-| `install-backup.sh` | ativa tudo na VPS-DATA (scripts + systemd timers 2x/dia + GFS) |
+| `install-backup.sh` | ativa tudo na host de DATA (scripts + systemd timers 2x/dia + GFS) |
 | `backup.env.example` | template de `/etc/boilerplate/backup.env` |
 
 ## Setup (uma vez) — segredos, manual
@@ -26,11 +26,11 @@ de longo prazo, em prefixos separados — não contam no limite dos 5.
 ```sh
 age-keygen -o backup-age.key      # NA SUA máquina, NÃO na VPS
 # "Public key: age1..."  → AGE_RECIPIENT no backup.env
-# backup-age.key (PRIVADA) → cofre/1Password OFFSITE. NUNCA na VPS-DATA.
+# backup-age.key (PRIVADA) → cofre/1Password OFFSITE. NUNCA na host de DATA.
 ```
 
-### 2. Cloudflare R2 + rclone (na VPS-DATA)
-Crie o bucket `boilerplate-backups` no R2 + um API token (R2 read/write). Na VPS-DATA:
+### 2. Cloudflare R2 + rclone (na host de DATA)
+Crie o bucket `boilerplate-backups` no R2 + um API token (R2 read/write). Na host de DATA:
 ```sh
 rclone config     # n) new · name: r2 · type: s3 · provider: Cloudflare
                   # + access_key/secret + endpoint https://<accountid>.r2.cloudflarestorage.com
@@ -41,9 +41,9 @@ rclone lsd r2:    # deve listar o bucket
 Crie um check em healthchecks.io com **período ~12h** (roda 2x/dia) + folga
 (grace ≥ ~15min, cobre o `RandomizedDelaySec`) → copie a **ping URL**.
 
-### 4. `/etc/boilerplate/backup.env` (na VPS-DATA)
+### 4. `/etc/boilerplate/backup.env` (na host de DATA)
 ```sh
-scp infra/backup/backup.env.example root@<VPS-DATA>:/etc/boilerplate/backup.env
+scp infra/backup/backup.env.example root@<host de DATA>:/etc/boilerplate/backup.env
 # edite: AGE_RECIPIENT · HC_PING_URL · RCLONE_* ; depois: chmod 600 /etc/boilerplate/backup.env
 ```
 

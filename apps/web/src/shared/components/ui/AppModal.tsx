@@ -1,9 +1,16 @@
-import { Button, CloseButton, Dialog, Flex, Portal } from "@chakra-ui/react";
-import type { DialogRootProps } from "@chakra-ui/react";
+import { Button, Flex } from "@chakra-ui/react";
 import type { PropsWithChildren, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-
-type DialogSize = NonNullable<DialogRootProps["size"]>;
+import {
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
+  DialogTitle,
+  type DialogSize,
+} from "@/components/ui/dialog";
 
 /**
  * Chakra v3's Dialog dropped the `2xl`/`3xl` sizes it accepted in v2. Keep the
@@ -67,51 +74,50 @@ export function AppModal({
   const { t } = useTranslation("common");
 
   return (
-    <Dialog.Root
+    // `onOpenChange` fires for every dismissal route (X, overlay, Esc); routing
+    // only the close transition to `onClose` keeps the v2 contract exactly.
+    <DialogRoot
       open={isOpen}
-      onOpenChange={(e) => {
-        if (!e.open) onClose();
+      onOpenChange={({ open }) => {
+        if (!open) onClose();
       }}
       size={size ? SIZE_MAP[size] : undefined}
       scrollBehavior={scrollBehavior}
       placement="center"
     >
-      <Portal>
-        <Dialog.Backdrop bg="blackAlpha.300" backdropFilter="blur(2px)" />
-        <Dialog.Positioner>
-          <Dialog.Content borderRadius={borderRadius} mx={{ base: 3, md: 0 }}>
-            <Dialog.Header fontSize={{ base: "md", md: "lg" }}>
-              <Dialog.Title>{title}</Dialog.Title>
-            </Dialog.Header>
-            <Dialog.CloseTrigger asChild>
-              <CloseButton size="sm" />
-            </Dialog.CloseTrigger>
-            <Dialog.Body>{children}</Dialog.Body>
-            <Dialog.Footer flexDirection={{ base: "column-reverse", sm: "row" }} gap={2}>
-              {footerLeft && <Flex mr="auto">{footerLeft}</Flex>}
-              <Button
-                variant="ghost"
-                onClick={onCancelAction ?? onClose}
-                loading={isCancelLoading}
-                w={{ base: "full", sm: "auto" }}
-              >
-                {cancelActionLabel ?? t("actions.cancel")}
-              </Button>
-              {primaryActionLabel && onPrimaryAction ? (
-                <Button
-                  colorPalette={primaryColorScheme}
-                  onClick={onPrimaryAction}
-                  loading={isPrimaryLoading}
-                  disabled={isPrimaryDisabled}
-                  w={{ base: "full", sm: "auto" }}
-                >
-                  {primaryActionLabel}
-                </Button>
-              ) : null}
-            </Dialog.Footer>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
+      <DialogContent data-cy="app-modal" borderRadius={borderRadius} mx={{ base: 3, md: 0 }}>
+        <DialogHeader>
+          <DialogTitle fontSize={{ base: "md", md: "lg" }}>{title}</DialogTitle>
+        </DialogHeader>
+        {/* The snippet carries no copy of its own — the label comes from here
+            so it follows the active locale. */}
+        <DialogCloseTrigger aria-label={t("actions.close")} />
+        <DialogBody>{children}</DialogBody>
+        <DialogFooter flexDirection={{ base: "column-reverse", sm: "row" }} gap={2}>
+          {footerLeft && <Flex mr="auto">{footerLeft}</Flex>}
+          <Button
+            data-cy="app-modal-cancel"
+            variant="ghost"
+            onClick={onCancelAction ?? onClose}
+            loading={isCancelLoading}
+            w={{ base: "full", sm: "auto" }}
+          >
+            {cancelActionLabel ?? t("actions.cancel")}
+          </Button>
+          {primaryActionLabel && onPrimaryAction ? (
+            <Button
+              data-cy="app-modal-primary"
+              colorPalette={primaryColorScheme}
+              onClick={onPrimaryAction}
+              loading={isPrimaryLoading}
+              disabled={isPrimaryDisabled}
+              w={{ base: "full", sm: "auto" }}
+            >
+              {primaryActionLabel}
+            </Button>
+          ) : null}
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   );
 }

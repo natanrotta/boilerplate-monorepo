@@ -27,7 +27,8 @@
     "unlink": "Unlink",
     "reload": "Reload page",
     "selectAll": "Select all",
-    "actions": "Actions"
+    "actions": "Actions",
+    "clear": "Clear"
   },
   "avatar": {
     "change": "Change photo",
@@ -162,7 +163,8 @@
     "tagSearch": "Search tag...",
     "noTagsFound": "No tags found",
     "noTagsAvailable": "No tags available",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "searchLabel": "Search field"
   },
   "list": {
     "deleteTitle": "Confirm deletion",

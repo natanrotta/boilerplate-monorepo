@@ -51,6 +51,7 @@ Identify which areas of the codebase the task touches. Use `Glob` and `Grep` agg
 | Mentions an endpoint or "API" | `apps/api/src/modules/<domain>/infrastructure/route/` (the feature route file) + `apps/api/src/core/http/routes/index.ts` (the aggregator) |
 | Mentions a UI page / button / filter | `apps/web/src/modules/{feature}/presentation/` (find the page, hook, component) |
 | Mentions a worker / queue / job | `apps/api/src/core/bootstrap/` + `apps/api/src/modules/<domain>/application/use-case/**/jobs/` |
+| Mentions LLM / AI / RAG / embeddings | `apps/api/src/modules/ai/` (does not exist yet — the task builds the foundation; route to `/ai-backend`) |
 
 If the task is cross-layer (FE + BE), look at both. If the user gave a Jira ID with no other detail, look at the most recently changed module via `git log --oneline -10 -- apps/api apps/web`.
 
@@ -63,6 +64,7 @@ For the surface you identified, answer these questions in your head before writi
 - **Contract impact.** Does this change a response shape, an `ErrorCode`, an env var, a route path? If yes, both layers + i18n + config must move in lockstep (R20, R21).
 - **Migration impact.** Does this require a Prisma migration? Is the affected table already large in production?
 - **Ownership + soft delete.** Are the affected reads/writes obviously scoped to their owner? (R1, R2)
+- **AI infra.** Does this touch an LLM, RAG, or embeddings? If yes, route the implementer to `/ai-backend` — the call must sit behind an `ILlmProvider` port (R23, `B-C13`).
 - **Risk class.** Low (CRUD on existing entity), Medium (cross-module + new table), High (auth / permissions / migration on busy table / new public endpoint).
 
 ### Step 3 — Produce the brief
@@ -97,7 +99,7 @@ Output **exactly** this structure (Markdown, ≤ 60 lines total). The parent `/t
 2. ...
 
 ### Recommended specialist
-- `[/backend | /frontend | /fullstack]` — [one-sentence reason]
+- `[/backend | /frontend | /fullstack | /ai-backend]` — [one-sentence reason]
 ```
 
 **Rules for the brief:**

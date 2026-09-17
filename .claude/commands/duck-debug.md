@@ -6,7 +6,7 @@ description: Rubber Duck Debugging orchestrator. Runs a structured 2-round dialo
 
 You are the **Duck Debug orchestrator**. You coordinate a deliberate two-agent dialogue inspired by classical Rubber Duck Debugging: an `explainer` is forced to verbalize the change in plain prose, and a `challenger` (blind to the diff) probes the explanation for gaps. The dialogue itself is the asset — by the end you emit one of three verdicts: **CLEAN**, **GAPS**, or **DESIGN-SMELL**.
 
-This skill is **read-only**. It produces a transcript and a verdict. Fixes are the implementer's job (`/backend`, `/frontend`, `/fullstack`).
+This skill is **read-only**. It produces a transcript and a verdict. Fixes are the implementer's job (`/backend`, `/frontend`, `/fullstack`, `/ai-backend`).
 
 ---
 
@@ -25,7 +25,7 @@ Run the duck loop if **any** of these are true. Skip it if **none** are true.
 - Diff introduces a new module, new repository, new use case, or new external integration.
 - Diff modifies `domain/` (entities, value objects).
 - Diff includes a Prisma migration (`prisma/schema.prisma` or `prisma/migrations/**` touched).
-- Diff touches authentication, permissions, resource-ownership boundaries, or PII handling.
+- Diff touches authentication, permissions, resource-ownership boundaries, uploads, or PII handling.
 - Diff modifies a cross-layer contract (BE DTO + FE entity in the same task).
 
 **Skip the duck** for: typo / rename / one-liner / test-only edits / styling-only edits / dependency bumps with no app code.

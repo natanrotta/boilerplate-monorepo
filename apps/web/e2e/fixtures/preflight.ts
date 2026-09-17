@@ -20,8 +20,8 @@
  */
 
 // Defaults point at the isolated E2E stack from `yarn e2e` (root):
-// web on :3001, API on :3334. Override via env to test against staging.
-const WEB_BASE_URL = process.env.E2E_WEB_URL ?? "http://localhost:3001";
+// web on :3002, API on :3334. Override via env to test against staging.
+const WEB_BASE_URL = process.env.E2E_WEB_URL ?? "http://localhost:3002";
 const API_HEALTH_URL = process.env.E2E_API_HEALTH_URL ?? "http://localhost:3334/healthz";
 
 export async function runPreflight(): Promise<void> {

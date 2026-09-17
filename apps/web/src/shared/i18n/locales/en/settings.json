@@ -3,11 +3,6 @@
     "title": "Settings",
     "description": "Manage your profile, team and account"
   },
-  "tabs": {
-    "profile": "Profile",
-    "team": "Team",
-    "account": "Account"
-  },
   "account": {
     "title": "Account Details",
     "accountName": "Account Name",

@@ -1,6 +1,13 @@
-import { useRef } from "react";
-import { Button, Dialog, Portal } from "@chakra-ui/react";
+import { Button } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
+import {
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -26,7 +33,6 @@ export function ConfirmDialog({
   isDanger = true,
 }: ConfirmDialogProps) {
   const { t } = useTranslation("common");
-  const cancelRef = useRef<HTMLButtonElement>(null);
 
   const resolvedTitle = title ?? t("confirmDialog.defaultTitle");
   const resolvedDescription = description ?? t("confirmDialog.defaultDescription");
@@ -34,43 +40,56 @@ export function ConfirmDialog({
   const resolvedCancelLabel = cancelLabel ?? t("actions.cancel");
 
   return (
-    <Dialog.Root
+    // v3 folded AlertDialog into Dialog: `role="alertdialog"` is what makes
+    // assistive tech announce it as a decision. `initialFocusEl` replaces v2's
+    // `leastDestructiveRef` — focus lands on Cancel, not on the destructive CTA.
+    // It is resolved on demand (a ref would still be null when the dialog mounts
+    // its content in a portal).
+    <DialogRoot
       role="alertdialog"
       open={isOpen}
-      onOpenChange={(e) => {
-        if (!e.open) onClose();
+      onOpenChange={({ open }) => {
+        if (!open) onClose();
       }}
-      // Focus the least-destructive (cancel) button when the dialog opens,
-      // preserving the v2 `leastDestructiveRef` behavior.
-      initialFocusEl={() => cancelRef.current}
       placement="center"
+      initialFocusEl={() =>
+        document.querySelector<HTMLButtonElement>("[data-confirm-cancel]")
+      }
     >
-      <Portal>
-        <Dialog.Backdrop bg="blackAlpha.300" backdropFilter="blur(2px)" />
-        <Dialog.Positioner>
-          <Dialog.Content borderRadius="lg" mx={{ base: 4, md: 0 }}>
-            <Dialog.Header fontSize="md" fontWeight="700">
-              <Dialog.Title>{resolvedTitle}</Dialog.Title>
-            </Dialog.Header>
-            <Dialog.Body fontSize="sm" color="text.secondary">
-              {resolvedDescription}
-            </Dialog.Body>
-            <Dialog.Footer gap={2}>
-              <Button ref={cancelRef} size="sm" variant="ghost" onClick={onClose}>
-                {resolvedCancelLabel}
-              </Button>
-              <Button
-                size="sm"
-                colorPalette={isDanger ? "red" : "brand"}
-                onClick={onConfirm}
-                loading={isLoading}
-              >
-                {resolvedConfirmLabel}
-              </Button>
-            </Dialog.Footer>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
+      <DialogContent data-cy="confirm-dialog" borderRadius="lg" mx={{ base: 4, md: 0 }}>
+        <DialogHeader>
+          <DialogTitle fontSize="md" fontWeight="700">
+            {resolvedTitle}
+          </DialogTitle>
+        </DialogHeader>
+        <DialogBody fontSize="sm" color="text.secondary">
+          {resolvedDescription}
+        </DialogBody>
+        <DialogFooter gap={2}>
+          <Button
+            data-confirm-cancel
+            data-cy="confirm-cancel"
+            size="sm"
+            variant="ghost"
+            onClick={onClose}
+          >
+            {resolvedCancelLabel}
+          </Button>
+          <Button
+            data-cy="confirm-confirm"
+            size="sm"
+            // The button recipe paints `solid` with the brand tokens and ignores
+            // `colorPalette` (`colorPalette="red"` rendered this blue), so the
+            // destructive CTA uses the recipe's own `danger` variant. Chakra's
+            // generated types don't know the custom variant name.
+            variant={(isDanger ? "danger" : "solid") as "solid"}
+            onClick={onConfirm}
+            loading={isLoading}
+          >
+            {resolvedConfirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   );
 }

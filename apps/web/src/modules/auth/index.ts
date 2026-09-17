@@ -7,5 +7,5 @@ export type {
   UpdateProfileInput,
 } from "./domain/entities/AuthUser";
 
-export { useAuth } from "./presentation/hooks/useAuth";
+export { useAuth } from "./presentation/context/useAuth";
 export { getPostAuthDestination } from "./presentation/utils/postAuthDestination";
