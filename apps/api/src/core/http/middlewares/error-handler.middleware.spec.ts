@@ -121,7 +121,7 @@ describe("errorHandlerMiddleware", () => {
 
   it("strips the query string from the logged URL on a 5xx AppError (SEC-C7)", () => {
     const { req } = mockReqRes();
-    (req as any).originalUrl = "/api/patients?search=joao+silva&cpf=123";
+    (req as any).originalUrl = "/api/search?q=joao+silva&document=123";
     const next = vi.fn() as unknown as NextFunction;
     const res = {
       status: vi.fn().mockReturnValue({ json: vi.fn() }),
@@ -130,14 +130,14 @@ describe("errorHandlerMiddleware", () => {
     errorHandlerMiddleware(new InternalError("boom"), req, res, next);
 
     const [logContext] = (req.log as any).error.mock.calls[0];
-    expect(logContext.url).toBe("/api/patients");
+    expect(logContext.url).toBe("/api/search");
     expect(logContext.url).not.toContain("?");
     // Reporter metadata stays query-free too.
     const event = runNotifyCallback(
       vi.mocked(errorReporter.notify).mock.calls[0]!,
     );
     expect(event.addMetadata).toHaveBeenCalledWith("request", {
-      url: "/api/patients",
+      url: "/api/search",
       method: "GET",
     });
   });
@@ -205,7 +205,7 @@ describe("errorHandlerMiddleware", () => {
     ["403", () => new ForbiddenError("denied")],
     [
       "429",
-      () => new TooManyRequestsError("too many", undefined, "AI_RATE_LIMIT"),
+      () => new TooManyRequestsError("too many", undefined, "AUTH_RATE_LIMIT"),
     ],
   ])("should report %s AppError with warning severity", (_, factory) => {
     const { req, res, next } = mockReqRes();

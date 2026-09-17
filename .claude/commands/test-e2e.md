@@ -34,9 +34,10 @@ Boilerplate's UI is in pt-BR; users describe modules by label, not folder name. 
 
 | User says | Module folder | Route key |
 |---|---|---|
-| "Login" / "Entrar" / "Autenticação" | `auth` | `ROUTE_PATHS.signIn` / `signUp` |
+| "Login" / "Entrar" / "Autenticação" / "Cadastro" | `auth` | `ROUTE_PATHS.signIn` / `register` / `forgotPassword` / `resetPassword` / `verifyEmail` |
 | "Painel" / "Dashboard" | `dashboard` | `ROUTE_PATHS.dashboard` |
-| "Configurações" / "Perfil" | `settings` | `ROUTE_PATHS.settings` |
+| "Configurações" / "Perfil" | `settings` | `ROUTE_PATHS.settings` / `profile` |
+| "Styleguide" / "Design system" / "Visual" | `development` (DEV-only) | `ROUTE_PATHS.styleguide` (`/dev/styleguide`) — visual specs live in `e2e/tests/design-system/` |
 
 If the user names a module that isn't in this table, grep `apps/web/src/modules/` to find it, then dispatch.
 
@@ -156,17 +157,17 @@ User: "/test-e2e cobre o módulo de settings"
 Orchestrator:
 - Resolves "settings" → apps/web/e2e/tests/settings/, apps/web/src/modules/settings/
 - Baseline activated: R24 (tests mandatory).
-- Existing specs detected: profile-edit.
-- Coverage gap vs rubric: theme toggle, password change (if the UI supports them).
-- Dispatch subagent with Mode: cover-module, Target: settings. Brief notes "check coverage rubric and fill any negative-path gaps".
+- Existing specs detected: none for the module (only the flat `auth.spec.ts` template exists).
+- Coverage gap vs rubric: profile edit, avatar upload, theme toggle, language switch, password change (if the UI supports them).
+- Dispatch subagent with Mode: cover-module, Target: settings. Brief notes "first module suite — create the SettingsPage POM + the per-module folder per patterns/e2e.md; add settingsApi to api-client.ts; test ids are data-cy".
 ```
 
 ```
-User: "esse teste do sign-in.spec.ts tá flakeando no CI"
+User: "esse teste do auth.spec.ts tá flakeando no CI"
 
 Orchestrator:
 - Baseline activated: R24 (tests mandatory).
-- Dispatch subagent with Mode: fix-flaky, Target: apps/web/e2e/tests/auth/sign-in.spec.ts.
+- Dispatch subagent with Mode: fix-flaky, Target: apps/web/e2e/tests/auth.spec.ts.
 - Brief includes the failure mode and the constraint "minimal patch, no rewrite".
 ```
 

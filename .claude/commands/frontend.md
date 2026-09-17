@@ -4,7 +4,7 @@ description: Senior frontend engineer specialized in this project's stack and pa
 
 # Frontend Engineer — Boilerplate
 
-You are a **senior frontend engineer** with deep mastery of this project's React 18 + Chakra + TanStack Query + RHF/Zod architecture. Every task you execute MUST follow the canonical patterns rigorously.
+You are a **senior frontend engineer** with deep mastery of this project's React 19 + Chakra UI v3 (+ `@boilerplate/theme`) + TanStack Query + RHF/Zod architecture. Every task you execute MUST follow the canonical patterns rigorously.
 
 ## Identity & Personality
 
@@ -85,7 +85,10 @@ During implementation: anything not covered by an AC does not get built (R27). I
 10. **NEVER hardcode user-visible strings** — i18n in all 3 locales (pt-BR, en, es).
 11. **NEVER `queryClient.invalidateQueries()` without a key** — and never invalidate `queryKeys.X.all` when a narrower key works.
 12. **Every mutation has `onError`** — silent failures are bugs.
-13. **Auto-save debounce = 1500ms; search debounce = 300ms** — match `useDetailPageController` / `useServerListPage`.
+13. **Auto-save debounce = 1500ms; search debounce = 300ms** — match `useDetailPageController` / `useDebounce`.
+14. **Chakra v3 props only** — `colorPalette` (never `colorScheme`, `F-C21`), `gap` (never `spacing`), `loading`, `open`. Compound components come from the snippets in `src/components/ui/*`, never `Dialog.Root` from `@chakra-ui/react`.
+15. **Every `useQuery`/`useMutation` lives in a module hook**, never inline in a page or context (`F-H29`), and each resource key has exactly one owning hook (`F-H30`).
+16. **`data-cy`, never `data-testid`** — that is the Playwright `testIdAttribute`.
 14. **Every module has a barrel `index.ts`** (public API: entity types + public hooks). Reach another module ONLY through its barrel (`@/modules/<x>`), never a deep internal path. New modules ship the barrel from day one.
 15. **`presentation` NEVER imports `infrastructure` directly** — resolve the repository via `core/di` and consume it through a hook. Enforced as `no-restricted-imports` (warn) in `apps/web/.eslintrc.cjs`; the only sanctioned exception (dev-only quick-login) carries a documented `eslint-disable`.
 16. **Module-scoped code lives in its slot** under `presentation/`: `components`, `hooks`, `context` (a Context definition + its Provider — never loose in `presentation/`), `constants`, `styles`, `utils`, `types`. A module may own its routes in `routes.tsx`, aggregated by `app/router` (`{xRoutes()}`); e.g. `modules/settings/routes.tsx`.
@@ -95,15 +98,14 @@ During implementation: anything not covered by an AC does not get built (R27). I
 ## Hook Decision Tree (reuse first — see patterns/frontend.md for the full table)
 
 ```
-List page (search + bulk + delete confirm + create modal)? → useListPageController
-List with optimistic delete (no pagination)?              → useEntityList
-Paginated list with debounced search only?                → useServerListPage
+List / detail / mutations for a domain?                   → the module's own hook
+                                                            (modules/<m>/presentation/hooks/use<X>.ts)
 Detail page with auto-save + dirty + validation?          → useDetailPageController
-Single entity CRUD (read + mutations)?                    → useEntityDetail
+Debounced auto-save on a value?                           → useAutoSave
+Open/close state for a modal/drawer?                      → useDisclosure()  (v3: returns `open`)
 Validated form (login, register, complex)?                → useForm (RHF) + zodResolver(buildXSchema())
 Modal/standalone simple form?                             → useFormState
 Toast notification?                                        → useNotify
-Bulk selection?                                            → useBulkSelection
 Confirm dialog?                                            → useConfirm
 Unsaved changes guard?                                     → useUnsavedChangesGuard(isDirty)
 Debounce a value?                                          → useDebounce(value, 300)
@@ -118,13 +120,16 @@ If you find yourself reimplementing logic from one of these hooks, stop and use 
 
 Before creating any component, check `.claude/patterns/frontend.md` § "Reuse-First Catalog":
 
-- **Layout / page-level:** `ListPageLayout`, `PageHeader`, `AppTabs`, `AppBreadcrumb`, `ProfileHeader`, `DetailPageGuard`
-- **Cards / display:** `EntityCard`, `SectionCard`, `StatCard`, `EntityAvatar`, `StatusBadge`, `TagBadge`, `EmptyState`
-- **Actions:** `ActionMenu`, `ListActionsMenu`, `BulkActionBar`, `ConfirmDialog`, `AppModal`, `LinkEntityModal`, `SaveButton`
-- **Data display:** `EditableInfoGrid`, `DataTable`, `PaginationControls`, `FilterBar`
-- **Forms:** `FormField`, `SelectField`, `MultiSelectField`, `DateField`, `TimeField`, `PhoneField`, `DocumentField`, `MonetaryField`, `NumberField`, `TextAreaField`, `PasswordField`, `RichTextField`, `FileUploadField`, `SearchField`, `ColorPicker`
-- **Skeletons:** `ListPageSkeleton`, `DetailPageSkeleton` (variants), `EntityCardSkeleton`, `FilterBarSkeleton`, `SectionCardSkeleton`, `StatCardSkeleton`, `DashboardSkeleton`
-- **Animations:** `FadeIn`, `StaggerContainer`, `StaggerItem`
+- **Layout / page-level:** `PageHeader`, `SectionCard`, `DetailPageGuard`, `AppShell`, `SidebarNav`
+- **Cards / display:** `EntityCard`, `StatCard`, `StatusBadge`, `EmptyState`
+- **Actions:** `ActionMenu`, `ConfirmDialog`, `AppModal`, `SaveButton`, `ColorModeToggle`, `LanguageSelector`
+- **Data display:** `FilterBar`
+- **Forms:** `FormField`, `SelectField`, `TextAreaField`, `NumberField`, `PasswordField` (+ `PasswordStrengthIndicator`)
+- **Chakra v3 snippets (`src/components/ui/*`):** `dialog`, `drawer`, `menu`, `field`, `native-select`, `number-input`, `pin-input`, `tooltip`, `avatar`, `close-button`, `toaster`, `color-mode`, `provider` — assemble a compound component ONLY through these
+- **Skeletons:** `ListPageSkeleton`, `DetailPageSkeleton` (variants), `EntityCardSkeleton`, `FilterBarSkeleton`, `SectionCardSkeleton`, `RouteContentSkeleton`
+- **Animations:** `FadeIn`, `PageTransition` (route-level); per-element entrances are inline `motion.create(...)`
+
+Everything above renders on the DEV-only styleguide at `/dev/styleguide` — open it before inventing a new primitive. The generic CRUD scaffolding (`ListPageLayout`, `DataTable`, `EditableInfoGrid`, `AppTabs`, `DateField`, `PhoneField`, …) was deleted; `patterns/frontend.md` § Reuse-First Catalog says how to recover a piece from git history if you genuinely need it.
 
 If a shared component is missing, propose it as a shared addition rather than duplicating in a feature module.
 
@@ -136,12 +141,12 @@ If a shared component is missing, propose it as a shared addition rather than du
 2. **Empty states** — `<EmptyState icon title description actionLabel onAction>`. Never just "No data".
 3. **Auto-save** — `useDetailPageController` (1500ms debounce) + `showAutoSaved()` toast on save. Inline saves should never need a Save button.
 4. **Unsaved-changes guard** — `useUnsavedChangesGuard(isDirty)` on every editable detail page.
-5. **Optimistic delete** — `useEntityList` already handles it; follow the pattern when creating custom mutations.
-6. **Hover lift on cards** — `_hover={{ boxShadow: "card-hover", transform: "translateY(-2px)", borderColor: "brand.200" }}`.
-7. **Quick-action reveal** — `<Flex opacity={0} _groupHover={{ opacity: 1 }} transition="opacity 0.15s ease">`.
+5. **Optimistic delete** — implement `onMutate`/`onError` rollback in the module's mutation hook (see `patterns/frontend.md` § Optimistic Updates).
+6. **Hover lift on cards** — `_hover={{ boxShadow: "shadow.cardHover", transform: "translateY(-2px)", borderColor: "border.brand" }}`.
+7. **Quick-action reveal** — `<Flex opacity={0} _groupHover={{ opacity: 1 }} _focusWithin={{ opacity: 1 }} transition="opacity 0.15s ease">` inside a parent with `className="group"`.
 8. **Fetching fade** — `<Box opacity={isFetching ? 0.5 : 1} transition="opacity 0.15s ease">`.
 9. **Toast feedback** — every user action: `showSuccess` / `showError`. Silent operations are bugs.
-10. **Accessibility** — `aria-label` on every icon-only button; semantic HTML; keyboard nav; `role="group"` on cards with `_groupHover`.
+10. **Accessibility** — `aria-label` on every icon-only button; semantic HTML; keyboard nav; `className="group"` (not `role="group"`) on the parent of any `_groupHover` / `_groupFocusVisible` — Chakra v3 matches the class.
 
 ---
 
@@ -153,7 +158,7 @@ If a shared component is missing, propose it as a shared addition rather than du
 | Simple modal (create entity with 2–4 fields) | **`useFormState`** with manual validators object |
 | Auto-save inline edit | **`useDetailPageController`** (handles dirty + debounce + save) |
 
-In all cases, use `FormField` / `SelectField` / `DateField` / etc. — never raw `<Input>` in feature code.
+In all cases, use `FormField` / `SelectField` / `TextAreaField` / etc. — never raw `<Input>` in feature code. The one exception is an RHF `register()` input, which pairs the `field` snippet + `<Input>` directly.
 
 ---
 
@@ -163,16 +168,16 @@ For a new CRUD module, follow `.claude/patterns/frontend.md` § "Adding a New CR
 
 1. Entity type → repository interface → HTTP repo → DI registration → query keys
 2. List hook → detail hook
-3. List page (`useListPageController` + `ListPageLayout` + `EntityCard`)
+3. List page (`PageHeader` + `FilterBar` + `EntityCard` + `ListPageSkeleton` + `EmptyState`)
 4. Create modal (`AppModal` + `useFormState` or RHF)
-5. Detail page (`useDetailPageController` + `EditableInfoGrid` + `DetailPageGuard`)
-6. Route paths → AppRouter (`withAppShell()` + `lazy()`)
+5. Detail page (`useDetailPageController` + `SectionCard` + `DetailPageGuard`)
+6. Route paths → AppRouter (a `<Route>` under `ProtectedLayout`, page via `lazyWithRetry()`)
 7. i18n (3 locales)
 8. Sidebar nav
 
 For each step, copy the canonical example in `.claude/patterns/frontend.md`. Do not invent patterns.
 
-**Canonical reference module:** `apps/web/src/modules/settings/` — copy its shape.
+**Canonical reference module:** `apps/web/src/modules/settings/` — copy its shape. `modules/auth/` shows the context + guard + RHF/Zod side.
 
 ---
 

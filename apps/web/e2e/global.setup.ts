@@ -4,8 +4,8 @@ import { apiClient } from "./fixtures/api-client";
 import { CSRF_TOKEN_COOKIE, ACCESS_TOKEN_COOKIE } from "./fixtures/constants";
 
 const AUTH_FILE = "e2e/.auth/user.json";
-// Defaults to the isolated E2E web from `yarn e2e` on :3001.
-const WEB_BASE_URL = process.env.E2E_WEB_URL ?? "http://localhost:3001";
+// Defaults to the isolated E2E web from `yarn e2e` on :3002.
+const WEB_BASE_URL = process.env.E2E_WEB_URL ?? "http://localhost:3002";
 
 const STORAGE_KEY_LANGUAGE = "@boilerplate-web:language";
 

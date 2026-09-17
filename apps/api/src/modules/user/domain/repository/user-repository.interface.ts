@@ -54,18 +54,13 @@ export interface SetTokenData {
 
 export interface IUserRepository {
   findById(id: string): Promise<User | null>;
-  /**
-   * Batch lookup — returns every existing user for the supplied ids, in
-   * arbitrary order, skipping ids that don't resolve.
-   */
-  findByIds(ids: string[]): Promise<User[]>;
   findByEmail(email: string): Promise<User | null>;
   findByGoogleId(googleId: string): Promise<User | null>;
   findByRefreshTokenHash(hash: string): Promise<User | null>;
-  findAll(): Promise<User[]>;
   create(data: CreateUserData): Promise<User>;
   update(id: string, data: UpdateUserData): Promise<User>;
-  delete(id: string): Promise<void>;
+  /** The only deletion path. A hard delete would orphan every row that
+   *  references the user; `deleted_at` keeps the audit trail (BASELINE R2). */
   softDelete(id: string): Promise<void>;
   incrementTokenVersion(id: string): Promise<void>;
   /** Flips `email_verified` to true after a successful PIN confirmation. */

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { FiCheckCircle } from "@/shared/components/icons";
 import { ROUTE_PATHS } from "@/app/router/RoutePaths";
-import { useAuth } from "@/modules/auth/presentation/hooks/useAuth";
+import { useAuth } from "@/modules/auth/presentation/context/useAuth";
 import { useNotify } from "@/shared/hooks/useNotify";
 import { FormField } from "@/shared/components/forms/FormField";
 import { LanguageSelector } from "@/shared/components/ui/LanguageSelector";

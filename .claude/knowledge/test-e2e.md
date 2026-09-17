@@ -3,8 +3,14 @@
 > Living notes for the `/test-e2e` skill + `e2e-test-writer`: flaky-test root causes, locator tricks, POM lessons.
 > Fills **with use**. Authority for the conventions stays in `.claude/patterns/e2e.md`.
 
-## Patterns
+## Selector Strategies
 - (none yet)
 
-## Flake root causes / fixes
+## Flaky Test Fixes
+- (none yet)
+
+## Page Object Patterns
+- (none yet)
+
+## Dead Ends
 - (none yet)

@@ -75,7 +75,7 @@ export function LanguageSelector() {
               fontSize: "xs",
               fontWeight: "500",
               bg: "neutral.800",
-              color: "#ffffff",
+              color: "white",
               borderRadius: "md",
               px: 2.5,
               py: 1,
@@ -83,6 +83,9 @@ export function LanguageSelector() {
           >
             <Flex
               as="button"
+              data-cy={`language-${lang.value}`}
+              aria-label={label}
+              aria-pressed={isActive}
               align="center"
               justify="center"
               gap={1.5}

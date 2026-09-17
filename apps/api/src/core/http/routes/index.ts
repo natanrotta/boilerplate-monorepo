@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { authRoutes } from "@modules/auth/infrastructure/route/auth.routes";
-import { userRoutes } from "@modules/user/infrastructure/route/user.routes";
 import { userRateLimit } from "../middlewares";
 import { container, DI_TOKENS } from "@core/container";
 
@@ -22,9 +21,8 @@ router.get("/health", (_req, res) => {
 
 router.use("/auth", authRoutes);
 
+// Per-user limiter for every authenticated surface mounted BELOW this line.
+// Mount new domain routers here — see `.claude/patterns/backend-modules.md`.
 router.use(userRateLimit);
-
-// User management (CRUD) — every route is auth-guarded inside user.routes.
-router.use("/users", userRoutes);
 
 export { router };

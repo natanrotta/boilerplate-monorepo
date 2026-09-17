@@ -4,7 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
 import { ROUTE_PATHS } from "@/app/router/RoutePaths";
-import { useAuth } from "@/modules/auth/presentation/hooks/useAuth";
+import { useAuth } from "@/modules/auth/presentation/context/useAuth";
 import { useNotify } from "@/shared/hooks/useNotify";
 import { PasswordField } from "@/shared/components/forms/PasswordField";
 import { PasswordStrengthIndicator } from "@/shared/components/forms/PasswordStrengthIndicator";

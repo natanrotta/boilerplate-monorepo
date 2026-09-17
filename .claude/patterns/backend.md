@@ -2,7 +2,7 @@
 
 **This document is the single source of truth for how a backend request flows from HTTP to database and back.**
 
-Every backend skill (`/backend`, `/fullstack`, `/architect`, `/code-review`, `/test`) MUST defer to this document. If a skill contradicts this file, this file wins. If you discover a divergence between this file and the actual code, update this file (PR + reviewer approval) — never let the skills drift.
+Every backend skill (`/backend`, `/fullstack`, `/ai-backend`, `/architect`, `/code-review`, `/test`) MUST defer to this document. If a skill contradicts this file, this file wins. If you discover a divergence between this file and the actual code, update this file (PR + reviewer approval) — never let the skills drift.
 
 > **📁 Physical organization is MODULE-FIRST — see [`backend-modules.md`](./backend-modules.md).**
 > `apps/api/src` is organized `modules/<domain>/ · shared/ · core/ · test/`, NOT
@@ -17,14 +17,15 @@ Every backend skill (`/backend`, `/fullstack`, `/architect`, `/code-review`, `/t
 
 ## Stack
 
-- **Runtime:** Node 20+ (tsx in dev, tsc + node in prod)
+- **Runtime:** Node 22 (tsx in dev, tsc + `tsconfig.build.json` + node in prod)
 - **HTTP:** Express 4
-- **DB:** PostgreSQL + Prisma 7
-- **DI:** tsyringe (decorators + reflect-metadata)
+- **DB:** PostgreSQL 15 + Prisma 7
+- **DI:** tsyringe (decorators + reflect-metadata) — tokens from `@core/container/tokens`
 - **Validation:** Zod
 - **Queue:** BullMQ + Redis
 - **Logger:** Pino (`ILoggerProvider`) — never `console.log`
-- **Errors:** Sentry + custom `AppError` hierarchy
+- **Errors:** Bugsnag (`core/service/error-reporter/`) + custom `AppError` hierarchy; `ErrorCodes` live in `@boilerplate/shared-types`
+- **Lifecycle:** `core/service/lifecycle/` — SIGTERM/SIGINT + `uncaughtException`/`unhandledRejection` → staged teardown (`SHUTDOWN_TIMEOUT_MS`)
 - **i18n:** i18next (pt-BR primary, en, es)
 - **Tests:** Vitest 3.2 (globals)
 
@@ -61,49 +62,51 @@ apps/api/src/
   shared/                      # pure kernel — ZERO domain knowledge, importable anywhere
     error/                     # AppError hierarchy + ErrorCodes enum
     i18n/                      # i18next config + locales/{pt-BR,en,es}/
-    util/                      # pagination, safe-s3-delete, slugify (named by purpose)
-    constant/                  # queue names, limits, defaults
-    policy/                    # ensure-authenticated (reusable authz)
-    provider/                  # generic provider PORTS (ICacheProvider, IJwtProvider…)
-    type/                      # cross-module domain primitives (JsonValue, FieldValue, enums)
-    dto/                       # common.dto (pagination/response schemas shared by all modules)
+    util/                      # html, parse-expires-in, safe-s3-delete, extract-s3-key (named by purpose)
+    constant/                  # defaults, image-upload
+    policy/                    # (none yet) reusable authz helpers for an explicit post-read check
+    provider/                  # generic provider PORTS (ICacheProvider, IJwtProvider, IQueueProvider…)
+    dto/                       # common.dto (UuidParamSchema — the /:id route param every module shares)
 
   core/                        # the chassis — boots the app, no business rule
-    http/                      # app.ts, routes/index.ts (aggregator), controllers/index.ts, middlewares/, logger.ts, types/
+    http/                      # app.ts, routes/index.ts (aggregator) + route-mount.spec.ts, middlewares/, helpers/, logger.ts, types/
     container/                 # tsyringe DI composition root (index.ts) + tokens.ts + boot guards
-    config/                    # Zod-validated env (env.ts)
+    config/                    # Zod-validated env: env.ts (dotenv + parse + exit) over schema/<concern>.schema.ts
     database/                  # prisma/prisma-client.ts, prisma-error-mapper.ts (mapPrismaError)
     provider/                  # concrete generic impls (RedisCache, BullMQQueue, S3Storage, Jwt, Bcrypt…)
-    service/                   # cross-cutting (error-reporter/Sentry, scheduler, aes-gcm-encryption)
+    service/                   # cross-cutting (error-reporter/Bugsnag, scheduler, lifecycle = graceful shutdown)
     bootstrap/                 # BullMQ queue + processor registration (called from main.ts)
 
   test/                        # cross-module test kit: mocks/ + factories/ (aggregator barrel)
   scripts/                     # operational tools (seeds) — run by hand / CI
   generated/                   # Prisma client (build artifact, gitignored) — via @generated alias
-  main.ts                      # bootstrap only (listen, cron, queue wiring)
+  main.ts                      # bootstrap only: error reporter → container → shutdown plan → listen
 ```
 
-**Path aliases:** `@modules/*` `@core/*` `@shared/*` `@test/*` `@generated/*`. DI tokens are imported from
-`@core/container/tokens`.
+**Path aliases:** `@modules/*` `@core/*` `@shared/*` `@test/*` `@generated/*`. The old
+`@domain` / `@application` / `@infrastructure` / `@tests` are **gone**. DI tokens are imported from
+`@core/container/tokens` (`DI_TOKENS.X` — typed string keys; never a bare string literal).
 
 **Dependency rule (inward only, unchanged):** `domain` ← `application` ← `infrastructure` inside each
 module. `modules/` may import `shared/` and `core/` (ports); `core/` may import `shared/`; `shared/`
 imports nobody. A module NEVER imports another module's `infrastructure/` — only its `domain/` or
-`application/`. Violations are blocking. Full skeleton + "where do I put X?" cheat-sheet in
+`application/`. The one external package any layer (domain included) may import is
+`@boilerplate/shared-types` — the zero-dependency wire contract — and in `domain/` only as `import type` /
+`export type` of a contract union or DTO (`ErrorCodes` is the one value export). Violations are blocking. Full skeleton + "where do I put X?" cheat-sheet in
 [`backend-modules.md`](./backend-modules.md).
 
 ---
 
 ## Canonical Request Lifecycle
 
-For `PATCH /users/me` (illustrative):
+For `PUT /auth/profile` (the real flow — `modules/auth`):
 
-1. `modules/user/infrastructure/route/user.routes.ts` → router matches verb/path
-2. `authMiddleware()` — verifies JWT, loads user, attaches `req.auth = { userId, role, language }`
-3. `validateRequest({ body: UpdateUserDTOSchema })` — Zod parse; on failure throws `ValidationError`
-4. `asyncHandler(controller.updateMe.bind(controller))` — wraps async to forward rejections to error middleware
-5. `UserController.updateMe(req, res)` — `container.resolve(UpdateUserUseCase).execute(req.auth.userId, req.body)`
-6. Use case: validates preconditions → calls repository → triggers side effects (queue jobs, cache invalidation) → returns response DTO
+1. `modules/auth/infrastructure/route/auth.routes.ts` → router matches verb/path (mounted at `/auth` by `core/http/routes/index.ts`)
+2. `authMiddleware()` — verifies the JWT from the `boilerplate_at` cookie, loads the user, attaches `req.auth = { userId, language, scope? }`
+3. `validateRequest({ body: UpdateProfileDTOSchema })` — Zod parse; on failure throws `ValidationError`
+4. `asyncHandler(controller.updateProfile.bind(controller))` — wraps async to forward rejections to error middleware
+5. `AuthController.updateProfile(req, res)` — `container.resolve(UpdateProfileUseCase).execute(req.auth.userId, req.body)`
+6. Use case: validates preconditions → calls the repository → triggers side effects (queue jobs, cache eviction) → returns response DTO
 7. `PrismaUserRepository.update()` → `toEntity()` → returns domain entity
 8. Controller responds: `res.status(200).json({ ok: true, data: result })`
 9. Any thrown error → `errorHandlerMiddleware` → translates via i18n → `{ ok: false, error: { message, code, details? } }` with the right HTTP status
@@ -141,7 +144,7 @@ export class User {
 }
 ```
 
-**Rules:** immutable props, private; only getters; `toJSON()` controls serialization; no business behavior in entities (use cases own logic); nested relations as `Xxx[]` of IDs or nested entities.
+**Rules:** immutable props, private; only getters; `toJSON()` controls serialization and is typed with the response DTO from `@boilerplate/shared-types` (the web consumes the same type; status/type unions live in `domain/value-object/` and are re-exported from the package) — and a projection with a DIFFERENT exposure gets its own named method instead of a flag (`toMetadata()` hides the hash; never a `toJSON(includeSecret)`); no business behavior in entities (use cases own logic) — derived read-only getters over own state (`user.isActive`) are fine and preferred over `status === "ACTIVE"` literals in use cases; nested relations as `Xxx[]` of IDs or nested entities.
 
 ### Repository Interface (`modules/<domain>/domain/repository/{entity}-repository.interface.ts`)
 
@@ -158,7 +161,7 @@ export interface IUserRepository {
 }
 ```
 
-**Rules:** `Create*` has required fields; `Update*` is all-optional with `| null` for clearable fields; a paginated list returns `{ data, total }`. When a resource is owned by a specific user, take an `ownerId` argument on every method and scope every query by it (the same pattern multi-tenant apps use for `accountId`).
+**Rules:** when a resource is owned, every **request-driven** method takes the owner id **first** (`findById(userId, id)`, `delete(userId, id)` — R1) and returns `null` on a miss (the use case turns it into `NotFoundError`, R3); **system-triggered** methods (cron, a queue processor, the `/api/health` aggregate) are suffixed `*Internal` / named `listAll`, documented in the interface, and never reachable from a user request; `Create*` has required fields; `Update*` is all-optional with `| null` for clearable fields; a paginated list returns `{ data, total }`. (This is the same shape a multi-tenant app uses with `accountId` — see § Resource ownership.)
 
 ### Prisma Repository (`modules/<domain>/infrastructure/repository/prisma-{entity}-repository.ts`)
 
@@ -188,7 +191,7 @@ export class PrismaUserRepository implements IUserRepository {
 }
 ```
 
-**Rules:** `@injectable()`; private `toEntity()` (snake_case → camelCase); a private `includeRelations` getter for a reusable join shape (with soft-delete on relations) when the entity has any; **every** Prisma catch → `mapPrismaError(error)`; soft-delete = `update({ deleted_at: new Date() })`, never physical; `deleted_at: null` on every read (plus the owner column when the row is owned); `prisma.$transaction` for multi-table writes; `Promise.all([findMany, count])` for paginated reads.
+**Rules:** `@injectable()`; private `toEntity()` (snake_case → camelCase); a private `includeRelations` getter for a reusable join shape (with soft-delete on relations) when the entity has any; **every** Prisma catch → `mapPrismaError(error)`; soft-delete = `update({ deleted_at: new Date() })`, never physical, on user-facing records; `deleted_at: null` on every read, plus the owner column on every request-driven read of an owned row; `prisma.$transaction` for multi-table writes; `Promise.all([findMany, count])` for paginated reads.
 
 ### Use Case (`modules/<domain>/application/use-case/{feature}/{action}-{entity}.use-case.ts`)
 
@@ -214,7 +217,7 @@ export class CreateUserUseCase {
 }
 ```
 
-**Rules:** one operation per use case; `@injectable()` + `@inject("Token")` for all deps; receives validated DTOs, returns response DTOs; **never** touches `Request`/`Response`; throws `AppError` subclass with `ErrorCodes`; queues background jobs **after** successful mutations; invalidates caches immediately after writes; use CAS for state transitions with concurrent access; use `safeS3Delete()` for file cleanup (idempotent).
+**Rules:** one operation per use case; `@injectable()` + `@inject(DI_TOKENS.X)` for **all** deps — including concrete classes (the dev runtime `tsx` does not emit `design:paramtypes`, see `backend-modules.md` § DI); receives validated DTOs, returns response DTOs; **never** touches `Request`/`Response`; throws `AppError` subclass with `ErrorCodes`; queues background jobs **after** successful mutations; evicts caches immediately after writes; write-before-send for anything that leaves the process (persist the row, **then** call the external service — the id you return must already be committed); use CAS for state transitions with concurrent access; use `safeS3Delete()` for file cleanup (idempotent).
 
 ### DTO — Zod (`modules/<domain>/application/dto/{entity}.dto.ts`)
 
@@ -236,7 +239,7 @@ export type UpdateUserDTO = z.infer<typeof UpdateUserDTOSchema>;
 export interface UserResponseDTO { id: string; name: string; email: string; createdAt: Date; }
 ```
 
-**Reuse first:** `UuidParamSchema`, `PaginationQuerySchema`, `PaginatedResponseDTO<T>`, `BulkDeleteDTOSchema` from `shared/dto/common.dto.ts`. Always `.trim()` strings; use `z.coerce.date()` for date strings, `z.coerce.number()` for query numerics; nullable+optional means `null` clears and omit means unchanged.
+**Reuse first:** `UuidParamSchema` from `shared/dto/common.dto.ts` for every `/:id` route param (add `PaginationQuerySchema` / `BulkDeleteDTOSchema` there the day a module needs them — never redeclare per module). **No custom messages on Zod checks** (`.uuid("…")`, `.min(1, "…")`): a schema-level message overrides the per-request error map that localizes validation errors (`validate-request.middleware.ts`) — the plain check is what makes `validation:string.uuid` apply. Always `.trim()` strings; use `z.coerce.date()` for date strings, `z.coerce.number()` for query numerics; nullable+optional means `null` clears and omit means unchanged.
 
 ### Controller (`modules/<domain>/infrastructure/controller/{entity}.controller.ts`)
 
@@ -250,7 +253,7 @@ export class UserController {
 }
 ```
 
-**Rules:** thin (resolve + delegate + envelope); auth via `req.auth.{userId,role,language}`; **never** put business logic here; **never** catch errors (let them bubble to error middleware).
+**Rules:** thin (resolve + delegate + envelope); auth via `req.auth.{userId,language,scope?}`; **never** put business logic here; **never** catch errors (let them bubble to error middleware).
 
 ### Route (`modules/<domain>/infrastructure/route/{entity}.routes.ts`)
 
@@ -273,19 +276,21 @@ userRoutes.delete("/me",
 export { userRoutes };
 ```
 
-Register in `core/http/routes/index.ts`: `router.use("/users", userRoutes)`.
+Register in `core/http/routes/index.ts`: `router.use("/<domain>", <domain>Routes)`. Declare literal routes (`/bulk`, `/me`) **before** `/:id` to avoid conflicts (`B-M3`).
 
-**Middleware order:** `authMiddleware()` → `validateRequest({ params?, query?, body? })` → `requireRole(...)` (when needed) → upload (when handling files) → `asyncHandler(handler)`.
+> **`B-C14` — always CALL the factory.** `authMiddleware` is a factory: `router.use(authMiddleware())`, never `router.use(authMiddleware)`. Passed uncalled, Express runs the factory as the handler — it returns a function, never calls `next()`, and **every request on that router hangs** while the guard is silently absent. Same for `emailVerificationAuthMiddleware()`, `rejectScopedTokens()`, `requireScope("x")`, `bearerFromQueryToken()`. `core/http/routes/route-mount.spec.ts` scans every route file statically and `.claude/hooks/post-edit-backend.sh` greps for it.
+
+**Middleware order:** `authMiddleware()` (or a scoped variant such as `emailVerificationAuthMiddleware()`) → `validateRequest({ params?, query?, body? })` → upload (when handling files) → `asyncHandler(handler)`. Rate limiters are mounted at the aggregator level (`core/http/routes/index.ts`: `authRateLimit` on `/auth`, `userRateLimit` after it; `publicRateLimit` on public surfaces).
 
 ### Dependency Injection (`core/container/index.ts`)
 
 ```typescript
-container.registerSingleton<IUserRepository>("UserRepository", PrismaUserRepository);
-container.registerSingleton<IJwtProvider>("JwtProvider", JsonWebTokenJwtProvider);
-container.registerSingleton<IHashProvider>("HashProvider", BcryptHashProvider);
+container.registerSingleton<IUserRepository>(DI_TOKENS.UserRepository, PrismaUserRepository);
+container.registerSingleton<IJwtProvider>(DI_TOKENS.JwtProvider, JsonWebTokenJwtProvider);
+container.registerSingleton<IHashProvider>(DI_TOKENS.HashProvider, BcryptHashProvider);
 ```
 
-**Rules:** all string tokens; all singletons; use cases are **not** registered (resolved per-request via `container.resolve(UseCase)` so request-scoped state is fresh). Group registrations by category (repositories, providers, services).
+**Rules:** every token comes from `DI_TOKENS` (`core/container/tokens.ts` — typed keys, one place); all singletons; use cases are **not** registered (resolved per-request via `container.resolve(UseCase)` so request-scoped state is fresh); each module exposes `register<Domain>Module(container)` in `<domain>.module.ts` for its own bindings, and `core/container/index.ts` composes them. Group registrations by category (repositories, providers, services, config values). Middleware factories capture their singletons **once** at creation time — never `container.resolve()` per request inside the handler.
 
 ---
 
@@ -293,11 +298,15 @@ container.registerSingleton<IHashProvider>("HashProvider", BcryptHashProvider);
 
 ### Auth context
 
-`authMiddleware()` populates `req.auth`. Treat it as guaranteed inside any route after the middleware runs. Never trust a client-supplied owner id — always read the acting user from `req.auth.userId`.
+`authMiddleware()` populates `req.auth = { userId, language, scope? }` from the session JWT in the `boilerplate_at` cookie. Treat it as guaranteed inside any route after the middleware runs. Never trust a client-supplied owner id — always read the acting user from `req.auth.userId`.
 
 ### Resource ownership
 
-The boilerplate ships single-user, but the moment you add a resource owned by a user (or, later, a tenant/account), **every read and write must filter by the owner column**. Read the owner from `req.auth.userId`, never from the request body. Use a policy helper (e.g. `ensureOwner(entity, req.auth.userId)`) instead of inline `if (!entity || entity.ownerId !== callerId)`, and on mismatch throw `NotFoundError` (never `ForbiddenError` — don't reveal that a resource exists for another owner). This is the exact pattern a multi-tenant app applies with `account_id`.
+The boilerplate is **single-user by construction**: a row belongs to a `user_id`. The moment you add a resource owned by a user, **every request-driven read and write filters by the owner column**. Put the scoping in the **repository signature** — `findById(userId, id)`, `update(userId, id, …)`, `delete(userId, id)` — so a use case cannot forget it: a row of another owner resolves to `null` and the use case throws `NotFoundError` (never `ForbiddenError` — don't reveal that the resource exists for someone else). Read the owner from `req.auth.userId`, never from the request body. Never write `if (!entity || entity.userId !== callerId)` after an unscoped read (`B-H11`); if a post-read check is genuinely needed, add a `shared/policy/ensure-same-owner.ts` helper rather than an inline `if`. There is no `ensureOwner()` helper in the codebase today — don't cite one.
+
+**System-triggered paths** (cron, a queue processor, the `/api/health` aggregate) have no requesting user: their repository methods are suffixed `*Internal` / named `listAll`, keyed by the primary key, documented in the interface, and never reachable from a user request. An entity returned by such a path carries its real owner id, but that value was **not** validated against a caller — never forward it into an owner-scoped method as a stand-in for `req.auth.userId` (confused deputy).
+
+**`account_id` multi-tenancy is the documented upgrade path.** The day you add an account/tenant table, the same rules apply verbatim with `accountId` read from `req.auth` (never from the body), and `@@index([account_id])` replaces `@@index([user_id])`.
 
 ### Soft delete
 
@@ -359,7 +368,7 @@ When adding a new `ErrorCode`: (1) add to `shared/error/error-codes.ts`, (2) add
 
 ### Pagination
 
-Use `PaginationQuerySchema` (`page`, `limit`, `search`, `sortBy`, `sortOrder`) and `buildPaginationMeta(total, limit, page)` from `shared/util/pagination.ts`. Default `limit=20`, max `limit=100`. Offset-based: `skip: (page-1)*limit, take: limit`. Use `Promise.all([findMany, count])` for parallel data + count.
+No list endpoint paginates yet. The first one that needs it creates `PaginationQuerySchema` (`page`, `limit`, `search`, `sortBy`, `sortOrder`) in `shared/dto/common.dto.ts` and `buildPaginationMeta(total, limit, page)` in `shared/util/pagination.ts`. Default `limit=20`, max `limit=100`. Offset-based: `skip: (page-1)*limit, take: limit`. Use `Promise.all([findMany, count])` for parallel data + count.
 
 ### Queues / Jobs (BullMQ)
 
@@ -367,7 +376,7 @@ Bootstrap in `core/bootstrap/{feature}-queue.bootstrap.ts`:
 
 ```typescript
 export function bootstrapUserQueues(): void {
-  const queueProvider = container.resolve<IQueueProvider>("QueueProvider");
+  const queueProvider = container.resolve<IQueueProvider>(DI_TOKENS.QueueProvider);
   queueProvider.createQueue("user-operations");
   queueProvider.registerProcessor("user-operations",
     createSendWelcomeEmailProcessor(/* injected deps */),
@@ -375,7 +384,7 @@ export function bootstrapUserQueues(): void {
 }
 ```
 
-Call `bootstrapUserQueues()` from `main.ts`. Defaults: 3 attempts, exponential backoff (1s base), `removeOnComplete: 100`, `removeOnFail: 200`. Job IDs should be deterministic when duplicate prevention matters (`jobId: ${entityType}:${entityId}`). Bull Board admin UI at `/admin/queues` (dev only).
+Call `bootstrap<Feature>Queues()` from `main.ts` (create `core/bootstrap/` on first use — today only the cron is wired, by `core/service/scheduler/`; a BullMQ processor follows the shape above, next to the `IQueueProvider` / `IFlowProducer` ports). Defaults: 3 attempts, exponential backoff (1s base), `removeOnComplete: 100`, `removeOnFail: 200`. Job IDs should be deterministic when duplicate prevention matters (`jobId: ${entityType}:${entityId}`). Bull Board admin UI at `/admin/queues` (dev only).
 
 ### When to queue vs sync (decision)
 
@@ -385,6 +394,7 @@ Call `bootstrapUserQueues()` from `main.ts`. Defaults: 3 attempts, exponential b
 | Bulk delete (>10) | **Yes** | Risk of timeout; needs retry per item |
 | Heavy file ops (S3 cleanup, image processing) | **Yes** | Slow, user shouldn't wait |
 | Call to a slow/expensive external API | **Yes** | Expensive, slow, must retry |
+| LLM call / embedding generation | **Yes** | Expensive, slow, must retry (R23) |
 | Simple CRUD (create/get/update/list) | **No** | Fast; user expects immediate feedback |
 
 ### When to use a transaction
@@ -392,14 +402,14 @@ Call `bootstrapUserQueues()` from `main.ts`. Defaults: 3 attempts, exponential b
 | Scenario | Tx? | Why |
 |----------|-----|-----|
 | Create entity + relation rows | **Yes** | Partial state = orphan rows |
-| Multi-table signup (User + Profile + Settings) | **Yes** | Atomic |
+| Multi-table signup (User + related rows) | **Yes** | Atomic |
 | Cascading delete with relations | **Yes** | All-or-nothing |
 | Single-table CRUD | **No** | Prisma op already atomic |
 | Update + S3 cleanup | **No** | Cleanup is idempotent (use `safeS3Delete`) |
 
 ### Logging
 
-Use `ILoggerProvider` (Pino) — never `console.log`. Structured fields: `userId`, `entityId`, `latencyMs`, `outcome`. **Never** log PII or secrets: no full names/emails in plaintext where avoidable, no passwords or tokens, no request bodies containing personal data.
+Use `ILoggerProvider` (Pino) — never `console.log`. Structured fields: `userId`, `entityId`, `latencyMs`, `outcome`. **Never** log PII or secrets: no full names or e-mail addresses in plaintext where avoidable, no passwords, reset/verification tokens or cookies, no request bodies containing personal data, no S3 signed URLs, no full LLM prompts. The pino `redact` list + `SENSITIVE_BODY_FIELDS` (`core/http/logger.ts`) are defense in depth, not a license.
 
 ### i18n
 
@@ -415,25 +425,43 @@ Before creating anything new, check this table.
 
 | Token | Interface | Implementation | Purpose |
 |-------|-----------|----------------|---------|
-| `"JwtProvider"` | `IJwtProvider` | `JsonWebTokenJwtProvider` | Sign/verify tokens, refresh pairs |
-| `"HashProvider"` | `IHashProvider` | `BcryptHashProvider` | Password hashing |
-| `"CacheProvider"` | `ICacheProvider` | `RedisCacheProvider` | Generic Redis caching |
-| `"StorageProvider"` | `IStorageProvider` | `S3StorageProvider` | S3 upload / delete / signed URL |
-| `"QueueProvider"` | `IQueueProvider` | `BullMQQueueProvider` | Queues with retry/backoff |
-| `"LoggerProvider"` | `ILoggerProvider` | `PinoLoggerProvider` | Structured logging |
-| `"MailProvider"` | `IMailProvider` | (your SMTP/transactional impl) | Send transactional email |
+| `DI_TOKENS.JwtProvider` | `IJwtProvider` | `JsonWebTokenJwtProvider` | Sign/verify tokens, refresh pairs |
+| `DI_TOKENS.HashProvider` | `IHashProvider` | `BcryptHashProvider` | Password hashing |
+| `DI_TOKENS.CacheProvider` | `ICacheProvider` | `RedisCacheProvider` | Generic Redis caching |
+| `DI_TOKENS.StorageProvider` | `IStorageProvider` | `S3StorageProvider` | S3 upload / delete / signed URL |
+| `DI_TOKENS.QueueProvider` | `IQueueProvider` | `BullMQQueueProvider` | Queues with retry/backoff |
+| `DI_TOKENS.FlowProducer` | `IFlowProducer` | BullMQ flow producer | Parent/child job graphs |
+| `DI_TOKENS.EventBus` | `IEventBus` | Redis pub/sub | Cross-process events (SSE fan-out) |
+| `DI_TOKENS.LoggerProvider` | `ILoggerProvider` | `PinoLoggerProvider` | Structured logging |
+| `DI_TOKENS.MailProvider` | `IMailProvider` | Resend impl | Transactional e-mail |
+| `DI_TOKENS.AppConfig` | `AppConfig` | the parsed env object | Typed config, injected — never `process.env` |
+| `DI_TOKENS.DatabaseStatusProvider` / `NodeExporterMetricsProvider` / `CiProvider` | `I*Provider` | Postgres probe / node_exporter / GitHub Actions | The `/api/health` + status surfaces |
 
-> Add new provider ports to `shared/provider/` (interface) and their concrete
-> impls to `core/provider/` (see `backend-modules.md` § port vs impl split).
+> Add a new **generic** provider port to `shared/provider/` (interface) and its
+> concrete impl to `core/provider/<kind>/`; a **domain-flavored** port lives in
+> `modules/<domain>/domain/provider/` with its adapter in
+> `modules/<domain>/infrastructure/provider/` (see `backend-modules.md` § port vs
+> impl split). Every token is a `DI_TOKENS` entry.
+
+### Existing Services
+
+| Token / caller | Class | Purpose |
+|---|---|---|
+| `DI_TOKENS.AuthProfileBuilder` | `modules/auth/application/service/auth-profile.builder.ts` (registered in `auth.module.ts`) | Builds the `/auth/me` profile |
+| — (called from `main.ts`) | `core/service/error-reporter/` · `core/service/scheduler/` · `core/service/lifecycle/` | Bugsnag facade · node-cron · SIGTERM/SIGINT + uncaught error → staged teardown → exit |
 
 ### Shared Utilities
 
 | Utility | Location | Purpose |
 |---------|----------|---------|
-| `buildPaginationMeta()` | `shared/util/pagination.ts` | `{ page, limit, total, totalPages }` |
-| `safeS3Delete()` | `shared/util/safe-s3-delete.ts` | Delete S3 object without throwing |
-| `generateUserPublicCode()` | `shared/util/generate-public-code.ts` | Public code generator |
+| `safeS3Delete()` | `shared/util/safe-s3-delete.ts` | Delete an S3 object without throwing |
+| `extractS3Key()` | `shared/util/extract-s3-key.ts` | Extract the object key from an S3 URL |
+| `parseExpiresIn()` | `shared/util/parse-expires-in.ts` | `15m` / `30d` → milliseconds |
+| `escapeHtml()` | `shared/util/html.ts` | Escape user text before it enters an e-mail template |
+| `UuidParamSchema` | `shared/dto/common.dto.ts` | The `/:id` route param schema |
+| `IMAGE_UPLOAD` constants | `shared/constant/image-upload.ts` | Allowed MIME types + max bytes, shared with `@boilerplate/shared-types` |
 | `mapPrismaError()` | `core/database/prisma/prisma-error-mapper.ts` | Translate Prisma errors → AppError |
+| `buildPaginationMeta()` | `shared/util/pagination.ts` *(not created yet — add on the first paginated endpoint)* | `{ page, limit, total, totalPages }` |
 
 ---
 
@@ -452,12 +480,14 @@ Before creating anything new, check this table.
 | Provider interface | `{type}-provider.interface.ts` | `jwt-provider.interface.ts` |
 | Provider impl | `{impl}-{type}-provider.ts` | `bcrypt-hash-provider.ts` |
 | Queue bootstrap | `{feature}-queue.bootstrap.ts` | `user-queue.bootstrap.ts` |
-| Processor | `{action}-{entity}.processor.ts` | `send-welcome-email.processor.ts` |
+| Processor / job | `{action}-{entity}.processor.ts` · `{name}.job.ts` | `send-welcome-email.processor.ts` |
+| Value object | `{concept}-{kind}.ts` | `user-status.ts` |
+| Module registration | `{domain}.module.ts` | `auth.module.ts` |
 | Test | `*.spec.ts` (next to source) | `create-user.spec.ts` |
 | Factory | `{entity}.factory.ts` | `user.factory.ts` |
-| Mock | in `test/mocks/repositories.mock.ts` | `mockUserRepository()` |
+| Mock | in `test/mocks/repositories.mock.ts` (or an `in-memory-*.repository.ts` in the module's `test/`) | `mockUserRepository()` |
 
-**Database (Prisma):** `snake_case` table + column names with `@@map`. UUID PKs. `created_at`/`updated_at` timestamps. `deleted_at DateTime?` for soft delete. `@@index([owner_id])` on every owned table. Cascades: `Cascade` for owned deps, `SetNull` for optional refs.
+**Database (Prisma):** `snake_case` table + column names with `@@map`. UUID PKs. `created_at`/`updated_at` timestamps. `deleted_at DateTime?` for soft delete. `@@index([user_id])` on every owned table (`@@index([account_id])` once you add tenancy). Cascades: `Cascade` for owned deps, `SetNull` for optional refs.
 
 ---
 
@@ -481,7 +511,7 @@ See `/test` skill for the full template.
 2. **Domain** — entity → repository interface
 3. **Application** — DTOs (Zod) → use case(s)
 4. **Infrastructure** — Prisma repository → controller → routes → register routes in `routes/index.ts`
-5. **Wiring** — register repository (and any new provider/service) in `core/container/index.ts`; add ErrorCodes; add translations in 3 locales
+5. **Wiring** — register the repository (and any new provider/service) in the module's `<domain>.module.ts` with an explicit `DI_TOKENS` entry, composed by `core/container/index.ts`; add the `ErrorCodes` entry in `packages/shared-types/src/error-codes.ts`; add translations in the 3 locales (`error-codes.spec.ts` pins the parity)
 6. **Background jobs** (if needed) — processor + bootstrap; call from `main.ts`
 7. **Tests** — factory + mock (if new entity/repo) → use case spec → DTO spec → entity spec → controller spec
 8. **Quality gate** — `yarn type-check && yarn lint && yarn test`

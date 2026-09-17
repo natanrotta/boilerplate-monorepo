@@ -12,7 +12,7 @@ For full architectural context, defer to:
 
 ## How to use this doc
 
-Every specialist (`/backend`, `/frontend`, `/fullstack`) MUST do this at the start of every task:
+Every specialist (`/backend`, `/frontend`, `/fullstack`, `/ai-backend`) MUST do this at the start of every task:
 
 1. Read this file fully (it is intentionally short).
 2. Output a one-line **Baseline activation** statement listing the rule IDs that apply to the current task.
@@ -30,7 +30,7 @@ Before creating ANYTHING new, walk this 5-question gate:
 
 1. **Does a shared component / hook / utility already cover this?**
    - Backend: `.claude/patterns/backend.md` § Reuse-First Catalog (entities, repos, providers, helpers).
-   - Frontend: `.claude/patterns/frontend.md` § Reuse-First Catalog (`ListPageLayout`, `EntityCard`, `EmptyState`, `useListPageController`, `useDetailPageController`, `FormField`, ...).
+   - Frontend: `.claude/patterns/frontend.md` § Reuse-First Catalog (`PageHeader`, `SectionCard`, `EntityCard`, `EmptyState`, `AppModal`, `useDetailPageController`, `FormField`, ...) **and** the Chakra v3 snippets in `src/components/ui/*`.
 2. **Can the existing thing be extended (one extra prop, one extra method) instead of cloned?** Extension wins.
 3. **If extension is impossible, is the new thing reusable?** Place it in `shared/` (FE) or `modules/<domain>/application/service/` (domain-scoped) / `shared/util/` (generic, no domain) (BE) — never inside a feature module if any other module could need it.
 4. **Did you grep for the same string / behavior in the codebase?** If 2+ files implement the same logic, consolidate before adding the third.
@@ -46,9 +46,9 @@ A new file that fails questions 1–3 is a code smell. Stop and reconsider.
 
 | ID | Rule | Anchor |
 |----|------|--------|
-| R1 | Every Prisma query (read AND write) on an **owned** table filters by its owner column (`owner_id` / `user_id`; `account_id` once you add tenancy). | `B-C1` |
+| R1 | Every Prisma query (read AND write) on an **owned** table filters by its owner column (`user_id`), taken from `req.auth.userId` — never from the body. The boilerplate is single-user by construction; `account_id` multi-tenancy is the documented upgrade path, and the moment you add it the same rule applies with `accountId` from `req.auth`. | `B-C1` |
 | R2 | Every read filters `deleted_at: null`. Soft delete is the default. | `B-C2` |
-| R3 | Cross-owner access uses an ownership policy (`ensureOwner(...)`) and throws `NotFoundError` (never `ForbiddenError`). | `B-C3`, `B-H11`, `B-H16` |
+| R3 | Cross-owner access is impossible by construction: request-driven repository methods take the owner id and return `null` on a miss; the use case throws `NotFoundError` (never `ForbiddenError`, which confirms existence). Never launder an owner id read from a system-triggered (`*Internal`) path into a scoped query. | `B-C3`, `B-H11`, `B-H16` |
 | R4 | Errors use `AppError` subclasses with `ErrorCode`. **Never** `throw new Error(...)`. | `B-C4` |
 | R5 | Logging via `ILoggerProvider` (Pino). **Never** `console.*`. **Never** log PII or secrets. | `B-C5`, `B-H12` |
 | R6 | Success response: `{ ok: true, data }`. Error response: `{ ok: false, error: { message, code, details? } }`. Paginated: `{ data, meta: { page, limit, total, totalPages } }`. | `B-C8` |
@@ -60,15 +60,15 @@ A new file that fails questions 1–3 is a code smell. Stop and reconsider.
 
 | ID | Rule | Anchor |
 |----|------|--------|
-| R10 | Semantic tokens only (`bg.*`, `text.*`, `border.*`, `status.*`). **No hardcoded hex.** | `F-C2` |
+| R10 | Semantic tokens only (`bg.*`, `text.*`, `border.*`, `status.*`), defined in `packages/theme` (`@boilerplate/theme`). **No hardcoded hex/rgba outside the theme** — a new visual need is a new token. Chakra **v3**: `colorPalette` (never `colorScheme`); compound components come from the snippets in `src/components/ui/*`. `app/theme/tokenContract.spec.ts` fails on a token without `_dark`, on a warm hue, and on an unknown token name. | `F-C2`, `F-C21` |
 | R11 | **No yellow / orange / amber.** Purple for warnings, red for errors, accent (green) for success. | `F-C3` (hard project rule) |
 | R12 | Components never call `httpClient` directly. Always: hook → repository → httpClient. | `F-C1`, `F-C7` |
 | R13 | New repository → registered in `core/di/repositories.ts`. New query key → added to `core/query/queryKeys.ts` (factory: `all` / `list` / `search` / `detail`). | `F-H1`, `F-H2` |
 | R14 | Every mutation has `onError`. `invalidateQueries` is selective — never `queryKeys.X.all` unless every sub-key is genuinely affected. | `F-C5`, `F-C6` |
 | R15 | Routes via `ROUTE_PATHS` constants. UI strings via i18n in all 3 locales (pt-BR, en, es). | `F-C8`, `F-C9`, `F-H15` |
-| R16 | Forms use `FormField` / `SelectField` / `DateField` / etc. (RHF + Zod for validated forms; `useFormState` for simple modals). Never raw `<Input>` in feature code. | `F-H5`, `F-H6` |
+| R16 | Forms use `FormField` / `SelectField` / `TextAreaField` / `NumberField` / `PasswordField` (RHF + Zod for validated forms; `useFormState` for simple modals). Never raw `<Input>`/`<Textarea>`/`<Select>` in feature code — the one exception is an RHF `register()` input, which pairs the `field` snippet + `<Input>` directly. | `F-H5`, `F-H6` |
 | R17 | Loading = skeleton (never bare `<Spinner />` for primary content). Empty = `<EmptyState>` with CTA. | `F-H8`, `F-H9` |
-| R18 | Use the right shared hook from the decision tree (`useListPageController`, `useDetailPageController`, `useEntityDetail`, ...). Never re-implement their logic inline. | `F-H3`, `F-H4` |
+| R18 | Use the right shared hook from the decision tree (`useDetailPageController`, `useFormState`, `useAutoSave`, `useConfirm`, `useNotify`, `useUnsavedChangesGuard`, ...). Never re-implement their logic inline, and never call `useQuery`/`useMutation` directly in a page — it belongs in a module hook. | `F-H3`, `F-H4`, `F-H29` |
 | R19 | List items / mapped components are `memo()`. Handlers passed to memoized children are `useCallback`. | `F-H10`, `F-H11` |
 
 ### Cross-cutting
@@ -78,6 +78,7 @@ A new file that fails questions 1–3 is a code smell. Stop and reconsider.
 | R20 | Backend response field renames update the frontend entity in the same PR. New backend `ErrorCode` ships with translations in all 3 locales AND a frontend toast. | `X-C1`, `X-C2`, `X-H1`, `X-H5` |
 | R21 | New env var → registered in `apps/api/src/core/config/env.ts` Zod schema. Migrations consider rollback for non-empty production tables. | `X-H4`, `X-C3` |
 | R22 | **No secrets in commits.** API keys, tokens, DB URLs with creds → environment only. | `X-C4` |
+| R23 | LLM calls always via an `ILlmProvider` port (never a vendor SDK or a raw `fetch` in a use case). Embeddings via an embedding service. Retrieval filtered by the owner column. Usage/cost logged via an AI-usage repository. (The boilerplate has no AI infra yet — `@langchain/*` and `openai` are declared in `apps/api/package.json` for this specialist, and the first AI task builds the foundation; see `/ai-backend`.) | `B-C13` |
 
 ### Tests (mandatory in this project)
 

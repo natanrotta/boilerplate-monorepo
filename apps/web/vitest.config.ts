@@ -1,11 +1,12 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import { fileURLToPath } from "node:url";
+import { aliases } from "./aliases";
 
 /**
  * Vitest config for web unit/component tests. Kept separate from `vite.config.ts`
  * so the dev/build pipeline doesn't pull in jsdom and the TS lint rules for
- * test files don't leak into production code.
+ * test files don't leak into production code. The path aliases are the same
+ * object both configs share (`aliases.ts`).
  *
  * Tests live alongside source as `*.spec.ts` / `*.spec.tsx`.
  */
@@ -25,12 +26,6 @@ export default defineConfig({
     exclude: ["e2e/**", "node_modules/**", "dist/**"],
   },
   resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
-      "@/app": fileURLToPath(new URL("./src/app", import.meta.url)),
-      "@/core": fileURLToPath(new URL("./src/core", import.meta.url)),
-      "@/shared": fileURLToPath(new URL("./src/shared", import.meta.url)),
-      "@/modules": fileURLToPath(new URL("./src/modules", import.meta.url)),
-    },
+    alias: aliases,
   },
 });

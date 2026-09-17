@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import i18n from "@/shared/i18n";
 import { AppError } from "@/core/errors/AppError";
-import { ErrorCodes } from "@/core/errors/errorCodes";
+import { ErrorCodes } from "@boilerplate/shared-types";
 import { STORAGE_KEYS } from "@/shared/constants/storageKeys";
 
 // Per-request opt-out from the global session-expired redirect. The silent
@@ -19,8 +19,8 @@ declare module "axios" {
 
 const CSRF_COOKIE = "boilerplate_csrf";
 
-/** Double-submit CSRF cookie reader — exported for the one non-axios
- *  transport (the copilot SSE fetch in HttpCopilotRepository). */
+/** Double-submit CSRF cookie reader. Exported so a non-axios transport (a raw
+ *  `fetch` for streaming / file upload) can echo the same header. */
 export function getCsrfToken(): string | null {
   const match = document.cookie.match(new RegExp(`(?:^|; )${CSRF_COOKIE}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : null;

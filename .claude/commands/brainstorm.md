@@ -85,7 +85,8 @@ Ask questions **one at a time**, in order of importance. Categories:
 
 **Technical Constraints:**
 - Does it need async processing? (Queues, jobs)
-- Does it call an external service? (Third-party API, webhook)
+- Does it call an external service? (Third-party API, webhook, S3, the mail provider)
+- Does it involve AI/ML? (LLM, embeddings) → `/ai-backend`
 - Are there performance requirements? (Latency, data volume)
 
 **Rule:** WAIT for the answer before asking the next question. If the answer raises new doubts, ask a follow-up before moving on.
@@ -233,6 +234,6 @@ After the transition to implementation (Phase 7), follow the protocol in `.claud
 
 ## Task Lifecycle (read-only handoff)
 
-This is a **read-only specialist**. It covers phases 1–3 (analyze, requirements, plan) of the 7-phase task lifecycle defined in the root `CLAUDE.md`, but it does **NOT** implement. Once the design/scope is validated, hand off to an implementing specialist (`/backend`, `/frontend`, `/fullstack`), which will take over and end with `/finish-task`. Do **not** call `/finish-task` yourself — there is nothing to finalize.
+This is a **read-only specialist**. It covers phases 1–3 (analyze, requirements, plan) of the 7-phase task lifecycle defined in the root `CLAUDE.md`, but it does **NOT** implement. Once the design/scope is validated, hand off to an implementing specialist (`/backend`, `/frontend`, `/fullstack`, or `/ai-backend`), which will take over and end with `/finish-task`. Do **not** call `/finish-task` yourself — there is nothing to finalize.
 
 $ARGUMENTS

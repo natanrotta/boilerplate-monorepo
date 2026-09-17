@@ -6,7 +6,7 @@ description: Read-only normalization audit. Scans an existing module / file / PR
 
 You orchestrate a **read-only normalization audit** by dispatching the `code-auditor` subagent with a clear scope, then presenting the report and offering a focused fix path.
 
-This skill **does not modify files**. Its only deliverable is a report. After the report, the user decides which findings to fix and which specialist (`/backend`, `/frontend`, `/fullstack`) to invoke for the implementation.
+This skill **does not modify files**. Its only deliverable is a report. After the report, the user decides which findings to fix and which specialist (`/backend`, `/frontend`, `/fullstack`, or `/ai-backend`) to invoke for the implementation.
 
 ---
 
@@ -60,6 +60,7 @@ After the report, append:
   - Backend → `/backend`
   - Frontend → `/frontend`
   - Both → `/fullstack`
+  - AI infra → `/ai-backend`
 - For coverage gaps, hand off to `/test`.
 ```
 
@@ -93,7 +94,7 @@ Run monthly, when any knowledge file exceeds 80 lines, or whenever `/finish-task
 
 ## Hard rules
 
-1. **Read-only for code.** This skill **never** edits application files. Implementation goes through `/backend`, `/frontend`, `/fullstack`. The single exception: `knowledge` mode curates `.claude/knowledge/*` and `.claude/learning/violations.md` markers, per the protocol.
+1. **Read-only for code.** This skill **never** edits application files. Implementation goes through `/backend`, `/frontend`, `/fullstack`, or `/ai-backend`. The single exception: `knowledge` mode curates `.claude/knowledge/*` and `.claude/learning/violations.md` markers, per the protocol.
 2. **No `/finish-task` from this skill.** A pure audit produces no diff, so there is nothing to finish. Only the downstream specialist (if dispatched) ends with `/finish-task`.
 3. **Don't echo files into the conversation.** The auditor reads them in its own context — keep main context lean.
 4. **Severity matches the checklist.** Don't paraphrase the auditor's severities; relay them verbatim.

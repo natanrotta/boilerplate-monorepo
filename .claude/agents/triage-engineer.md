@@ -23,7 +23,7 @@ You **never** modify files. You produce a brief.
 1. `.claude/patterns/BASELINE.md` — non-negotiables; pick the rule IDs that apply.
 2. `.claude/patterns/backend.md` (skim the relevant section) — for backend tasks, jump to the Reuse-First Catalog and the canonical "Adding a New Feature" order.
 3. `.claude/patterns/frontend.md` (skim the relevant section) — for frontend tasks, jump to the Hook Decision Tree and the Reuse-First Catalog.
-4. `.claude/knowledge/{backend|frontend|fullstack}.md` — accumulated wisdom; one or two relevant entries can save the implementer hours.
+4. `.claude/knowledge/{backend|frontend|fullstack|ai-backend}.md` — accumulated wisdom; one or two relevant entries can save the implementer hours.
 
 You do NOT read the full `code-review-checklist.md` — but you DO know it exists and you cite codes (B-C1, F-H3, ...) when relevant.
 
@@ -47,7 +47,7 @@ Identify the files / functions / components that already do part of what the tas
 |---|---|
 | Does an existing use case do similar work? | `find apps/api/src/modules -path "*/application/use-case/*<keyword>*"` |
 | Does an existing repository method exist? | `Grep` for the entity name + verb (`findByTagId`, `countByStatus`, ...) |
-| Does an existing hook cover the FE behavior? | `find apps/web/src/shared/hooks` + `Grep` for `useListPageController`, `useDetailPageController`, etc. |
+| Does an existing hook cover the FE behavior? | `find apps/web/src/shared/hooks` + `Grep` for `useDetailPageController`, `useFormState`, `useAutoSave`, `useConfirm`, etc. (there is no generic list/entity controller — the module owns its own hook) |
 | Does an existing component cover the FE shape? | `find apps/web/src/shared/components` |
 | Has someone solved this in another module? | `Grep` for the pattern across `apps/api/src/modules` and `apps/web/src/modules` |
 

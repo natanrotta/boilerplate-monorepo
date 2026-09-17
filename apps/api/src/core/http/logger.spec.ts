@@ -20,8 +20,6 @@ describe("logger redact paths", () => {
       'request.headers["x-csrf-token"]',
       "req.body.summary",
       "request.body.summary",
-      "req.body.transcription",
-      "request.body.transcription",
       "req.body.fieldValues",
       "request.body.fieldValues",
       "req.body.password",
@@ -33,7 +31,14 @@ describe("logger redact paths", () => {
     }
   });
 
-  it("functionally redacts credentials + PHI in a customProps-shaped record", () => {
+  it("redacts the e-mail address in a request body (identity, not just secrets)", () => {
+    // Every auth payload carries `email`; a 4xx on sign-in or password-reset
+    // would otherwise write the address into the log line.
+    expect(redactPaths).toContain("req.body.email");
+    expect(redactPaths).toContain("request.body.email");
+  });
+
+  it("functionally redacts credentials, identity and free text in a customProps-shaped record", () => {
     let line = "";
     const sink = pino(
       { redact: { paths: redactPaths, censor: "[REDACTED]" } },
@@ -43,14 +48,14 @@ describe("logger redact paths", () => {
     sink.warn({
       request: {
         method: "POST",
-        url: "/patients",
+        url: "/api/auth/sign-in",
         headers: {
           authorization: "Bearer super-secret-jwt",
           cookie: "boilerplate_rt=abc",
         },
         body: {
-          summary: "patient PHI summary",
-          transcription: "clinical text",
+          email: "person@example.com",
+          summary: "free-form user content",
           password: "p@ss",
         },
       },
@@ -59,18 +64,18 @@ describe("logger redact paths", () => {
     const parsed = JSON.parse(line);
     expect(parsed.request.headers.authorization).toBe("[REDACTED]");
     expect(parsed.request.headers.cookie).toBe("[REDACTED]");
+    expect(parsed.request.body.email).toBe("[REDACTED]");
     expect(parsed.request.body.summary).toBe("[REDACTED]");
-    expect(parsed.request.body.transcription).toBe("[REDACTED]");
     expect(parsed.request.body.password).toBe("[REDACTED]");
     expect(line).not.toContain("super-secret-jwt");
-    expect(line).not.toContain("patient PHI summary");
-    expect(line).not.toContain("clinical text");
+    expect(line).not.toContain("person@example.com");
+    expect(line).not.toContain("free-form user content");
   });
 });
 
 describe("pathOnly", () => {
-  it("strips the query string (PHI/token) from a URL", () => {
-    expect(pathOnly("/patients?search=Jo%C3%A3o+Silva")).toBe("/patients");
+  it("strips the query string (PII/token) from a URL", () => {
+    expect(pathOnly("/api/users?search=Jo%C3%A3o+Silva")).toBe("/api/users");
     expect(pathOnly("/imports/stream?access_token=secret")).toBe(
       "/imports/stream",
     );

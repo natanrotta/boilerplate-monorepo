@@ -3,11 +3,6 @@
     "title": "Configuración",
     "description": "Gestione su perfil, equipo y cuenta"
   },
-  "tabs": {
-    "profile": "Perfil",
-    "team": "Equipo",
-    "account": "Cuenta"
-  },
   "account": {
     "title": "Datos de la Cuenta",
     "accountName": "Nombre de la Cuenta",

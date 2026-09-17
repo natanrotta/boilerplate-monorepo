@@ -99,10 +99,9 @@ export class ConflictError extends AppError {
 }
 
 /**
- * HTTP 410 Gone. Used by the public share endpoints (patient-document
- * shares, workplace schedule shares) when the link existed but is no
- * longer valid — expired or explicitly revoked. Distinct from 404 so the
- * frontend can render an empathic "este link expirou em X" message.
+ * HTTP 410 Gone. For a public share link that existed but is no longer
+ * valid — expired or explicitly revoked. Distinct from 404 so the frontend
+ * can render an empathic "este link expirou" message instead of "not found".
  */
 export class GoneError extends AppError {
   constructor(

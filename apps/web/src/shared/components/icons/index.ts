@@ -279,4 +279,4 @@ export const LuListOrdered = lucide(ListOrdered, "LuListOrdered");
 export const LuQuote = lucide(Quote, "LuQuote");
 
 // Brand / fill marks with no Lucide equivalent — inlined in BrandIcons.tsx.
-export { BsBookmarkFill, FaWhatsapp } from "./BrandIcons";
+export { BsBookmarkFill } from "./BrandIcons";

@@ -1,43 +1,41 @@
 import { memo } from "react";
-import { Field, NumberInput } from "@chakra-ui/react";
+import { Field } from "@/components/ui/field";
+import {
+  NumberInputField,
+  NumberInputRoot,
+  type NumberInputProps,
+} from "@/components/ui/number-input";
 
-interface NumberFieldProps extends Omit<NumberInput.RootProps, "onChange" | "value"> {
+interface NumberFieldProps
+  extends Omit<NumberInputProps, "onChange" | "onValueChange" | "value"> {
   label?: string;
   value: number;
   error?: string;
   onChange: (value: number) => void;
 }
 
-function NumberFieldComponent({ label, value, error, onChange, ...props }: NumberFieldProps) {
+function NumberFieldComponent({
+  label,
+  value,
+  error,
+  onChange,
+  ...props
+}: NumberFieldProps) {
   return (
-    <Field.Root invalid={Boolean(error)}>
-      {label && (
-        <Field.Label
-          fontSize="xs"
-          fontWeight="600"
-          color="text.secondary"
-          mb={1}
-          letterSpacing="0.01em"
-        >
-          {label}
-        </Field.Label>
-      )}
-      <NumberInput.Root
+    <Field invalid={Boolean(error)} label={label} errorText={error}>
+      {/* v3 keeps the committed value as a string and reports both forms on
+          change; the public `number` contract is preserved by converting at the
+          boundary. An empty/partial entry yields NaN — coerced to 0, as before. */}
+      <NumberInputRoot
         value={String(value)}
-        onValueChange={(details) =>
-          onChange(Number.isNaN(details.valueAsNumber) ? 0 : details.valueAsNumber)
+        onValueChange={({ valueAsNumber }) =>
+          onChange(Number.isNaN(valueAsNumber) ? 0 : valueAsNumber)
         }
         {...props}
       >
-        <NumberInput.Control />
-        <NumberInput.Input />
-      </NumberInput.Root>
-      {error ? (
-        <Field.ErrorText fontSize="xs" fontWeight="500" color="status.error.fg">
-          {error}
-        </Field.ErrorText>
-      ) : null}
-    </Field.Root>
+        <NumberInputField />
+      </NumberInputRoot>
+    </Field>
   );
 }
 

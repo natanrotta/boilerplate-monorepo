@@ -79,18 +79,18 @@ describe("mapPrismaError", () => {
   it("should pass through AppError subclasses unchanged (no re-wrapping)", () => {
     // Domain / application code wraps work in `try { } catch (e) { throw
     // mapPrismaError(e); }`. When the inner code throws a domain error
-    // (e.g. PhoneReplacementService → ValidationError(INVALID_PHONE)),
+    // (e.g. a use case throwing ValidationError inside a Prisma try/catch),
     // re-wrapping as InternalError would hide it as a generic 500 and
     // strip the user-facing code. The mapper must let our own AppErrors
     // through unchanged.
     const original = new ValidationError(
       "Invalid phone number",
       undefined,
-      ErrorCodes.INVALID_PHONE,
+      ErrorCodes.VALIDATION_ERROR,
     );
     const mapped = mapPrismaError(original);
     expect(mapped).toBe(original);
-    expect(mapped.code).toBe(ErrorCodes.INVALID_PHONE);
+    expect(mapped.code).toBe(ErrorCodes.VALIDATION_ERROR);
     expect(mapped.statusCode).toBe(422);
   });
 });

@@ -5,14 +5,14 @@ import { ErrorCodes } from "@shared/error";
 import { createRateLimitStore } from "./rate-limit-store";
 
 /**
- * IP-keyed limiter for fully anonymous, patient-facing endpoints (currently
- * `/api/public/document-shares/:hash/meta` and `/:hash/verify`).
+ * IP-keyed limiter for fully anonymous endpoints — a public share link, a
+ * one-time-code check, anything reachable without a session.
  *
- * The use-case layer already enforces a per-hash PIN brute-force guard via
- * the cache provider (5 attempts / 15min). This middleware is the coarser
- * HTTP-layer shield: it blocks hash *enumeration* from a single IP before
- * the use-case ever runs. Default 30 req / 15min comfortably covers a
- * patient reloading the share page while still cutting off scrapers.
+ * The use-case layer owns the per-resource brute-force guard (e.g. N attempts
+ * per hash via the cache provider). This middleware is the coarser HTTP-layer
+ * shield: it blocks *enumeration* from a single IP before the use case ever
+ * runs. The default 30 req / 15min comfortably covers a real visitor
+ * reloading the page while still cutting off scrapers.
  */
 export const publicRateLimit = rateLimit({
   windowMs: env.RATE_LIMIT_PUBLIC_WINDOW_MS,

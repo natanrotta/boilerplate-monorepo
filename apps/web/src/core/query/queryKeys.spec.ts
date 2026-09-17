@@ -5,7 +5,6 @@ describe("queryKeys", () => {
   describe("hierarchy", () => {
     it("nests narrow keys under the entity's `all` root", () => {
       expect(queryKeys.auth.me()[0]).toBe("auth");
-      expect(queryKeys.dashboard.summary()[0]).toBe("dashboard");
       expect(queryKeys.health.version()[0]).toBe("health");
     });
   });
@@ -17,14 +16,10 @@ describe("queryKeys", () => {
     });
   });
 
-  describe("dashboard namespace", () => {
-    it("encodes the target date in the summary key", () => {
-      expect(queryKeys.dashboard.summary()).toEqual(["dashboard", "summary", "today"]);
-      expect(queryKeys.dashboard.summary("2025-03-01")).toEqual([
-        "dashboard",
-        "summary",
-        "2025-03-01",
-      ]);
+  describe("health namespace", () => {
+    it("nests version() under the health root", () => {
+      expect(queryKeys.health.version()).toEqual(["health", "version"]);
+      expect(queryKeys.health.all).toEqual(["health"]);
     });
   });
 

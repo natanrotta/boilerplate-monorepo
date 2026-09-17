@@ -1,0 +1,10 @@
+{
+  // Type-checks the Playwright side (specs, page objects, fixtures, config and
+  // the e2e runner), which the app tsconfig (`include: ["src"]`) never sees.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  },
+  "include": ["e2e", "playwright.config.ts", "scripts"]
+}

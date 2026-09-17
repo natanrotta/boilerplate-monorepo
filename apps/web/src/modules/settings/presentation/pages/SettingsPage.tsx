@@ -3,19 +3,10 @@ import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { LanguageSelector } from "@/shared/components/ui/LanguageSelector";
 import { ColorModeToggle } from "@/shared/components/ui/ColorModeToggle";
-import { AppTabs } from "@/shared/components/ui/AppTabs";
 import { ProfileTab } from "@/modules/settings/presentation/components/ProfileTab";
 
 export function SettingsPage() {
   const { t } = useTranslation("settings");
-
-  const tabs = [
-    {
-      id: "profile",
-      label: t("tabs.profile", "Perfil"),
-      content: <ProfileTab />,
-    },
-  ];
 
   return (
     <>
@@ -29,7 +20,9 @@ export function SettingsPage() {
           </Flex>
         }
       />
-      <AppTabs items={tabs} syncWithUrl />
+      {/* Profile is the only section today, so it renders directly under the
+          header. A second section becomes a tab set again. */}
+      <ProfileTab />
     </>
   );
 }
