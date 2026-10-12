@@ -3,6 +3,21 @@
     "title": "Configurações",
     "description": "Gerencie seu perfil, equipe e conta"
   },
+  "tabs": {
+    "label": "Seções das configurações",
+    "profile": "Perfil",
+    "preferences": "Preferências"
+  },
+  "preferences": {
+    "language": {
+      "title": "Idioma",
+      "description": "O idioma da interface e dos e-mails que você recebe."
+    },
+    "theme": {
+      "title": "Tema",
+      "description": "Alterne entre o tema claro e o escuro."
+    }
+  },
   "account": {
     "title": "Dados da Conta",
     "accountName": "Nome da Conta",

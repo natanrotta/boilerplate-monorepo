@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { csrfProtection } from "./csrf.middleware";
+import {
+  csrfProtection,
+  csrfProtectionWithDevQuickLogin,
+} from "./csrf.middleware";
 import { ForbiddenError } from "@shared/error";
 import {
   CSRF_TOKEN_COOKIE,
@@ -179,6 +182,41 @@ describe("csrfProtection", () => {
       csrfProtection(req, res, next);
 
       expect(next).toHaveBeenCalledWith();
+    });
+  });
+
+  describe("dev quick-login (a login endpoint, exempt only in the opted-in variant)", () => {
+    const impersonate = {
+      method: "POST",
+      path: "/api/dev/impersonate",
+      accessCookie: true,
+    };
+
+    it("the dev variant passes POST /api/dev/impersonate carrying a stale session cookie and no CSRF token", () => {
+      const { req, res, next } = mockReqResNext(impersonate);
+
+      csrfProtectionWithDevQuickLogin(req, res, next);
+
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    it("the default middleware does NOT exempt it (no bypass left behind a 404)", () => {
+      const { req, res, next } = mockReqResNext(impersonate);
+
+      expect(() => csrfProtection(req, res, next)).toThrow(ForbiddenError);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("the dev variant does not exempt any other /api/dev/* path", () => {
+      const { req, res, next } = mockReqResNext({
+        ...impersonate,
+        path: "/api/dev/impersonate/extra",
+      });
+
+      expect(() => csrfProtectionWithDevQuickLogin(req, res, next)).toThrow(
+        ForbiddenError,
+      );
+      expect(next).not.toHaveBeenCalled();
     });
   });
 

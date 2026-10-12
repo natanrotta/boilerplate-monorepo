@@ -3,12 +3,13 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
-import { env } from "../config";
+import { env, isDevQuickLoginEnabled } from "../config";
 import { httpLogger } from "./logger";
 import {
   errorHandlerMiddleware,
   localeMiddleware,
   csrfProtection,
+  csrfProtectionWithDevQuickLogin,
 } from "./middlewares";
 import { createRateLimitStore } from "./middlewares/rate-limit-store";
 import { router } from "./routes";
@@ -18,6 +19,8 @@ import { ErrorCodes } from "@shared/error";
 
 const app = express();
 
+// The dev quick-login guard (`modules/auth/.../dev.routes.ts`) reads `req.ip`
+// as "the last proxy hop": changing this number changes what that check means.
 app.set("trust proxy", 1);
 
 // Error-reporter request context — FIRST middleware so every breadcrumb and
@@ -94,7 +97,11 @@ app.use(
 
 app.use(cookieParser());
 app.use(express.json({ limit: "10kb" }));
-app.use(csrfProtection);
+app.use(
+  isDevQuickLoginEnabled(env)
+    ? csrfProtectionWithDevQuickLogin
+    : csrfProtection,
+);
 
 app.use(httpLogger);
 

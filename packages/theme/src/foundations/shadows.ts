@@ -4,7 +4,5 @@ import { defineTokens } from "@chakra-ui/react";
 // `semantic-tokens.ts` under `shadow.*` (and the focus rings kept at the root
 // of that file, so `boxShadow="input-focus"` keeps working).
 export const shadows = defineTokens.shadows({
-  sm: {
-    value: "0px 1px 3px rgba(15, 23, 42, 0.08), 0px 1px 2px rgba(15, 23, 42, 0.04)",
-  },
+  sm: { value: "0 1px 2px rgba(0, 0, 0, 0.04)" },
 });

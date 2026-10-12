@@ -1,59 +1,67 @@
 import { defineTextStyles } from "@chakra-ui/react";
 
-// The eight voices of the product. Nunito Sans carries structure and prose;
-// `mono` is reserved for identifiers, versions and timestamps.
+// The voices of the product. Geist carries structure and prose, with tight
+// negative tracking on anything large. Geist Mono carries identifiers, versions
+// and timestamps, and the small uppercase eyebrow.
 export const textStyles = defineTextStyles({
   // Marketing-sized statement (auth screens).
   display: {
     value: {
       fontFamily: "heading",
-      fontWeight: "800",
-      fontSize: { base: "2xl", md: "3xl" },
-      lineHeight: "1.2",
-      letterSpacing: "-0.02em",
+      fontWeight: "600",
+      fontSize: { base: "28px", md: "32px" },
+      lineHeight: "1.1",
+      letterSpacing: "-0.04em",
     },
   },
   // Page title — `PageHeader` renders it as the `<h1>`.
   pageTitle: {
     value: {
       fontFamily: "heading",
-      fontWeight: "700",
+      fontWeight: "600",
       fontSize: { base: "lg", md: "xl" },
-      lineHeight: "1.25",
-      letterSpacing: "tight",
+      lineHeight: "1.2",
+      letterSpacing: "-0.03em",
     },
   },
   // Card / section title.
   sectionTitle: {
     value: {
       fontFamily: "heading",
-      fontWeight: "700",
+      fontWeight: "600",
       fontSize: "md",
       lineHeight: "1.3",
+      letterSpacing: "-0.02em",
     },
   },
-  // Field label and column header: tiny, uppercase, wide tracking.
+  // Field label and column header: tiny, uppercase, mono, wide tracking.
   eyebrow: {
     value: {
-      fontFamily: "heading",
-      fontWeight: "700",
-      fontSize: "xs",
+      fontFamily: "mono",
+      fontWeight: "400",
+      fontSize: "11px",
       lineHeight: "1.2",
-      letterSpacing: "wider",
+      letterSpacing: "0.08em",
       textTransform: "uppercase",
     },
   },
   body: {
-    value: { fontFamily: "body", fontWeight: "400", fontSize: "sm", lineHeight: "1.6" },
+    value: { fontFamily: "body", fontWeight: "400", fontSize: "sm", lineHeight: "1.55" },
   },
   bodyStrong: {
-    value: { fontFamily: "body", fontWeight: "600", fontSize: "sm", lineHeight: "1.5" },
+    value: { fontFamily: "body", fontWeight: "500", fontSize: "sm", lineHeight: "1.5" },
   },
   caption: {
-    value: { fontFamily: "body", fontWeight: "500", fontSize: "xs", lineHeight: "1.4" },
+    value: { fontFamily: "body", fontWeight: "400", fontSize: "xs", lineHeight: "1.4" },
   },
   // Identifiers, versions, timestamps.
   mono: {
-    value: { fontFamily: "mono", fontWeight: "500", fontSize: "xs", lineHeight: "1.4" },
+    value: {
+      fontFamily: "mono",
+      fontWeight: "400",
+      fontSize: "xs",
+      lineHeight: "1.4",
+      fontVariantNumeric: "tabular-nums",
+    },
   },
 });

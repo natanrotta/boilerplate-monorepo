@@ -14,7 +14,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      // The product's design system, compiled from source (see vite.config.ts).
+      // It imports Chakra from outside this folder and has no node_modules of
+      // its own, so Chakra's types are pinned to this project's copy.
+      "@boilerplate/theme": ["../../packages/theme/src/index.ts"],
+      "@chakra-ui/react": ["./node_modules/@chakra-ui/react/dist/types/index.d.ts"]
     }
   },
   "include": ["src"],

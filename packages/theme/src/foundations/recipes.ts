@@ -17,18 +17,19 @@ import { defineRecipe } from "@chakra-ui/react";
  * the text inputs next to it.
  */
 export const fieldBase = {
-  borderRadius: "sm",
-  bg: "bg.surface",
+  borderRadius: "md",
+  bg: "bg.input",
   borderColor: "border.default",
-  borderWidth: "1.5px",
+  borderWidth: "1px",
   color: "text.primary",
   fontSize: { base: "16px", md: "sm" },
-  transition: "all 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
+  transition: "box-shadow 0.15s, border-color 0.15s",
   _hover: { borderColor: "border.strong" },
+  // Focus is the accent border plus the 3px ring — nothing else moves.
   _focusVisible: {
     borderColor: "border.focus",
     boxShadow: "input-focus",
-    bg: "bg.surface",
+    bg: "bg.input",
     outline: "none",
   },
   _invalid: { borderColor: "status.error.fg", boxShadow: "input-error" },
@@ -49,38 +50,27 @@ export const fieldBase = {
 
 export const buttonRecipe = defineRecipe({
   base: {
-    borderRadius: "sm",
+    borderRadius: "md",
     fontWeight: "500",
-    transitionProperty: "all",
-    transitionDuration: "200ms",
-    transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+    transitionProperty: "background, border-color, opacity, transform",
+    transitionDuration: "150ms",
+    _active: { transform: "scale(0.99)" },
   },
   variants: {
     variant: {
+      // The primary action: the ink inverted (black on light, near-white on
+      // dark). The accent is for focus, selection and links — never for this.
       solid: {
-        bg: "bg.brand.solid",
-        color: "text.onBrand",
-        boxShadow: "0 1px 2px rgba(47, 128, 237, 0.20)",
-        _hover: {
-          bg: "bg.brand.solid-hover",
-          transform: "translateY(-1px)",
-          boxShadow: "0 4px 12px rgba(47, 128, 237, 0.30)",
-        },
-        _active: {
-          bg: "bg.brand.solid-active",
-          transform: "translateY(0)",
-          boxShadow: "0 1px 2px rgba(47, 128, 237, 0.20)",
-        },
+        bg: "bg.primary",
+        color: "text.onPrimary",
+        _hover: { bg: "bg.primaryHover" },
+        _active: { bg: "bg.primaryActive" },
       },
       subtle: {
         bg: "bg.brand.subtle",
         color: "text.brand",
-        _hover: {
-          bg: "bg.brand.subtle",
-          filter: "brightness(0.97)",
-          transform: "translateY(-1px)",
-        },
-        _active: { filter: "brightness(0.94)", transform: "translateY(0)" },
+        _hover: { bg: "bg.brand.subtle", filter: "brightness(0.96)" },
+        _active: { filter: "brightness(0.92)" },
       },
       ghost: {
         color: "text.primary",
@@ -88,33 +78,28 @@ export const buttonRecipe = defineRecipe({
         _hover: { bg: "bg.hover" },
         _active: { bg: "bg.active" },
       },
+      // The secondary action: a bordered panel.
       outline: {
-        border: "1px solid",
+        // Longhands on purpose: the `border` shorthand resets the color to
+        // `currentColor` when it lands after `borderColor` in the stylesheet.
+        borderWidth: "1px",
+        borderStyle: "solid",
         borderColor: "border.default",
-        color: "text.brand",
+        color: "text.primary",
         bg: "bg.surface",
-        _hover: {
-          bg: "bg.brand.subtle",
-          borderColor: "border.brand",
-          transform: "translateY(-1px)",
-        },
-        _active: { filter: "brightness(0.95)", transform: "translateY(0)" },
+        _hover: { bg: "bg.hover" },
+        _active: { bg: "bg.active" },
       },
       // Destructive CTA. `colorPalette="red"` does nothing on `solid` (that
-      // variant paints the brand tokens explicitly), so the destructive button
-      // is its own variant instead.
+      // variant paints the primary tokens explicitly), so the destructive
+      // button is its own variant instead.
       danger: {
         bg: "status.error.solid",
         // White in BOTH modes: this button is always red, so it must not follow
-        // `text.onBrand` if that ever becomes a dark ink.
+        // `text.onPrimary`, which is a dark ink on the dark canvas.
         color: "white",
-        boxShadow: "0 1px 2px rgba(239, 68, 68, 0.20)",
-        _hover: {
-          filter: "brightness(0.94)",
-          transform: "translateY(-1px)",
-          boxShadow: "0 4px 12px rgba(239, 68, 68, 0.30)",
-        },
-        _active: { filter: "brightness(0.88)", transform: "translateY(0)" },
+        _hover: { filter: "brightness(0.94)" },
+        _active: { filter: "brightness(0.88)" },
       },
     },
   },
@@ -122,7 +107,7 @@ export const buttonRecipe = defineRecipe({
 });
 
 export const badgeRecipe = defineRecipe({
-  base: { borderRadius: "full", fontWeight: "600", px: 2.5, py: 1 },
+  base: { borderRadius: "full", fontWeight: "500", px: 2.5, py: 1 },
 });
 
 export const inputRecipe = defineRecipe({

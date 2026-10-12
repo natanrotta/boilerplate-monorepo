@@ -1,4 +1,4 @@
-import { Box, Button, Menu } from "@chakra-ui/react";
+import { Box, Menu, chakra } from "@chakra-ui/react";
 import { Check, ChevronDown } from "lucide-react";
 import { useLocale, type Locale } from "@/hooks/useLocale";
 
@@ -8,63 +8,70 @@ const LANGUAGES: { code: Locale; label: string }[] = [
   { code: "es", label: "Español" },
 ];
 
-/** Language picker styled as a select: a bordered pill showing the active
- *  language label + chevron (no flag). Chakra `Menu` renders its list inline
- *  (no portal), so it works both in the desktop pill and inside the mobile
- *  hamburger stack without escaping or being clipped. */
+/** Language picker: a bordered square the size of the theme switch, showing the active code. */
 export const LanguageSwitcher = () => {
-  const { locale, setLocale } = useLocale();
-  const active = LANGUAGES.find((l) => l.code === locale) ?? LANGUAGES[0];
+  const { locale, setLocale, dict } = useLocale();
 
   return (
-    <Menu.Root positioning={{ placement: "top-end" }}>
+    <Menu.Root positioning={{ placement: "bottom-end" }}>
       <Menu.Trigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          h={9}
-          pl={3.5}
-          pr={2.5}
-          gap={1.5}
-          borderRadius="full"
+        <chakra.button
+          type="button"
+          aria-label={dict.header.language}
+          title={dict.header.language}
+          display="flex"
+          alignItems="center"
+          gap="4px"
+          h="32px"
+          pl="10px"
+          pr="7px"
+          flexShrink={0}
+          borderRadius="sm"
           borderWidth="1px"
           borderColor="border.default"
           bg="bg.surface"
-          color="text.secondary"
-          fontWeight="600"
-          fontSize="xs"
-          _hover={{ bg: "bg.brand.subtle", color: "text.brand", borderColor: "border.brand" }}
-          _active={{ bg: "bg.brand.subtle" }}
+          color="text.primary"
+          textStyle="mono"
+          fontSize="11px"
+          textTransform="uppercase"
+          transition="background 0.15s"
+          _hover={{ bg: "bg.hover" }}
+          _focusVisible={{ outline: "none", borderColor: "border.focus", boxShadow: "shadow.focus" }}
         >
-          {active.label}
-          <Box as={ChevronDown} fontSize="sm" />
-        </Button>
+          {locale}
+          <Box asChild boxSize="13px" color="text.muted" aria-hidden>
+            <ChevronDown />
+          </Box>
+        </chakra.button>
       </Menu.Trigger>
       <Menu.Positioner>
         <Menu.Content
           bg="bg.surface"
-          border="1px solid"
-          borderColor="border.subtle"
+          borderWidth="1px"
+          borderColor="border.default"
+          borderRadius="lg"
           boxShadow="shadow.panel"
-          py={1.5}
-          minW="180px"
+          p="4px"
+          minW="160px"
         >
-          {LANGUAGES.map((l) => {
-            const isActive = l.code === locale;
+          {LANGUAGES.map((language) => {
+            const isActive = language.code === locale;
             return (
               <Menu.Item
-                key={l.code}
-                value={l.code}
-                onClick={() => setLocale(l.code)}
-                fontSize="sm"
-                fontWeight={isActive ? "700" : "500"}
-                color={isActive ? "text.brand" : "text.primary"}
-                bg="transparent"
-                _hover={{ bg: "bg.brand.subtle", color: "text.brand" }}
-                _focus={{ bg: "bg.brand.subtle" }}
+                key={language.code}
+                value={language.code}
+                onClick={() => setLocale(language.code)}
+                justifyContent="space-between"
+                borderRadius="sm"
+                fontSize="13px"
+                color={isActive ? "text.primary" : "text.muted"}
+                _hover={{ bg: "bg.hover", color: "text.primary" }}
+                _focus={{ bg: "bg.hover" }}
               >
-                <Box as={Check} fontSize="sm" color="text.brand" opacity={isActive ? 1 : 0} />
-                {l.label}
+                {language.label}
+                <Box asChild boxSize="14px" color="text.accent" opacity={isActive ? 1 : 0} aria-hidden>
+                  <Check />
+                </Box>
               </Menu.Item>
             );
           })}

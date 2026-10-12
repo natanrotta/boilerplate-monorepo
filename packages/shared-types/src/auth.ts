@@ -84,3 +84,12 @@ export interface RefreshTokenResponseDTO {
   token: string;
   refreshToken: string;
 }
+
+/** One row of the dev-only quick-login panel (`GET /dev/users`, which only
+ *  exists on a local machine with `DEV_QUICK_LOGIN_ENABLED=true`). */
+export interface DevUserListItemDTO {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+}

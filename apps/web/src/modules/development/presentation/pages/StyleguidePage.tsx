@@ -1,411 +1,301 @@
-import { useState, type ReactNode } from "react";
-import {
-  Box,
-  Button,
-  Code,
-  Flex,
-  Heading,
-  SimpleGrid,
-  Stack,
-  Text,
-  useDisclosure,
-} from "@chakra-ui/react";
-import { buttonRecipe, semanticTokens, textStyles } from "@boilerplate/theme";
-import { FiActivity, FiClock, FiEdit2, FiTrash2 } from "@/shared/components/icons";
-import { PageHeader } from "@/shared/components/ui/PageHeader";
-import { StatusBadge } from "@/shared/components/ui/StatusBadge";
-import { SectionCard } from "@/shared/components/ui/SectionCard";
-import { StatCard } from "@/shared/components/ui/StatCard";
-import { EntityCard } from "@/shared/components/ui/EntityCard";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { Box, Button, Flex, Stack, Text, chakra } from "@chakra-ui/react";
+import { ColorModeToggle } from "@/shared/components/ui/ColorModeToggle";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { FilterBar } from "@/shared/components/ui/FilterBar";
-import { ActionMenu } from "@/shared/components/ui/ActionMenu";
-import { SaveButton } from "@/shared/components/ui/SaveButton";
-import { ColorModeToggle } from "@/shared/components/ui/ColorModeToggle";
-import { LanguageSelector } from "@/shared/components/ui/LanguageSelector";
-import { DetailPageGuard } from "@/shared/components/ui/DetailPageGuard";
-import { AppModal } from "@/shared/components/ui/AppModal";
-import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
-import { FormField } from "@/shared/components/forms/FormField";
-import { PasswordField } from "@/shared/components/forms/PasswordField";
-import { PasswordStrengthIndicator } from "@/shared/components/forms/PasswordStrengthIndicator";
-import { SelectField } from "@/shared/components/forms/SelectField";
-import { NumberField } from "@/shared/components/forms/NumberField";
-import { TextAreaField } from "@/shared/components/forms/TextAreaField";
-import { ListPageSkeleton } from "@/shared/components/skeletons/ListPageSkeleton";
-import { DetailPageSkeleton } from "@/shared/components/skeletons/DetailPageSkeleton";
-import { EntityCardSkeleton } from "@/shared/components/skeletons/EntityCardSkeleton";
-import { SectionCardSkeleton } from "@/shared/components/skeletons/SectionCardSkeleton";
-import { FilterBarSkeleton } from "@/shared/components/skeletons/FilterBarSkeleton";
-import { useNotify } from "@/shared/hooks/useNotify";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
+import { Section } from "../styleguide/Section";
+import {
+  STYLEGUIDE_CATEGORIES,
+  STYLEGUIDE_SECTIONS,
+  filterSections,
+} from "../styleguide/registry";
+
+const COMPONENT_COUNT = new Set(
+  STYLEGUIDE_SECTIONS.flatMap((section) => section.usage.map((item) => item.name)),
+).size;
+
+/** How far below the top of the scrolling area a section becomes "the current one". */
+const ACTIVE_LINE_PX = 48;
+
+/** The element that scrolls the sections: the content column on desktop, the page elsewhere. */
+function scrollerOf(content: HTMLElement | null): HTMLElement | null {
+  if (content && content.scrollHeight > content.clientHeight + 1) {
+    const overflowY = getComputedStyle(content).overflowY;
+    if (overflowY === "auto" || overflowY === "scroll") return content;
+  }
+  return document.scrollingElement as HTMLElement | null;
+}
 
 /**
- * DEV-ONLY design-system gallery (`/dev/styleguide`, mounted only when
- * `import.meta.env.DEV`). Every shared primitive in every state, in one page,
- * so a design change can be judged — and snapshot-tested
- * (`e2e/tests/design-system/styleguide-visual.spec.ts`) — in light and dark.
- *
- * Token swatches are read from `@boilerplate/theme`, so they follow the design
- * with no edit here. Demo copy is literal pt-BR on purpose: this is a
- * development tool, not a product screen, so it stays out of the i18n catalog.
+ * The section the reader is on: the last one whose top has passed a line near
+ * the top of the scrolling area. Returns a setter too, so a click on the index
+ * marks its target at once instead of waiting for the scroll to arrive.
  */
+function useActiveSection(ids: readonly string[], contentRef: RefObject<HTMLElement | null>) {
+  const [active, setActive] = useState<string | null>(ids[0] ?? null);
 
-type Leaf = { path: string };
+  useEffect(() => {
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const scroller = scrollerOf(contentRef.current);
+      const isPage = scroller === document.scrollingElement;
+      const areaTop = scroller && !isPage ? scroller.getBoundingClientRect().top : 96;
+      const areaBottom =
+        scroller && !isPage ? scroller.getBoundingClientRect().bottom : window.innerHeight;
 
-function tokenPaths(node: unknown, prefix = ""): Leaf[] {
-  if (!node || typeof node !== "object") return [];
-  return Object.entries(node).flatMap(([key, child]) =>
-    child && typeof child === "object" && "value" in child
-      ? [{ path: `${prefix}${key}` }]
-      : tokenPaths(child, `${prefix}${key}.`),
-  );
+      let current = ids[0] ?? null;
+      let lastVisible: string | null = null;
+      for (const id of ids) {
+        const element = document.getElementById(id);
+        if (!element) continue;
+        const { top } = element.getBoundingClientRect();
+        if (top <= areaTop + ACTIVE_LINE_PX) current = id;
+        if (top < areaBottom) lastVisible = id;
+      }
+      // At the very end the last sections never reach the line: the last one
+      // on screen is the current one.
+      const visibleHeight = isPage ? window.innerHeight : (scroller?.clientHeight ?? 0);
+      const atEnd =
+        scroller !== null && scroller.scrollTop + visibleHeight >= scroller.scrollHeight - 2;
+      setActive(atEnd && lastVisible ? lastVisible : current);
+    };
+    const onScroll = () => {
+      if (frame === 0) frame = requestAnimationFrame(measure);
+    };
+
+    measure();
+    // Capture: the sections scroll inside the content column on desktop.
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame !== 0) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll, { capture: true });
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [ids, contentRef]);
+
+  return [active, setActive] as const;
 }
 
-const colorTokens = tokenPaths(semanticTokens.colors);
-const shadowTokens = tokenPaths(semanticTokens.shadows);
-const textStyleNames = Object.keys(textStyles);
-const buttonVariants = Object.keys(buttonRecipe.variants?.variant ?? {});
-const BUTTON_SIZES = ["xs", "sm", "md"] as const;
-const STATUSES = ["success", "info", "warning", "error", "neutral"] as const;
-
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
-  return (
-    <Box
-      as="section"
-      data-cy={`styleguide-${id}`}
-      bg="bg.surface"
-      borderWidth="1px"
-      borderColor="border.subtle"
-      borderRadius="lg"
-      p={{ base: 4, md: 6 }}
-    >
-      <Heading as="h2" textStyle="sectionTitle" mb={4}>
-        {title}
-      </Heading>
-      {children}
-    </Box>
-  );
-}
-
-function Label({ children }: { children: ReactNode }) {
-  return (
-    <Text textStyle="caption" color="text.muted">
-      {children}
-    </Text>
-  );
-}
-
-function TypographySection() {
-  return (
-    <Section id="typography" title="Tipografia">
-      <Stack gap={3}>
-        {textStyleNames.map((name) => (
-          <Flex key={name} gap={4} align="baseline" wrap="wrap">
-            <Code minW="120px">{name}</Code>
-            <Text textStyle={name}>Boilerplate — base para novos produtos</Text>
-          </Flex>
-        ))}
-      </Stack>
-    </Section>
-  );
-}
-
-function ColorSection() {
-  return (
-    <Section id="colors" title="Cores semânticas">
-      <SimpleGrid columns={{ base: 2, md: 4, xl: 6 }} gap={3}>
-        {colorTokens.map(({ path }) => (
-          <Stack key={path} gap={1}>
-            <Box
-              h={10}
-              borderRadius="md"
-              bg={path}
-              borderWidth="1px"
-              borderColor="border.subtle"
-            />
-            <Label>{path}</Label>
-          </Stack>
-        ))}
-      </SimpleGrid>
-    </Section>
-  );
-}
-
-function ShadowSection() {
-  return (
-    <Section id="shadows" title="Sombras">
-      <SimpleGrid columns={{ base: 2, md: 4 }} gap={6}>
-        {shadowTokens.map(({ path }) => (
-          <Stack key={path} gap={2}>
-            <Box h={14} borderRadius="lg" bg="bg.elevated" boxShadow={path} />
-            <Label>{path}</Label>
-          </Stack>
-        ))}
-      </SimpleGrid>
-    </Section>
-  );
-}
-
-function ButtonSection() {
-  return (
-    <Section id="buttons" title="Botões">
-      <Stack gap={4}>
-        {buttonVariants.map((variant) => (
-          <Flex key={variant} gap={3} align="center" wrap="wrap">
-            <Code minW="80px">{variant}</Code>
-            {BUTTON_SIZES.map((size) => (
-              // The recipe adds variants Chakra's generated types don't know. Its
-              // variants paint explicit tokens, so `colorPalette` only reaches the
-              // states they leave to Chakra's defaults — mirroring the app's call sites.
-              <Button key={size} size={size} variant={variant as "solid"} colorPalette="brand">
-                {size}
-              </Button>
-            ))}
-            <Button size="sm" variant={variant as "solid"} colorPalette="brand" disabled>
-              desabilitado
-            </Button>
-            <Button size="sm" variant={variant as "solid"} colorPalette="brand" loading>
-              carregando
-            </Button>
-          </Flex>
-        ))}
-      </Stack>
-    </Section>
-  );
-}
-
-function BadgeSection() {
-  return (
-    <Section id="badges" title="Status">
-      <Flex gap={2} wrap="wrap">
-        {STATUSES.map((status) => (
-          <StatusBadge key={status} status={status} label={status} />
-        ))}
-      </Flex>
-    </Section>
-  );
-}
-
-function FieldSection() {
-  const [name, setName] = useState("Projeto principal");
-  const [password, setPassword] = useState("Abc123!x");
-  const [kind, setKind] = useState("text");
-  const [count, setCount] = useState(3);
-  const [notes, setNotes] = useState("");
-
-  return (
-    <Section id="fields" title="Campos">
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-        <FormField label="Padrão" value={name} onChange={setName} />
-        <FormField
-          label="Com ajuda"
-          value=""
-          onChange={() => {}}
-          placeholder="https://"
-          helperText="Texto de apoio abaixo do campo."
-        />
-        <FormField label="Com erro" value="abc" onChange={() => {}} error="Formato inválido." />
-        <FormField label="Desabilitado" value="somente leitura" onChange={() => {}} disabled />
-        <Stack gap={2}>
-          <PasswordField label="Senha" value={password} onChange={setPassword} />
-          <PasswordStrengthIndicator password={password} />
-        </Stack>
-        <SelectField
-          label="Seleção"
-          value={kind}
-          onChange={setKind}
-          options={[
-            { value: "text", label: "Texto" },
-            { value: "image", label: "Imagem" },
-          ]}
-        />
-        <NumberField label="Número" value={count} onChange={setCount} />
-        <TextAreaField
-          label="Texto longo"
-          value={notes}
-          onChange={setNotes}
-          placeholder="Escreva algo…"
-          helperText="Até 4096 caracteres."
-        />
-      </SimpleGrid>
-    </Section>
-  );
-}
-
-function CardSection() {
-  return (
-    <Section id="cards" title="Cards">
-      <Stack gap={6}>
-        <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
-          {(["default", "glass", "sunken"] as const).map((variant) => (
-            <SectionCard key={variant} variant={variant} p={4}>
-              <Text textStyle="bodyStrong">SectionCard</Text>
-              <Label>{variant}</Label>
-            </SectionCard>
-          ))}
-        </SimpleGrid>
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-          <EntityCard
-            title="Registro de exemplo"
-            subtitle="criado por Ana Souza"
-            badges={[<StatusBadge key="s" status="success" label="Ativo" />]}
-            metaItems={[{ icon: FiClock, label: "Atualizado há 2 horas" }]}
-            actionItems={[
-              { label: "Editar", icon: FiEdit2, onClick: () => {} },
-              { label: "Excluir", icon: FiTrash2, onClick: () => {}, isDanger: true },
-            ]}
-            onClick={() => {}}
-          />
-          <StatCard
-            label="Total"
-            value="128"
-            hint="+12% no mês"
-            icon={FiActivity}
-            trend="up"
-          />
-        </SimpleGrid>
-      </Stack>
-    </Section>
-  );
-}
-
-function StateSection() {
-  return (
-    <Section id="states" title="Estados">
-      <Stack gap={6}>
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap={6}>
-          <EmptyState
-            title="Nada por aqui"
-            description="Crie o primeiro registro para começar."
-            actionLabel="Adicionar"
-            onAction={() => {}}
-            size="sm"
-          />
-          <Stack gap={4}>
-            <FilterBarSkeleton />
-            <EntityCardSkeleton />
-            <SectionCardSkeleton lines={2} />
-          </Stack>
-        </SimpleGrid>
-        <Stack gap={2}>
-          <Label>ListPageSkeleton</Label>
-          <ListPageSkeleton columns={{ base: 1, md: 2 }} cardCount={2} showFilter={false} />
-        </Stack>
-        <Stack gap={2}>
-          <Label>DetailPageSkeleton (profile)</Label>
-          <DetailPageSkeleton variant="profile" />
-        </Stack>
-        <Stack gap={2}>
-          <Label>DetailPageGuard — carregando / erro / não encontrado</Label>
-          <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
-            <DetailPageGuard isLoading entity={null} skeletonVariant="single">
-              <Text>conteúdo</Text>
-            </DetailPageGuard>
-            <DetailPageGuard isLoading={false} error={new Error("boom")} entity={null}>
-              <Text>conteúdo</Text>
-            </DetailPageGuard>
-            <DetailPageGuard isLoading={false} entity={null}>
-              <Text>conteúdo</Text>
-            </DetailPageGuard>
-          </SimpleGrid>
-        </Stack>
-      </Stack>
-    </Section>
-  );
-}
-
-function ControlSection() {
-  const [search, setSearch] = useState("");
-  return (
-    <Section id="controls" title="Controles">
-      <Stack gap={6}>
-        <PageHeader
-          title="Título da página"
-          description="Descrição curta do que a página faz."
-          primaryAction={{ label: "Adicionar", onClick: () => {} }}
-        />
-        <FilterBar searchValue={search} onSearchChange={setSearch} />
-        <Flex gap={4} align="center" wrap="wrap">
-          <ActionMenu items={[{ label: "Editar", icon: FiEdit2, onClick: () => {} }]} />
-          <SaveButton isDirty isSaving={false} onClick={() => {}} />
-          <SaveButton isDirty={false} isSaving={false} onClick={() => {}} />
-          <ColorModeToggle />
-          <ColorModeToggle size="md" />
-          <LanguageSelector />
-        </Flex>
-      </Stack>
-    </Section>
-  );
-}
-
-function OverlaySection() {
-  const modal = useDisclosure();
-  const confirm = useDisclosure();
-  const { showSuccess, showInfo, showWarning, showError } = useNotify();
-
-  return (
-    <Section id="overlays" title="Sobreposições">
-      <Flex gap={3} wrap="wrap">
-        <Button size="sm" variant="outline" onClick={modal.onOpen}>
-          Abrir modal
-        </Button>
-        <Button size="sm" variant="outline" onClick={confirm.onOpen}>
-          Abrir confirmação
-        </Button>
-        <Button size="sm" variant="ghost" onClick={() => showSuccess("Salvo com sucesso")}>
-          Toast success
-        </Button>
-        <Button size="sm" variant="ghost" onClick={() => showInfo("Informação")}>
-          Toast info
-        </Button>
-        <Button size="sm" variant="ghost" onClick={() => showWarning("Atenção")}>
-          Toast warning
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => showError(new Error("Algo deu errado"), "Algo deu errado")}
-        >
-          Toast error
-        </Button>
-      </Flex>
-      <AppModal
-        isOpen={modal.open}
-        onClose={modal.onClose}
-        title="Novo registro"
-        primaryActionLabel="Criar"
-        onPrimaryAction={modal.onClose}
-      >
-        <Text>Conteúdo do modal.</Text>
-      </AppModal>
-      <ConfirmDialog
-        isOpen={confirm.open}
-        onClose={confirm.onClose}
-        onConfirm={confirm.onClose}
-        title="Excluir registro?"
-        description="Esta ação não pode ser desfeita."
-      />
-    </Section>
-  );
-}
-
+/**
+ * DEV-ONLY design-system reference (`/dev/styleguide`, mounted only when
+ * `import.meta.env.DEV`). Every shared primitive of the app, grouped by
+ * category, with what it is for, how to use it (import + a minimal call) and —
+ * in its preview — every variation and state. A side index follows the scroll
+ * and a quick filter (press `/`) finds a component by name.
+ *
+ * The previews are the subject of the visual regression spec
+ * (`e2e/tests/design-system/styleguide-visual.spec.ts`), in light and dark.
+ * Sections live in `../sections` and are described in `../styleguide/registry`.
+ * Copy is literal pt-BR on purpose: this is a development tool, not a product
+ * screen, so it stays out of the i18n catalog.
+ */
 export function StyleguidePage() {
+  const [query, setQuery] = useState("");
+  const filterRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const sections = useMemo(() => filterSections(STYLEGUIDE_SECTIONS, query), [query]);
+  const groups = useMemo(
+    () =>
+      STYLEGUIDE_CATEGORIES.map((category) => ({
+        ...category,
+        sections: sections.filter((section) => section.category === category.id),
+      })).filter((group) => group.sections.length > 0),
+    [sections],
+  );
+  const ids = useMemo(() => sections.map((section) => section.id), [sections]);
+  const [active, setActive] = useActiveSection(ids, contentRef);
+  const isFiltering = query.trim() !== "";
+
+  // `/` jumps to the filter, as in the tools this page keeps company with.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping =
+        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
+      if (event.key !== "/" || isTyping || event.metaKey || event.ctrlKey || event.altKey) return;
+      event.preventDefault();
+      filterRef.current?.querySelector("input")?.focus();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  // A shared link (`/dev/styleguide#buttons`) opens on its section — on load
+  // and whenever the hash changes. The target is marked at once: the last
+  // sections cannot scroll far enough to reach the "current" line.
+  useEffect(() => {
+    const openHash = () => {
+      const id = window.location.hash.slice(1);
+      const element = id ? document.getElementById(id) : null;
+      if (!element) return;
+      element.scrollIntoView();
+      setActive(id);
+    };
+    openHash();
+    window.addEventListener("hashchange", openHash);
+    return () => window.removeEventListener("hashchange", openHash);
+  }, [setActive]);
+
+  const goTo = (id: string) => {
+    setActive(id);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.replaceState(null, "", `#${id}`);
+  };
+
   return (
-    <Stack gap={6} pb={10}>
+    // Desktop: the page takes exactly the viewport (as the list screens do) —
+    // the header, the filter and the index stay put and only the sections
+    // scroll. Smaller screens flow normally.
+    <Flex
+      direction="column"
+      gap={{ base: 5, lg: 4 }}
+      h={{ lg: "calc(100dvh - 24px)" }}
+      mb={{ lg: -7 }}
+      pb={{ base: 10, lg: 0 }}
+    >
       <PageHeader
         title="Styleguide"
-        description="Primitivos do design system em todos os estados."
+        description="A referência viva do design system: fundamentos, componentes, variações e estados."
+        actions={<ColorModeToggle />}
+        mb={0}
+        flex="none"
       />
-      <TypographySection />
-      <ColorSection />
-      <ShadowSection />
-      <ButtonSection />
-      <BadgeSection />
-      <FieldSection />
-      <CardSection />
-      <StateSection />
-      <ControlSection />
-      <OverlaySection />
-    </Stack>
+
+      <Flex
+        flex="none"
+        position={{ base: "sticky", lg: "static" }}
+        top={0}
+        zIndex={5}
+        align="center"
+        gap={3}
+        wrap="wrap"
+        py={3}
+        bg="bg.canvas"
+        borderBottomWidth="1px"
+        borderColor="border.subtle"
+        data-cy="sg-toolbar"
+      >
+        <Box ref={filterRef} flex="1 1 280px" maxW="420px" data-cy="sg-filter">
+          <FilterBar
+            searchValue={query}
+            onSearchChange={setQuery}
+            searchPlaceholder="Filtrar por componente, token ou estado…"
+          />
+        </Box>
+        <Text fontSize="12px" color="text.muted" data-cy="sg-count" aria-live="polite">
+          {isFiltering
+            ? `${sections.length} de ${STYLEGUIDE_SECTIONS.length} seções`
+            : `${STYLEGUIDE_SECTIONS.length} seções · ${COMPONENT_COUNT} componentes documentados`}
+        </Text>
+        <Text
+          display={{ base: "none", md: "block" }}
+          ml="auto"
+          fontFamily="mono"
+          fontSize="11px"
+          color="text.muted"
+        >
+          / para filtrar
+        </Text>
+      </Flex>
+
+      <Flex gap={6} align="stretch" flex="1" minH={0}>
+        {/* The index is a card as tall as the screen; a long list scrolls inside it. */}
+        <Box
+          as="nav"
+          aria-label="Seções do styleguide"
+          display={{ base: "none", lg: "block" }}
+          flex="none"
+          w="232px"
+          mb={5}
+          p={3}
+          bg="bg.surface"
+          borderWidth="1px"
+          borderColor="border.subtle"
+          borderRadius="xl"
+          overflowY="auto"
+          data-cy="sg-nav"
+        >
+          <Stack gap={5}>
+            {groups.map((group) => (
+              <Stack key={group.id} gap={1}>
+                <Text textStyle="eyebrow" color="text.muted" px={2.5} mb={1}>
+                  {group.title}
+                </Text>
+                {group.sections.map((section) => {
+                  const isActive = active === section.id;
+                  return (
+                    <chakra.a
+                      key={section.id}
+                      href={`#${section.id}`}
+                      aria-current={isActive ? "location" : undefined}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        goTo(section.id);
+                      }}
+                      display="block"
+                      px={2.5}
+                      py="6px"
+                      borderRadius="sm"
+                      fontSize="13px"
+                      color={isActive ? "text.primary" : "text.muted"}
+                      bg={isActive ? "bg.brand.subtle" : "transparent"}
+                      transition="background 0.14s ease, color 0.14s ease"
+                      _hover={{ bg: isActive ? "bg.brand.subtle" : "bg.hover", color: "text.primary" }}
+                      _focusVisible={{ outline: "2px solid", outlineColor: "border.focus", outlineOffset: "1px" }}
+                      data-cy={`sg-nav-${section.id}`}
+                    >
+                      {section.title}
+                    </chakra.a>
+                  );
+                })}
+              </Stack>
+            ))}
+          </Stack>
+        </Box>
+
+        <Stack
+          ref={contentRef}
+          gap={10}
+          flex="1"
+          minW={0}
+          overflowY={{ lg: "auto" }}
+          pr={{ lg: 2 }}
+          pb={{ lg: 7 }}
+          data-cy="sg-content"
+        >
+          {groups.length === 0 ? (
+            <Stack gap={4} align="center">
+              <EmptyState
+                title="Nada encontrado"
+                description={`Nenhuma seção corresponde a “${query.trim()}”. Tente o nome de um componente, como EntityCard ou StatusBadge.`}
+              />
+              <Button variant="outline" size="sm" onClick={() => setQuery("")} data-cy="sg-clear">
+                Limpar filtro
+              </Button>
+            </Stack>
+          ) : (
+            groups.map((group) => (
+              <Stack key={group.id} as="section" gap={4} aria-label={group.title} data-cy={`sg-category-${group.id}`}>
+                <Flex align="baseline" gap={3}>
+                  <Text fontSize="18px" fontWeight="500" letterSpacing="-0.02em">
+                    {group.title}
+                  </Text>
+                  <Text fontFamily="mono" fontSize="11px" color="text.muted">
+                    {group.sections.length}
+                  </Text>
+                </Flex>
+                {group.sections.map((section) => (
+                  <Section key={section.id} section={section} categoryTitle={group.title} />
+                ))}
+              </Stack>
+            ))
+          )}
+        </Stack>
+      </Flex>
+    </Flex>
   );
 }

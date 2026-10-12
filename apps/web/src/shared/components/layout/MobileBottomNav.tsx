@@ -1,76 +1,60 @@
 import { memo } from "react";
-import { Box, Flex, Icon, Text } from "@chakra-ui/react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Box, Flex, Text } from "@chakra-ui/react";
+import { NavLink } from "react-router-dom";
+import { LayoutGroup } from "motion/react";
 import { useTranslation } from "react-i18next";
-import { FiHome, FiSettings } from "@/shared/components/icons";
-import type { IconType } from "@/shared/components/icons";
-import { ROUTE_PATHS } from "@/app/router/RoutePaths";
+import { SlidingIndicator } from "@/shared/components/animations/SlidingIndicator";
+import { AnimatedIcon, useHoverPlay } from "@/shared/components/icons/animated";
+import type { NavigationItem } from "@/shared/components/layout/navigation";
+import { navigationItems } from "@/shared/components/layout/navigation";
 
-interface BottomNavItem {
-  labelKey: string;
-  to: string;
-  icon: IconType;
-  matchPaths?: string[];
-}
-
-const bottomNavItems: BottomNavItem[] = [
-  {
-    labelKey: "nav.dashboard",
-    to: ROUTE_PATHS.dashboard,
-    icon: FiHome,
-  },
-  {
-    labelKey: "nav.settings",
-    to: ROUTE_PATHS.settings,
-    icon: FiSettings,
-  },
-];
-
-const NavItem = memo(function NavItem({
-  item,
-  isActive,
-}: {
-  item: BottomNavItem;
-  isActive: boolean;
-}) {
+const NavItem = memo(function NavItem({ item }: { item: NavigationItem }) {
   const { t } = useTranslation("common");
+  const { playing, hostProps } = useHoverPlay();
 
   return (
-    <NavLink to={item.to} style={{ flex: 1 }}>
-      <Flex
-        direction="column"
-        align="center"
-        justify="center"
-        gap={0.5}
-        py={1.5}
-        color={isActive ? "text.brand" : "text.muted"}
-        cursor="pointer"
-        transition="color 0.15s ease"
-        _active={{ transform: "scale(0.92)" }}
-        role="group"
-      >
+    <NavLink to={item.to} style={{ flex: 1 }} {...hostProps}>
+      {({ isActive }) => (
         <Flex
+          direction="column"
           align="center"
           justify="center"
-          w={10}
-          h={7}
-          borderRadius="full"
-          bg={isActive ? "bg.brand.subtle" : "transparent"}
-          transition="background 0.2s ease"
+          gap={0.5}
+          py={1.5}
+          color={isActive ? "text.brand" : "text.muted"}
+          cursor="pointer"
+          transition="color 0.15s ease"
+          _active={{ transform: "scale(0.92)" }}
+          role="group"
         >
-          <Icon as={item.icon} boxSize={5} />
+          <Flex position="relative" align="center" justify="center" w={10} h={7}>
+            {/* The pill hops to the tapped item. */}
+            {isActive ? (
+              <SlidingIndicator
+                layoutId="bottom-nav-active"
+                bg="bg.brand.subtle"
+                borderRadius="full"
+              />
+            ) : null}
+            <Flex position="relative">
+              <AnimatedIcon name={item.icon} size={20} playing={playing} />
+            </Flex>
+          </Flex>
+          <Text
+            fontSize="2xs"
+            fontWeight={isActive ? "700" : "500"}
+            lineHeight="1"
+            letterSpacing="0.01em"
+          >
+            {t(item.labelKey)}
+          </Text>
         </Flex>
-        <Text fontSize="2xs" fontWeight={isActive ? "700" : "500"} lineHeight="1" letterSpacing="0.01em">
-          {t(item.labelKey)}
-        </Text>
-      </Flex>
+      )}
     </NavLink>
   );
 });
 
 export const MobileBottomNav = memo(function MobileBottomNav() {
-  const location = useLocation();
-
   return (
     <Box
       display={{ base: "block", lg: "none" }}
@@ -88,13 +72,11 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
       overflow="hidden"
     >
       <Flex as="nav" role="navigation" aria-label="Main navigation">
-        {bottomNavItems.map((item) => {
-          const isActive =
-            location.pathname === item.to ||
-            (item.matchPaths?.some((p) => location.pathname.startsWith(p)) ?? false);
-
-          return <NavItem key={item.to} item={item} isActive={isActive} />;
-        })}
+        <LayoutGroup id="mobile-bottom-nav">
+          {navigationItems.map((item) => (
+            <NavItem key={item.to} item={item} />
+          ))}
+        </LayoutGroup>
       </Flex>
     </Box>
   );

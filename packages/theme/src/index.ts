@@ -2,6 +2,7 @@ import { defineConfig } from "@chakra-ui/react";
 
 import { colors } from "./foundations/colors";
 import { fonts } from "./foundations/typography";
+import { keyframes } from "./foundations/keyframes";
 import { radii } from "./foundations/radii";
 import { shadows } from "./foundations/shadows";
 import { semanticTokens } from "./foundations/semantic-tokens";
@@ -36,6 +37,7 @@ export const boilerplateThemeConfig = defineConfig({
     tokens: { colors, fonts, radii, shadows },
     semanticTokens,
     textStyles,
+    keyframes,
     recipes: {
       badge: badgeRecipe,
       button: buttonRecipe,
@@ -45,6 +47,8 @@ export const boilerplateThemeConfig = defineConfig({
   },
 });
 
+export { BRAND_MARK } from "./foundations/brand";
+export { ACCENT_GLOW, GRID_IMAGE, GRID_MASK } from "./foundations/decor";
 export { colors } from "./foundations/colors";
 export { fonts } from "./foundations/typography";
 export { radii } from "./foundations/radii";

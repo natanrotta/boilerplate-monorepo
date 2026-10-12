@@ -46,6 +46,19 @@ export class PrismaUserRepository implements IUserRepository {
     }
   }
 
+  async findActive(limit: number): Promise<User[]> {
+    try {
+      const users = await prisma.user.findMany({
+        where: { status: "ACTIVE", deleted_at: null },
+        orderBy: { created_at: "asc" },
+        take: limit,
+      });
+      return users.map((user) => this.toEntity(user));
+    } catch (error) {
+      throw mapPrismaError(error);
+    }
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     try {
       const user = await prisma.user.findUnique({ where: { email } });

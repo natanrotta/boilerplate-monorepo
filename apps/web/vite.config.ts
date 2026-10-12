@@ -66,11 +66,17 @@ const devDepsNoImmutableCache = () => ({
   },
 });
 
-// `modules/development` (the /dev/styleguide gallery) is reachable only through
-// an `import.meta.env.DEV` branch in AppRouter, which the production build
-// drops. Failing the build when any of its modules lands in a chunk turns that
+// Dev-only code is reachable only through an `import.meta.env.DEV` branch,
+// which the production build drops: `modules/development` (the /dev/styleguide
+// gallery, mounted by AppRouter) and the passwordless quick login on the
+// sign-in page. Failing the build when any of it lands in a chunk turns that
 // guarantee into a gate instead of a convention.
-const DEV_ONLY_MODULE_DIR = "/src/modules/development/";
+const DEV_ONLY_MODULES = [
+  "/src/modules/development/",
+  "/src/modules/auth/presentation/components/DevQuickLogin",
+  "/src/modules/auth/presentation/hooks/useDevQuickLogin",
+  "/src/modules/auth/infrastructure/repositories/HttpDevAuthRepository",
+];
 const devOnlyModulesExcluded = () => ({
   name: "boilerplate:dev-only-modules-excluded",
   apply: "build" as const,
@@ -81,7 +87,7 @@ const devOnlyModulesExcluded = () => ({
   ) {
     for (const output of Object.values(bundle)) {
       const leaked = Object.keys(output.modules ?? {}).find((id) =>
-        id.includes(DEV_ONLY_MODULE_DIR),
+        DEV_ONLY_MODULES.some((devOnly) => id.includes(devOnly)),
       );
       if (leaked) {
         this.error(`Dev-only module ${leaked} leaked into ${output.fileName}`);
@@ -118,6 +124,11 @@ export default defineConfig(({ command }) => ({
       "/api": {
         target: apiProxyTarget,
         changeOrigin: true,
+        // Tell the API who the proxy's client is (`X-Forwarded-For`). The dev
+        // quick-login routes refuse a caller that is not this machine, and
+        // without this every request through the proxy looks local — a
+        // problem the moment this server listens on the network (`host`).
+        xfwd: true,
       },
     },
   },

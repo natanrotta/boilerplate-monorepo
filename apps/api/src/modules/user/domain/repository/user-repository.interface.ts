@@ -54,6 +54,8 @@ export interface SetTokenData {
 
 export interface IUserRepository {
   findById(id: string): Promise<User | null>;
+  /** Active, non-deleted users, oldest first — the dev quick-login panel. */
+  findActive(limit: number): Promise<User[]>;
   findByEmail(email: string): Promise<User | null>;
   findByGoogleId(googleId: string): Promise<User | null>;
   findByRefreshTokenHash(hash: string): Promise<User | null>;

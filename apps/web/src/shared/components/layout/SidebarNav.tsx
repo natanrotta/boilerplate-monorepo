@@ -1,4 +1,6 @@
-import { Box, Flex, Icon, IconButton, Image, Text } from "@chakra-ui/react";
+import { memo, useId } from "react";
+import { LayoutGroup } from "motion/react";
+import { Box, Flex, Icon, IconButton, Text } from "@chakra-ui/react";
 import { Avatar } from "@/components/ui/avatar";
 import {
   MenuContent,
@@ -20,6 +22,10 @@ import {
   FiSettings,
   FiSun,
 } from "@/shared/components/icons";
+import { AnimatedIcon, useHoverPlay } from "@/shared/components/icons/animated";
+import { SlidingIndicator } from "@/shared/components/animations/SlidingIndicator";
+import { BrandMark } from "@/shared/components/ui/BrandMark";
+import type { NavigationItem } from "@/shared/components/layout/navigation";
 import { navigationSections } from "@/shared/components/layout/navigation";
 import { AppVersion } from "@/shared/components/layout/AppVersion";
 import { useAuth } from "@/modules/auth";
@@ -31,7 +37,92 @@ interface SidebarNavProps {
   onNavigate?: () => void;
 }
 
+interface NavRowProps {
+  item: NavigationItem;
+  isCollapsed: boolean;
+  onNavigate?: () => void;
+}
+
+const NavRow = memo(function NavRow({ item, isCollapsed, onNavigate }: NavRowProps) {
+  const { t } = useTranslation("common");
+  // The whole row plays the icon: hover or keyboard focus on the link.
+  const { playing, hostProps } = useHoverPlay();
+
+  const renderItem = (isActive: boolean) => {
+    const navItem = (
+      <Flex
+        position="relative"
+        align="center"
+        justify={isCollapsed ? "center" : "flex-start"}
+        gap={3}
+        px={isCollapsed ? 0 : 3}
+        py={{ base: 2.5, lg: 2 }}
+        borderRadius="md"
+        color={isActive ? "text.brand" : "text.secondary"}
+        borderLeftWidth={isCollapsed ? "0" : "3px"}
+        borderLeftColor="transparent"
+        cursor="pointer"
+        _hover={{
+          bg: isActive ? "transparent" : "bg.hover",
+          transform: isActive || isCollapsed ? "none" : "translateX(2px)",
+        }}
+        transition="all 0.18s cubic-bezier(0.22, 1, 0.36, 1)"
+      >
+        {/* The tint and its marker glide from the previous row to this one.
+            It covers the row's (transparent) left border too. */}
+        {isActive ? (
+          <SlidingIndicator
+            layoutId="sidebar-active"
+            left={isCollapsed ? 0 : "-3px"}
+            bg="bg.brand.subtle"
+            borderRadius="md"
+            borderLeftWidth={isCollapsed ? "0" : "3px"}
+            borderLeftColor="brand.500"
+          />
+        ) : null}
+        <Flex position="relative" flexShrink={0}>
+          <AnimatedIcon name={item.icon} size={18} playing={playing} />
+        </Flex>
+        <Text
+          position="relative"
+          fontWeight={isActive ? "700" : "500"}
+          fontSize="sm"
+          opacity={isCollapsed ? 0 : 1}
+          w={isCollapsed ? 0 : "auto"}
+          overflow="hidden"
+          transition="opacity 0.15s ease"
+          whiteSpace="nowrap"
+        >
+          {t(item.labelKey)}
+        </Text>
+      </Flex>
+    );
+
+    if (isCollapsed) {
+      return (
+        <Tooltip
+          content={t(item.labelKey)}
+          positioning={{ placement: "right" }}
+          showArrow
+          openDelay={200}
+        >
+          {navItem}
+        </Tooltip>
+      );
+    }
+
+    return navItem;
+  };
+
+  return (
+    <NavLink to={item.to} onClick={onNavigate} {...hostProps}>
+      {({ isActive }) => renderItem(isActive)}
+    </NavLink>
+  );
+});
+
 export function SidebarNav({ forceExpanded, onNavigate }: SidebarNavProps) {
+  const layoutGroupId = useId();
   const { t } = useTranslation("common");
   const { user, signOut, isSubmitting } = useAuth();
   const sidebar = useSidebar();
@@ -56,16 +147,7 @@ export function SidebarNav({ forceExpanded, onNavigate }: SidebarNavProps) {
     >
       {/* Logo */}
       <Flex align="center" gap={3} px={1} justify={isCollapsed ? "center" : "flex-start"}>
-        <Image
-          src="/boilerplate-icon.png"
-          alt={t("platform.name", "Boilerplate")}
-          w={9}
-          h={9}
-          borderRadius="22%"
-          objectFit="cover"
-          boxShadow="shadow.brandMarkXs"
-          flexShrink={0}
-        />
+        <BrandMark size={36} />
         <Box
           flex={1}
           minW={0}
@@ -117,88 +199,40 @@ export function SidebarNav({ forceExpanded, onNavigate }: SidebarNavProps) {
         overflowY="auto"
         css={{ scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}
       >
-        {navigationSections.map((section) => (
-          <Box key={t(section.labelKey)}>
-            <Text
-              px={2}
-              fontSize="xs"
-              fontWeight="700"
-              textTransform="uppercase"
-              letterSpacing="wider"
-              color="text.muted"
-              opacity={isCollapsed ? 0 : 1}
-              h={isCollapsed ? 0 : "auto"}
-              mb={isCollapsed ? 0 : 1.5}
-              overflow="hidden"
-              transition="opacity 0.15s ease, height 0.2s ease, margin 0.2s ease"
-              whiteSpace="nowrap"
-            >
-              {t(section.labelKey)}
-            </Text>
-            <Flex direction="column" gap={1}>
-              {section.items.map((item) => {
-                const ItemIcon = item.icon;
-
-                const renderItem = (isActive: boolean) => {
-                  const navItem = (
-                    <Flex
-                      align="center"
-                      justify={isCollapsed ? "center" : "flex-start"}
-                      gap={3}
-                      px={isCollapsed ? 0 : 3}
-                      py={{ base: 2.5, lg: 2 }}
-                      borderRadius="md"
-                      bg={isActive ? "bg.brand.subtle" : "transparent"}
-                      color={isActive ? "text.brand" : "text.secondary"}
-                      borderLeftWidth={isCollapsed ? "0" : "3px"}
-                      borderLeftColor={isActive ? "brand.500" : "transparent"}
-                      cursor="pointer"
-                      _hover={{
-                        bg: isActive ? "bg.brand.subtle" : "bg.hover",
-                        transform: isActive || isCollapsed ? "none" : "translateX(2px)",
-                      }}
-                      transition="all 0.18s cubic-bezier(0.22, 1, 0.36, 1)"
-                    >
-                      <Icon as={ItemIcon} boxSize="18px" flexShrink={0} />
-                      <Text
-                        fontWeight={isActive ? "700" : "500"}
-                        fontSize="sm"
-                        opacity={isCollapsed ? 0 : 1}
-                        w={isCollapsed ? 0 : "auto"}
-                        overflow="hidden"
-                        transition="opacity 0.15s ease"
-                        whiteSpace="nowrap"
-                      >
-                        {t(item.labelKey)}
-                      </Text>
-                    </Flex>
-                  );
-
-                  if (isCollapsed) {
-                    return (
-                      <Tooltip
-                        content={t(item.labelKey)}
-                        positioning={{ placement: "right" }}
-                        showArrow
-                        openDelay={200}
-                      >
-                        {navItem}
-                      </Tooltip>
-                    );
-                  }
-
-                  return navItem;
-                };
-
-                return (
-                  <NavLink key={item.to} to={item.to} onClick={onNavigate}>
-                    {({ isActive }) => renderItem(isActive)}
-                  </NavLink>
-                );
-              })}
-            </Flex>
-          </Box>
-        ))}
+        {/* Its own group: the desktop sidebar and the mobile drawer never
+            trade indicators. */}
+        <LayoutGroup id={layoutGroupId}>
+          {navigationSections.map((section) => (
+            <Box key={t(section.labelKey)}>
+              <Text
+                px={2}
+                fontSize="xs"
+                fontWeight="700"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="text.muted"
+                opacity={isCollapsed ? 0 : 1}
+                h={isCollapsed ? 0 : "auto"}
+                mb={isCollapsed ? 0 : 1.5}
+                overflow="hidden"
+                transition="opacity 0.15s ease, height 0.2s ease, margin 0.2s ease"
+                whiteSpace="nowrap"
+              >
+                {t(section.labelKey)}
+              </Text>
+              <Flex direction="column" gap={1}>
+                {section.items.map((item) => (
+                  <NavRow
+                    key={item.to}
+                    item={item}
+                    isCollapsed={isCollapsed}
+                    onNavigate={onNavigate}
+                  />
+                ))}
+              </Flex>
+            </Box>
+          ))}
+        </LayoutGroup>
       </Flex>
 
       {/* User area - Discord style */}

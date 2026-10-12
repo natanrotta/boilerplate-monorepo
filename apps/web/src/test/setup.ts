@@ -1,6 +1,6 @@
 /// <reference types="@testing-library/jest-dom" />
 import { afterEach, beforeAll, expect, vi } from "vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
 import type { TestingLibraryMatchers } from "@testing-library/jest-dom/matchers";
 
@@ -22,6 +22,10 @@ declare module "vitest" {
 // a frozen TaskMeta object and explodes the whole suite. Manually wiring the
 // matchers via `expect.extend` keeps us on the stable contract.
 expect.extend(matchers);
+
+// Same test-id attribute as Playwright (`playwright.config.ts`), so a
+// `data-cy` works for `getByTestId` in component specs and in e2e alike.
+configure({ testIdAttribute: "data-cy" });
 
 // Force pt-BR so test assertions match the canonical locale (the project's
 // fallbackLng). Without this, i18next would pick navigator language ("en")
