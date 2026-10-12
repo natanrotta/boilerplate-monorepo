@@ -49,9 +49,17 @@ Cada push na branch `main` dispara um build no Pages. Mais nada.
 
 ## Variáveis de ambiente
 
-O site não faz chamadas de API em runtime. A única referência externa é `PLATFORM_URL` em
-`src/content/navigation.ts` (= `https://app.your-domain.tld`, o app real ✓). Para apontar um build
-de staging a outra URL, exponha uma env var do Vite (`VITE_PLATFORM_URL`).
+O site não faz chamadas de API em runtime. As duas referências externas ficam em
+`src/content/site.ts`: `PLATFORM_URL` (o destino de "Entrar" — defina `VITE_PLATFORM_URL` no
+build; sem ela vale o placeholder `https://app.example.com`) e `REPO_URL` (o repositório dos
+botões "Ver no GitHub" e do comando de clone — `VITE_REPO_URL`).
+
+## Dependência fora da pasta: `packages/theme`
+
+O site pinta com o design system do produto. `@boilerplate/theme` é um alias para
+`../../packages/theme/src` (`vite.config.ts` + `tsconfig.json`): o código é compilado junto com o
+do site, sem instalar nada do monorepo. O Pages clona o repositório inteiro, então a pasta está
+lá no build — mas mover o site para outro repositório exige levar `packages/theme` junto.
 
 ## Validando localmente
 

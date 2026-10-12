@@ -1,15 +1,15 @@
 import { defineTokens } from "@chakra-ui/react";
 
-// Soft, generous corners: 6px on small controls and inputs, 10–14px on cards
-// and panels, `full` for badges and pills.
+// Tight, precise corners: 7–9px on controls and inputs, 12–14px on cards,
+// menus and dialogs, 18–22px on large dialogs and sheets, `full` for pills.
 export const radii = defineTokens.radii({
   none: { value: "0" },
-  xs: { value: "4px" },
-  sm: { value: "6px" },
-  md: { value: "10px" },
-  lg: { value: "14px" },
-  xl: { value: "18px" },
-  "2xl": { value: "24px" },
-  "3xl": { value: "32px" },
+  xs: { value: "5px" },
+  sm: { value: "7px" },
+  md: { value: "9px" },
+  lg: { value: "12px" },
+  xl: { value: "14px" },
+  "2xl": { value: "18px" },
+  "3xl": { value: "22px" },
   full: { value: "9999px" },
 });

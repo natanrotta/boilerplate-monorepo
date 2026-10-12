@@ -1,16 +1,17 @@
-import { Box, Button, Container, Flex, Heading, Icon, Link, Stack, Text } from "@chakra-ui/react";
-import { motion } from "motion/react";
+import { Button, Flex, Icon, Link, Stack, Text } from "@chakra-ui/react";
 import { FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink } from "react-router-dom";
 import { FiCheckCircle } from "@/shared/components/icons";
 import { ROUTE_PATHS } from "@/app/router/RoutePaths";
+import { AuthShell } from "@/shared/components/layout/AuthShell";
+import {
+  AuthIntro,
+  AuthScreen,
+} from "@/modules/auth/presentation/components/AuthCard";
 import { useAuth } from "@/modules/auth/presentation/context/useAuth";
 import { useNotify } from "@/shared/hooks/useNotify";
 import { FormField } from "@/shared/components/forms/FormField";
-import { LanguageSelector } from "@/shared/components/ui/LanguageSelector";
-
-const MotionBox = motion.create(Box);
 
 export function ForgotPasswordPage() {
   const { t } = useTranslation("auth");
@@ -44,37 +45,18 @@ export function ForgotPasswordPage() {
   };
 
   const card = (
-    <MotionBox
-      bg="bg.surface"
-      borderWidth="1px"
-      borderColor="border.subtle"
-      boxShadow="shadow.panel"
-      borderRadius="3xl"
-      p={{ base: 6, md: 8 }}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      w="full"
-    >
-      <Stack gap={2} mb={6}>
-        <Text fontWeight="700" color="brand.600" letterSpacing="wide" fontSize="sm">
-          {tc("platform.name")}
-        </Text>
-        <Heading size="lg">{t("forgotPassword.title")}</Heading>
-        <Text color="text.secondary">{t("forgotPassword.subtitle")}</Text>
-      </Stack>
-
+    <>
       {sent ? (
         <Stack gap={5} align="stretch">
           <Flex
             align="center"
             gap={3}
             p={4}
-            bg="brand.50"
-            color="brand.700"
+            bg="status.info.bg"
+            color="status.info.fg"
             borderRadius="xl"
             borderWidth="1px"
-            borderColor="brand.100"
+            borderColor="status.info.border"
           >
             <Icon as={FiCheckCircle} boxSize={5} flexShrink={0} />
             <Text fontSize="sm" fontWeight="500">
@@ -85,7 +67,9 @@ export function ForgotPasswordPage() {
             {t("forgotPassword.sentHint")}
           </Text>
           <Button asChild variant="outline" size="lg">
-            <RouterLink to={ROUTE_PATHS.signIn}>{t("forgotPassword.backToSignIn")}</RouterLink>
+            <RouterLink to={ROUTE_PATHS.signIn}>
+              {t("forgotPassword.backToSignIn")}
+            </RouterLink>
           </Button>
         </Stack>
       ) : (
@@ -108,23 +92,35 @@ export function ForgotPasswordPage() {
             {t("forgotPassword.submit")}
           </Button>
           <Text color="text.secondary" fontSize="sm" textAlign="center">
-            <Link asChild color="brand.600" fontWeight="600">
-              <RouterLink to={ROUTE_PATHS.signIn}>{t("forgotPassword.backToSignIn")}</RouterLink>
+            <Link asChild color="text.link" fontWeight="600">
+              <RouterLink to={ROUTE_PATHS.signIn}>
+                {t("forgotPassword.backToSignIn")}
+              </RouterLink>
             </Link>
           </Text>
         </Stack>
       )}
-    </MotionBox>
+    </>
   );
 
   return (
-    <Flex minH="100vh" align="center" justify="center" px={4} py={8}>
-      <Container maxW="md" px={0}>
-        <Flex justify="flex-end" mb={4}>
-          <LanguageSelector />
-        </Flex>
+    <AuthShell
+      crossLinkPrompt={t("register.hasAccount")}
+      crossLinkLabel={t("register.signIn")}
+      crossLinkTo={ROUTE_PATHS.signIn}
+    >
+      <AuthScreen
+        maxW="400px"
+        intro={
+          <AuthIntro
+            eyebrow={tc("platform.name")}
+            title={t("forgotPassword.title")}
+            subtitle={t("forgotPassword.subtitle")}
+          />
+        }
+      >
         {card}
-      </Container>
-    </Flex>
+      </AuthScreen>
+    </AuthShell>
   );
 }

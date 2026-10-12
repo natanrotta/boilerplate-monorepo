@@ -1,17 +1,22 @@
-import { Box, Button, Container, Flex, Heading, Link, Stack, Text } from "@chakra-ui/react";
-import { motion } from "motion/react";
+import { Button, Link, Stack, Text } from "@chakra-ui/react";
 import { FormEvent, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link as RouterLink,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { ROUTE_PATHS } from "@/app/router/RoutePaths";
+import { AuthShell } from "@/shared/components/layout/AuthShell";
+import {
+  AuthIntro,
+  AuthScreen,
+} from "@/modules/auth/presentation/components/AuthCard";
 import { useAuth } from "@/modules/auth/presentation/context/useAuth";
 import { useNotify } from "@/shared/hooks/useNotify";
 import { PasswordField } from "@/shared/components/forms/PasswordField";
 import { PasswordStrengthIndicator } from "@/shared/components/forms/PasswordStrengthIndicator";
 import { isPasswordStrong } from "@/shared/utils/passwordValidation";
-import { LanguageSelector } from "@/shared/components/ui/LanguageSelector";
-
-const MotionBox = motion.create(Box);
 
 interface ResetFormErrors {
   password?: string;
@@ -66,33 +71,16 @@ export function ResetPasswordPage() {
   const invalidToken = !token;
 
   const card = (
-    <MotionBox
-      bg="bg.surface"
-      borderWidth="1px"
-      borderColor="border.subtle"
-      boxShadow="shadow.panel"
-      borderRadius="3xl"
-      p={{ base: 6, md: 8 }}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      w="full"
-    >
-      <Stack gap={2} mb={6}>
-        <Text fontWeight="700" color="brand.600" letterSpacing="wide" fontSize="sm">
-          {tc("platform.name")}
-        </Text>
-        <Heading size="lg">{t("resetPassword.title")}</Heading>
-        <Text color="text.secondary">{t("resetPassword.subtitle")}</Text>
-      </Stack>
-
+    <>
       {invalidToken ? (
         <Stack gap={4}>
           <Text color="text.secondary" fontSize="sm">
             {t("resetPassword.missingToken")}
           </Text>
           <Button asChild size="lg">
-            <RouterLink to={ROUTE_PATHS.forgotPassword}>{t("resetPassword.requestNew")}</RouterLink>
+            <RouterLink to={ROUTE_PATHS.forgotPassword}>
+              {t("resetPassword.requestNew")}
+            </RouterLink>
           </Button>
         </Stack>
       ) : (
@@ -122,23 +110,35 @@ export function ResetPasswordPage() {
             {t("resetPassword.submit")}
           </Button>
           <Text color="text.secondary" fontSize="sm" textAlign="center">
-            <Link asChild color="brand.600" fontWeight="600">
-              <RouterLink to={ROUTE_PATHS.signIn}>{t("resetPassword.backToSignIn")}</RouterLink>
+            <Link asChild color="text.link" fontWeight="600">
+              <RouterLink to={ROUTE_PATHS.signIn}>
+                {t("resetPassword.backToSignIn")}
+              </RouterLink>
             </Link>
           </Text>
         </Stack>
       )}
-    </MotionBox>
+    </>
   );
 
   return (
-    <Flex minH="100vh" align="center" justify="center" px={4} py={8}>
-      <Container maxW="md" px={0}>
-        <Flex justify="flex-end" mb={4}>
-          <LanguageSelector />
-        </Flex>
+    <AuthShell
+      crossLinkPrompt={t("register.hasAccount")}
+      crossLinkLabel={t("register.signIn")}
+      crossLinkTo={ROUTE_PATHS.signIn}
+    >
+      <AuthScreen
+        maxW="400px"
+        intro={
+          <AuthIntro
+            eyebrow={tc("platform.name")}
+            title={t("resetPassword.title")}
+            subtitle={t("resetPassword.subtitle")}
+          />
+        }
+      >
         {card}
-      </Container>
-    </Flex>
+      </AuthScreen>
+    </AuthShell>
   );
 }

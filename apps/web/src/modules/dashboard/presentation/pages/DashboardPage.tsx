@@ -54,7 +54,7 @@ export function DashboardPage() {
           <EmptyState
             title={t("empty.title")}
             description={t("empty.description")}
-            icon={FiActivity}
+            animatedIcon="dashboard"
           />
         </Box>
       </FadeIn>

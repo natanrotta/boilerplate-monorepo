@@ -1,4 +1,5 @@
 import { Suspense, type PropsWithChildren } from "react";
+import { MotionConfig } from "motion/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "@/modules/auth/presentation/context/AuthContext";
@@ -28,7 +29,11 @@ export function AppProviders({ children }: PropsWithChildren) {
     >
       <QueryClientProvider client={queryClient}>
         <GoogleOAuthProvider clientId={googleClientId}>
-          <AuthProvider>{children}</AuthProvider>
+          {/* Sliding indicators and page transitions stand still for users
+              who asked their system for less motion. */}
+          <MotionConfig reducedMotion="user">
+            <AuthProvider>{children}</AuthProvider>
+          </MotionConfig>
         </GoogleOAuthProvider>
         <Toaster />
         <Suspense>

@@ -6,34 +6,45 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0d0d10" />
+    <meta name="theme-color" content="#0a0a0b" />
     <meta
       name="description"
-      content="A clean, unbranded product boilerplate landing page. Theme, animations, i18n and light/dark mode ready to make your own."
-    />
-    <meta property="og:title" content="Boilerplate — Product starter landing" />
-    <meta
-      property="og:description"
-      content="A clean, unbranded product boilerplate landing page. Rebrand it and ship."
+      content="A TypeScript monorepo starter: auth, a design system, three languages, tests and deploy already built. Clone it, rename it and start shipping."
     />
     <meta property="og:type" content="website" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
+    <meta property="og:site_name" content="Boilerplate" />
+    <meta property="og:title" content="Boilerplate — TypeScript monorepo starter" />
+    <meta
+      property="og:description"
+      content="Auth, a design system, three languages, tests and deploy already built. Clone it, rename it and start shipping."
     />
-    <title>Boilerplate — Product starter landing</title>
+    <title>Boilerplate — TypeScript monorepo starter</title>
+    <!--
+      Paints the right canvas before the bundle arrives. The site is dark until
+      the visitor chooses otherwise; the key and the two colors mirror
+      COLOR_MODE_STORAGE_KEY and the `bg.canvas` token.
+    -->
     <style>
-      html,
-      body {
-        background: #f3f7fc;
+      html {
+        background: #0a0a0b;
+        color-scheme: dark;
+      }
+      html.light {
+        background: #fafafa;
+        color-scheme: light;
       }
       body {
         margin: 0;
-        font-family: "Nunito Sans", system-ui, -apple-system, sans-serif;
       }
     </style>
+    <script>
+      try {
+        var mode = localStorage.getItem("boilerplate-site-color-mode") === "light" ? "light" : "dark";
+        document.documentElement.classList.add(mode);
+      } catch (_) {
+        document.documentElement.classList.add("dark");
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

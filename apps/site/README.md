@@ -1,8 +1,8 @@
 # @boilerplate/site
 
-The public **marketing / landing site** — a fast, animated, unbranded tech-product page ready to rebrand.
+The public **marketing / landing site** — a minimal page about the boilerplate itself, ready to rebrand.
 
-**Stack:** React 18 · Vite 5 · TypeScript · Chakra UI 2 · GSAP (scroll reveals) · trilingual copy (en / pt / es).
+**Stack:** React 19 · Vite 7 · TypeScript · Chakra UI 3 · `@boilerplate/theme` (the app's design system) · Geist · trilingual copy (en / pt / es).
 
 > This is a **standalone yarn project** (its own `yarn.lock`) — it is *not* part of the root Turborepo workspaces. Install and run it via the root `yarn site:*` scripts or directly inside `apps/site`.
 
@@ -13,16 +13,16 @@ The public **marketing / landing site** — a fast, animated, unbranded tech-pro
 ```
 apps/site/src
 ├── main.tsx · App.tsx
-├── sections/       # Header, Hero, Problem, Modules (features), Trust, Pricing, Footer
-├── content/        # data for the sections: modules.ts, navigation.ts, pricing.ts
+├── sections/       # Hero (+ ProductMock), HowItWorks, Included, ClosingCta
+├── content/        # site.ts — URLs, routes, the stack chips, the page width
 ├── locales/        # en.ts, pt.ts, es.ts (key-for-key in sync; pt is the type source)
 ├── pages/          # LandingPage + legal (PrivacyPolicy, TermsOfUse)
-├── components/     # Container, GradientHeading, BrandMark, ColorModeToggle, LanguageSwitcher, ...
-├── hooks/          # useLocale, useReveal (GSAP), useGsap, useSiteNavigation
-└── theme/          # Chakra theme (foundations + components)
+├── components/     # Header, Footer, BrandMark, PageBackdrop, Reveal, SpotlightCard, ...
+├── hooks/          # useLocale, useInView, useScrolled
+└── theme/          # composes @boilerplate/theme + the site-only text styles
 ```
 
-Path alias: `@` → `./src`. All visible copy lives in `locales/{en,pt,es}.ts` — edit those to change the text (keep the three files in sync). The brand is the neutral placeholder **"Boilerplate"**.
+Path aliases: `@` → `./src`, and `@boilerplate/theme` → `../../packages/theme/src` (compiled from source — the site paints with the same tokens as the app). All visible copy lives in `locales/{en,pt,es}.ts` — edit those to change the text (keep the three files in sync). The brand is the neutral placeholder **"Boilerplate"**.
 
 ## Commands
 
@@ -44,7 +44,7 @@ yarn preview         # preview the production build
 
 ## Icons
 
-Favicons live in `public/` (`favicon.svg` is the source of truth — a simple `</>` mark on an indigo→violet tile; `favicon.ico` + `apple-touch-icon.png` are generated companions). Edit `favicon.svg` to rebrand.
+Favicons live in `public/`. `apps/web/public/favicon.svg` is the source of truth — a monoline "B" with a spark on a blue→violet tile, the same drawing as the `BrandMark` components. To rebrand, edit that SVG (and `BRAND_MARK` in `packages/theme`), then run `yarn workspace @boilerplate/web gen:icons`: it regenerates `favicon.ico` and `apple-touch-icon.png` for the web app and for this site, and copies the SVG here.
 
 ## Deploy
 

@@ -103,6 +103,10 @@ Plus the workspace package `packages/theme` (`@boilerplate/theme`) — the desig
 
 **Dependency rule:** `domain` ← `infrastructure` ← `presentation`. Components never import from `infrastructure` directly — always go through `core/di/repositories.ts` and a hook. A module is a black box to the others: import through its `index.ts` barrel, never `@/modules/<other>/presentation/...` (`F-H25`, also enforced by `no-restricted-imports`).
 
+### Dev quick login — the one sanctioned boundary exception
+
+`modules/auth/presentation/hooks/useDevQuickLogin.ts` instantiates `HttpDevAuthRepository` directly (no domain port, no `core/di` entry, query key outside `queryKeys`) behind a documented `eslint-disable`: its `/dev/*` API does not exist in production, so it must not leak into the registries. `DevQuickLoginDrawer` (trigger + drawer around `DevQuickLoginPanel`) is mounted by `SignInPage` only under `import.meta.env.DEV`. Do not copy this shape for anything else.
+
 ---
 
 ## Canonical Data-Fetching → Render Lifecycle

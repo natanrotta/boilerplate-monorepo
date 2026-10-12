@@ -30,6 +30,27 @@ export function csrfProtection(
   _res: Response,
   next: NextFunction,
 ): void {
+  return protect(req, next, false);
+}
+
+/**
+ * `csrfProtection` with the dev quick-login exemption switched on. `app.ts`
+ * mounts this one ONLY when `isDevQuickLoginEnabled(env)` — the middleware
+ * itself never reads the env, so the decision stays in the composition root.
+ */
+export function csrfProtectionWithDevQuickLogin(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): void {
+  return protect(req, next, true);
+}
+
+function protect(
+  req: Request,
+  next: NextFunction,
+  exemptDevImpersonate: boolean,
+): void {
   if (SAFE_METHODS.has(req.method)) {
     return next();
   }
@@ -41,6 +62,18 @@ export function csrfProtection(
   // token-only admin doesn't set, and which the web app's `boilerplate_csrf` cookie
   // leaks into on localhost) must not apply to them.
   if (req.path.startsWith("/api/admin/")) {
+    return next();
+  }
+
+  // Dev quick-login (`POST /api/dev/impersonate`) is a LOGIN endpoint — like
+  // sign-in, it establishes a session from the unauthenticated sign-in page and
+  // has no CSRF token to present. Left to the checks below, a stale `boilerplate_at`
+  // cookie from a prior session (without a matching `boilerplate_csrf` cookie) makes
+  // it read as "authenticated" and it 403s. It carries no CSRF risk: the whole
+  // `/dev` router is mounted only under NODE_ENV === "local" +
+  // DEV_QUICK_LOGIN_ENABLED — and the exemption itself only exists under that
+  // same condition, so no bypass is left behind where the route is a 404.
+  if (exemptDevImpersonate && req.path === "/api/dev/impersonate") {
     return next();
   }
 

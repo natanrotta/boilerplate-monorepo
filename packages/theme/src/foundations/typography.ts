@@ -1,10 +1,11 @@
 import { defineTokens } from "@chakra-ui/react";
 
 export const fonts = defineTokens.fonts({
-  // Nunito Sans carries headings and body; the mono stack is reserved for
-  // identifiers, versions and timestamps. Nunito Sans is bundled with the app
-  // (`@fontsource/nunito-sans`), so nothing is fetched at runtime.
-  heading: { value: "'Nunito Sans', sans-serif" },
-  body: { value: "'Nunito Sans', sans-serif" },
-  mono: { value: "'JetBrains Mono', 'Fira Code', monospace" },
+  // Geist carries headings and body. Geist Mono is a second voice, not a code
+  // font: identifiers, versions, counters and the small uppercase labels. Both
+  // are bundled with each app (`@fontsource-variable/geist`,
+  // `@fontsource/geist-mono`), so nothing is fetched at runtime.
+  heading: { value: "'Geist Variable', ui-sans-serif, system-ui, sans-serif" },
+  body: { value: "'Geist Variable', ui-sans-serif, system-ui, sans-serif" },
+  mono: { value: "'Geist Mono', ui-monospace, monospace" },
 });

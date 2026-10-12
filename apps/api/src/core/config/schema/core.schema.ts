@@ -4,6 +4,14 @@ export const coreSchema = z.object({
   NODE_ENV: z
     .enum(["local", "development", "staging", "production", "test"])
     .default("local"),
+  // Explicit opt-in for the dev-only quick-login routes (`/api/dev/*`), which
+  // issue sessions WITHOUT a password. They also require NODE_ENV === "local",
+  // but that alone is fail-unsafe (it is the default above) — so the routes
+  // stay off unless this is set on purpose. See `dev.routes.ts`.
+  DEV_QUICK_LOGIN_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   API_PORT: z.coerce.number().default(3333),
   // Allowed CORS origin(s). NEVER "*" in production.
   ALLOWED_ORIGIN: z.string().min(1, "ALLOWED_ORIGIN must be set").default("*"),

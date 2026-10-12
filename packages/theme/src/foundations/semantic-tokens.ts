@@ -9,77 +9,119 @@ import { defineSemanticTokens } from "@chakra-ui/react";
 // `colors.ts`. `apps/web/src/app/theme/tokenContract.spec.ts` fails the build
 // when a token here loses its `_dark` value, when any value drifts into the
 // yellow/orange/amber range, or when the app names a token that is not defined.
+//
+// The look is monochrome — near-neutral surfaces, ink and hairlines — plus one
+// accent (`brand`, a blue-violet). The primary action is the ink inverted
+// (`bg.primary`), never the accent.
 export const semanticTokens = defineSemanticTokens({
   colors: {
     bg: {
-      canvas: { value: { base: "#f3f7fc", _dark: "#0d0d10" } },
-      surface: { value: { base: "#ffffff", _dark: "#16161b" } },
-      elevated: { value: { base: "#ffffff", _dark: "#1d1d23" } },
-      sunken: { value: { base: "#f0f4f8", _dark: "#0a0a0d" } },
-      muted: { value: { base: "{colors.neutral.50}", _dark: "rgba(255, 255, 255, 0.04)" } },
-      hover: { value: { base: "{colors.neutral.100}", _dark: "rgba(255, 255, 255, 0.07)" } },
-      active: { value: { base: "{colors.neutral.200}", _dark: "rgba(255, 255, 255, 0.11)" } },
-      glass: { value: { base: "rgba(255, 255, 255, 0.80)", _dark: "rgba(22, 22, 27, 0.78)" } },
-      topbar: { value: { base: "rgba(255, 255, 255, 0.92)", _dark: "rgba(22, 22, 27, 0.88)" } },
+      // Page and header.
+      canvas: { value: { base: "{colors.neutral.50}", _dark: "#0a0a0b" } },
+      // Cards, menus, dialogs, secondary buttons.
+      surface: { value: { base: "#ffffff", _dark: "#111113" } },
+      elevated: { value: { base: "#ffffff", _dark: "#16161a" } },
+      // A card standing on a surface (the site's feature cards).
+      card: { value: { base: "#ffffff", _dark: "#121215" } },
+      sunken: { value: { base: "#f6f6f6", _dark: "#0a0a0b" } },
+      input: { value: { base: "#ffffff", _dark: "#0c0c0e" } },
+      // `_light` too: Chakra's own `bg.muted` is written with `_light`, which
+      // beats a `base` — without it the light mode shows Chakra's gray.
+      muted: {
+        value: {
+          base: "rgba(0, 0, 0, 0.04)",
+          _light: "rgba(0, 0, 0, 0.04)",
+          _dark: "rgba(255, 255, 255, 0.05)",
+        },
+      },
+      hover: { value: { base: "rgba(0, 0, 0, 0.04)", _dark: "rgba(255, 255, 255, 0.06)" } },
+      active: { value: { base: "rgba(0, 0, 0, 0.08)", _dark: "rgba(255, 255, 255, 0.10)" } },
+      glass: { value: { base: "rgba(250, 250, 250, 0.80)", _dark: "rgba(17, 17, 19, 0.80)" } },
+      topbar: { value: { base: "rgba(250, 250, 250, 0.88)", _dark: "rgba(10, 10, 11, 0.86)" } },
+      // The primary action is the ink inverted — black on light, near-white on
+      // dark — NOT the accent.
+      primary: { value: { base: "{colors.neutral.900}", _dark: "#ededef" } },
+      primaryHover: { value: { base: "#2e2e2e", _dark: "#ffffff" } },
+      primaryActive: { value: { base: "#000000", _dark: "#d9d9dc" } },
       brand: {
-        subtle: { value: { base: "{colors.brand.50}", _dark: "rgba(95, 161, 255, 0.14)" } },
+        subtle: { value: { base: "rgba(62, 111, 239, 0.10)", _dark: "rgba(97, 145, 255, 0.15)" } },
         emphasis: { value: { base: "{colors.brand.500}", _dark: "{colors.brand.400}" } },
         solid: { value: { base: "{colors.brand.500}", _dark: "{colors.brand.400}" } },
         "solid-hover": { value: { base: "{colors.brand.600}", _dark: "{colors.brand.300}" } },
         "solid-active": { value: { base: "{colors.brand.700}", _dark: "{colors.brand.500}" } },
       },
       accent: {
-        subtle: { value: { base: "{colors.accent.50}", _dark: "rgba(50, 200, 159, 0.14)" } },
+        subtle: { value: { base: "{colors.accent.50}", _dark: "rgba(62, 207, 142, 0.14)" } },
       },
       // Pill switch (`ColorModeToggle`): the track gradient ends and the thumb.
       // Named tokens instead of a `useColorMode()` branch in the component, so
       // the control follows the CSS class next-themes toggles like everything
       // else (F-H16).
       switch: {
-        track: { value: { base: "{colors.neutral.50}", _dark: "{colors.gray.800}" } },
-        trackEnd: { value: { base: "#f0f4f8", _dark: "{colors.gray.900}" } },
-        thumb: { value: { base: "#ffffff", _dark: "{colors.gray.900}" } },
+        track: { value: { base: "{colors.neutral.100}", _dark: "#151518" } },
+        trackEnd: { value: { base: "{colors.neutral.200}", _dark: "#0c0c0e" } },
+        thumb: { value: { base: "#ffffff", _dark: "{colors.neutral.800}" } },
       },
-      // Decorative ambient glows behind the auth screens (radial gradients).
-      // Consumed inside a raw gradient string via `{colors.bg.glow.*}`.
+      // Decorative ambient glows (radial gradients). Consumed inside a raw
+      // gradient string via `{colors.bg.glow.*}`.
       glow: {
-        primary: { value: { base: "rgba(47, 128, 237, 0.22)", _dark: "rgba(95, 161, 255, 0.16)" } },
+        primary: { value: { base: "rgba(62, 111, 239, 0.24)", _dark: "rgba(97, 145, 255, 0.22)" } },
         secondary: {
-          value: { base: "rgba(30, 178, 138, 0.20)", _dark: "rgba(50, 200, 159, 0.14)" },
+          value: { base: "rgba(203, 134, 219, 0.20)", _dark: "rgba(203, 134, 219, 0.16)" },
         },
-        tertiary: { value: { base: "rgba(95, 161, 255, 0.12)", _dark: "rgba(143, 192, 255, 0.10)" } },
+        tertiary: { value: { base: "rgba(62, 111, 239, 0.10)", _dark: "rgba(97, 145, 255, 0.10)" } },
       },
-      overlay: { value: { base: "{colors.blackAlpha.400}", _dark: "rgba(0, 0, 0, 0.72)" } },
+      // Dialog backdrop (the dialog also blurs what is behind it).
+      overlay: { value: { base: "rgba(250, 250, 250, 0.60)", _dark: "rgba(0, 0, 0, 0.60)" } },
     },
     text: {
-      primary: { value: { base: "#1f2937", _dark: "#f1f0f3" } },
-      secondary: { value: { base: "#4b5563", _dark: "#a8a6b1" } },
-      muted: { value: { base: "{colors.neutral.400}", _dark: "#83828d" } },
-      disabled: { value: { base: "{colors.neutral.300}", _dark: "#48474f" } },
-      inverse: { value: { base: "#ffffff", _dark: "#0d0d10" } },
+      primary: { value: { base: "{colors.neutral.900}", _dark: "#ededef" } },
+      // Labels, subtitles, secondary icons.
+      secondary: { value: { base: "{colors.neutral.600}", _dark: "{colors.neutral.500}" } },
+      // Hints, placeholders, timestamps — one step quieter, still readable.
+      muted: { value: { base: "#6e6e74", _dark: "#85858d" } },
+      // DECORATIVE ONLY — separators, "or", an inactive step. It does not pass
+      // AA; never use it for something the user has to read.
+      faint: { value: { base: "{colors.neutral.400}", _dark: "{colors.neutral.700}" } },
+      disabled: { value: { base: "{colors.neutral.400}", _dark: "{colors.neutral.700}" } },
+      inverse: { value: { base: "#ffffff", _dark: "#0a0a0b" } },
       link: { value: { base: "{colors.brand.600}", _dark: "{colors.brand.300}" } },
       brand: { value: { base: "{colors.brand.600}", _dark: "{colors.brand.300}" } },
-      accent: { value: { base: "{colors.accent.600}", _dark: "{colors.accent.300}" } },
-      // Text/icon ON the primary action — white in both modes, because the
-      // brand fill stays saturated blue on the dark canvas.
+      accent: { value: { base: "{colors.accent.700}", _dark: "{colors.accent.300}" } },
+      // Text/icon ON the accent fill (badges, the active marker) — white in
+      // both modes, because the accent stays saturated on the dark canvas.
       onBrand: { value: { base: "#ffffff", _dark: "#ffffff" } },
+      // Ink ON the primary action — it inverts with `bg.primary`.
+      onPrimary: { value: { base: "#ffffff", _dark: "#0a0a0b" } },
       // Icon on the `ColorModeToggle` thumb (`bg.switch.thumb`).
       switchThumb: { value: { base: "{colors.text.primary}", _dark: "#ffffff" } },
     },
     border: {
-      subtle: { value: { base: "rgba(15, 23, 42, 0.07)", _dark: "rgba(255, 255, 255, 0.06)" } },
-      default: { value: { base: "rgba(15, 23, 42, 0.12)", _dark: "rgba(255, 255, 255, 0.11)" } },
-      strong: { value: { base: "rgba(15, 23, 42, 0.20)", _dark: "rgba(255, 255, 255, 0.20)" } },
-      brand: { value: { base: "{colors.brand.200}", _dark: "{colors.brand.500}" } },
-      accent: { value: { base: "{colors.accent.200}", _dark: "rgba(50, 200, 159, 0.30)" } },
-      focus: { value: { base: "{colors.brand.400}", _dark: "{colors.brand.300}" } },
+      // Dividers and card borders. `_light` too, for the reason given at
+      // `bg.muted`: with `base` alone the light mode draws every hairline in
+      // Chakra's near-white gray.
+      subtle: {
+        value: {
+          base: "rgba(0, 0, 0, 0.08)",
+          _light: "rgba(0, 0, 0, 0.08)",
+          _dark: "rgba(255, 255, 255, 0.07)",
+        },
+      },
+      // Inputs, buttons, menus, an unchecked box.
+      default: { value: { base: "rgba(0, 0, 0, 0.12)", _dark: "rgba(255, 255, 255, 0.13)" } },
+      strong: { value: { base: "rgba(0, 0, 0, 0.20)", _dark: "rgba(255, 255, 255, 0.22)" } },
+      // The faint background grid behind a hero.
+      grid: { value: { base: "rgba(0, 0, 0, 0.05)", _dark: "rgba(255, 255, 255, 0.045)" } },
+      brand: { value: { base: "rgba(62, 111, 239, 0.32)", _dark: "rgba(97, 145, 255, 0.36)" } },
+      accent: { value: { base: "{colors.accent.200}", _dark: "rgba(62, 207, 142, 0.30)" } },
+      focus: { value: { base: "{colors.brand.500}", _dark: "{colors.brand.400}" } },
     },
     status: {
       success: {
-        fg: { value: { base: "{colors.green.600}", _dark: "{colors.green.300}" } },
-        solid: { value: { base: "{colors.green.500}", _dark: "{colors.green.400}" } },
-        bg: { value: { base: "{colors.green.50}", _dark: "rgba(34, 197, 94, 0.12)" } },
-        border: { value: { base: "{colors.green.200}", _dark: "rgba(34, 197, 94, 0.30)" } },
+        fg: { value: { base: "{colors.accent.700}", _dark: "{colors.accent.300}" } },
+        solid: { value: { base: "{colors.accent.500}", _dark: "{colors.accent.400}" } },
+        bg: { value: { base: "{colors.accent.50}", _dark: "rgba(62, 207, 142, 0.12)" } },
+        border: { value: { base: "{colors.accent.200}", _dark: "rgba(62, 207, 142, 0.30)" } },
       },
       // Warning is PURPLE, never yellow/orange/amber (project rule R11) — the
       // token contract spec fails the build on a warm hue anywhere in here.
@@ -98,88 +140,97 @@ export const semanticTokens = defineSemanticTokens({
       info: {
         fg: { value: { base: "{colors.brand.600}", _dark: "{colors.brand.300}" } },
         solid: { value: { base: "{colors.brand.500}", _dark: "{colors.brand.400}" } },
-        bg: { value: { base: "{colors.brand.50}", _dark: "rgba(95, 161, 255, 0.12)" } },
-        border: { value: { base: "{colors.brand.200}", _dark: "rgba(95, 161, 255, 0.30)" } },
+        bg: { value: { base: "{colors.brand.50}", _dark: "rgba(97, 145, 255, 0.12)" } },
+        border: { value: { base: "{colors.brand.200}", _dark: "rgba(97, 145, 255, 0.30)" } },
       },
       neutral: {
-        fg: { value: { base: "{colors.neutral.600}", _dark: "#a8a6b1" } },
+        fg: { value: { base: "{colors.neutral.600}", _dark: "{colors.neutral.500}" } },
         solid: { value: { base: "{colors.neutral.500}", _dark: "{colors.neutral.400}" } },
-        bg: { value: { base: "{colors.neutral.100}", _dark: "rgba(255, 255, 255, 0.06)" } },
-        border: { value: { base: "{colors.neutral.200}", _dark: "rgba(255, 255, 255, 0.12)" } },
+        bg: { value: { base: "rgba(0, 0, 0, 0.04)", _dark: "rgba(255, 255, 255, 0.06)" } },
+        border: { value: { base: "rgba(0, 0, 0, 0.12)", _dark: "rgba(255, 255, 255, 0.13)" } },
       },
     },
   },
   shadows: {
+    // Flat by default: a hairline does the separating, a shadow only appears
+    // when something lifts (hover, menus, dialogs).
     shadow: {
       card: {
         value: {
-          base: "0px 1px 2px rgba(15, 23, 42, 0.06), 0px 4px 12px -2px rgba(15, 23, 42, 0.08)",
-          _dark: "0px 1px 0 rgba(0, 0, 0, 0.20)",
+          base: "0 1px 2px rgba(0, 0, 0, 0.04)",
+          _dark: "0 0 0 1px rgba(255, 255, 255, 0.04)",
         },
       },
       cardHover: {
         value: {
-          base: "0px 4px 8px rgba(15, 23, 42, 0.06), 0px 12px 28px -4px rgba(15, 23, 42, 0.12)",
-          _dark: "0px 0 0 1px rgba(255, 255, 255, 0.04), 0px 8px 24px -8px rgba(0, 0, 0, 0.55)",
+          base: "0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -8px rgba(0, 0, 0, 0.12)",
+          _dark: "0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 32px -12px rgba(0, 0, 0, 0.60)",
         },
       },
+      // Menus, dialogs, the toast, floating buttons.
       panel: {
         value: {
-          base: "0px 8px 24px -4px rgba(15, 23, 42, 0.14), 0px 2px 6px rgba(15, 23, 42, 0.06)",
-          _dark: "0px 12px 32px -8px rgba(0, 0, 0, 0.55), 0px 2px 6px rgba(0, 0, 0, 0.35)",
+          base: "0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 40px -8px rgba(0, 0, 0, 0.14)",
+          _dark: "0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 60px -12px rgba(0, 0, 0, 0.70)",
         },
       },
       lg: {
         value: {
-          base: "0px 16px 40px -8px rgba(15, 23, 42, 0.16), 0px 4px 12px rgba(15, 23, 42, 0.06)",
-          _dark: "0px 20px 48px -12px rgba(0, 0, 0, 0.60), 0px 4px 12px rgba(0, 0, 0, 0.35)",
+          base: "0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 40px -8px rgba(0, 0, 0, 0.18)",
+          _dark: "0 0 0 1px rgba(255, 255, 255, 0.05), 0 24px 60px -12px rgba(0, 0, 0, 0.75)",
         },
       },
       inner: {
         value: {
-          base: "inset 0 2px 4px 0 rgba(15, 23, 42, 0.06)",
-          _dark: "inset 0 1px 2px 0 rgba(0, 0, 0, 0.30)",
+          base: "inset 0 1px 2px rgba(0, 0, 0, 0.05)",
+          _dark: "inset 0 1px 2px rgba(0, 0, 0, 0.40)",
+        },
+      },
+      // The 3px accent ring a focused control gets.
+      focus: {
+        value: {
+          base: "0 0 0 3px rgba(62, 111, 239, 0.22)",
+          _dark: "0 0 0 3px rgba(97, 145, 255, 0.30)",
         },
       },
       // Brand mark (logo tile), in the three sizes the app uses: the auth
       // screens' hero, the auth card's small badge, and the sidebar logo.
       brandMark: {
         value: {
-          base: "0 24px 48px -16px rgba(47, 128, 237, 0.45), 0 8px 24px -8px rgba(30, 178, 138, 0.25)",
-          _dark:
-            "0 24px 48px -16px rgba(95, 161, 255, 0.35), 0 8px 24px -8px rgba(50, 200, 159, 0.20)",
+          base: "0 20px 50px -16px rgba(62, 111, 239, 0.45)",
+          _dark: "0 20px 50px -16px rgba(97, 145, 255, 0.40)",
         },
       },
       brandMarkSm: {
         value: {
-          base: "0 12px 28px -10px rgba(47, 128, 237, 0.45)",
-          _dark: "0 12px 28px -10px rgba(95, 161, 255, 0.35)",
+          base: "0 10px 24px -10px rgba(62, 111, 239, 0.45)",
+          _dark: "0 10px 24px -10px rgba(97, 145, 255, 0.40)",
         },
       },
       brandMarkXs: {
         value: {
-          base: "0 2px 8px rgba(47, 128, 237, 0.30)",
-          _dark: "0 2px 8px rgba(95, 161, 255, 0.24)",
+          base: "0 2px 8px rgba(62, 111, 239, 0.28)",
+          _dark: "0 2px 8px rgba(97, 145, 255, 0.24)",
         },
       },
       // The floating card on the auth screens.
       authCard: {
         value: {
-          base: "0 24px 64px -24px rgba(15, 23, 42, 0.18), 0 8px 24px -16px rgba(15, 23, 42, 0.12)",
-          _dark: "0 24px 64px -24px rgba(0, 0, 0, 0.60), 0 8px 24px -16px rgba(0, 0, 0, 0.40)",
+          base: "0 1px 2px rgba(0, 0, 0, 0.04), 0 20px 50px -12px rgba(0, 0, 0, 0.12)",
+          _dark: "0 0 0 1px rgba(255, 255, 255, 0.03), 0 30px 80px -20px rgba(0, 0, 0, 0.80)",
         },
       },
       // Pill switch (`ColorModeToggle`).
       switchTrack: {
         value: {
-          base: "inset 0 1px 2px rgba(15, 23, 42, 0.06)",
+          base: "inset 0 1px 2px rgba(0, 0, 0, 0.05)",
           _dark: "inset 0 1px 2px rgba(0, 0, 0, 0.40)",
         },
       },
       switchThumb: {
         value: {
-          base: "0 1px 3px rgba(15, 23, 42, 0.20), 0 0 6px rgba(15, 23, 42, 0.05)",
-          _dark: "0 2px 6px rgba(0, 0, 0, 0.50), 0 0 12px rgba(95, 161, 255, 0.35)",
+          base: "0 1px 3px rgba(0, 0, 0, 0.18)",
+          _dark: "0 2px 6px rgba(0, 0, 0, 0.50)",
         },
       },
     },
@@ -187,38 +238,38 @@ export const semanticTokens = defineSemanticTokens({
     // like `boxShadow="input-focus"` — including the input recipe — keep working.
     outline: {
       value: {
-        base: "0 0 0 3px rgba(47, 128, 237, 0.30)",
-        _dark: "0 0 0 3px rgba(143, 192, 255, 0.45)",
+        base: "0 0 0 3px rgba(62, 111, 239, 0.28)",
+        _dark: "0 0 0 3px rgba(97, 145, 255, 0.40)",
       },
     },
     "input-focus": {
       value: {
-        base: "0 0 0 3px rgba(47, 128, 237, 0.15)",
-        _dark: "0 0 0 3px rgba(143, 192, 255, 0.28)",
+        base: "0 0 0 3px rgba(62, 111, 239, 0.22)",
+        _dark: "0 0 0 3px rgba(97, 145, 255, 0.30)",
       },
     },
     "input-error": {
       value: {
-        base: "0 0 0 3px rgba(245, 101, 101, 0.12)",
+        base: "0 0 0 3px rgba(239, 68, 68, 0.14)",
         _dark: "0 0 0 3px rgba(252, 165, 165, 0.22)",
       },
     },
     "input-error-focus": {
       value: {
-        base: "0 0 0 3px rgba(245, 101, 101, 0.20)",
+        base: "0 0 0 3px rgba(239, 68, 68, 0.22)",
         _dark: "0 0 0 3px rgba(252, 165, 165, 0.32)",
       },
     },
     "brand-glow": {
       value: {
-        base: "0px 0px 0px 3px rgba(47, 128, 237, 0.20), 0px 4px 12px rgba(47, 128, 237, 0.15)",
-        _dark: "0px 0px 0px 3px rgba(143, 192, 255, 0.18), 0px 4px 12px rgba(95, 161, 255, 0.18)",
+        base: "0 0 0 3px rgba(62, 111, 239, 0.20), 0 4px 12px rgba(62, 111, 239, 0.15)",
+        _dark: "0 0 0 3px rgba(97, 145, 255, 0.20), 0 4px 12px rgba(97, 145, 255, 0.18)",
       },
     },
     "accent-glow": {
       value: {
-        base: "0px 0px 0px 3px rgba(30, 178, 138, 0.20), 0px 4px 12px rgba(30, 178, 138, 0.15)",
-        _dark: "0px 0px 0px 3px rgba(93, 220, 182, 0.16), 0px 4px 12px rgba(50, 200, 159, 0.18)",
+        base: "0 0 0 3px rgba(47, 179, 122, 0.20), 0 4px 12px rgba(47, 179, 122, 0.15)",
+        _dark: "0 0 0 3px rgba(93, 214, 154, 0.16), 0 4px 12px rgba(62, 207, 142, 0.18)",
       },
     },
   },

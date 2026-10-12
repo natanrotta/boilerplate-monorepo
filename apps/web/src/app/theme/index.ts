@@ -19,14 +19,6 @@ const config = defineConfig({
       color: "text.primary",
       fontSize: "sm",
       minH: "100vh",
-      // The one texture in the system: two very faint brand/accent washes in
-      // the top corners of the canvas.
-      backgroundImage:
-        "radial-gradient(ellipse 60% 40% at 10% -10%, rgba(47, 128, 237, 0.06) 0%, transparent 60%), radial-gradient(ellipse 50% 35% at 90% 5%, rgba(30, 178, 138, 0.05) 0%, transparent 55%)",
-      _dark: {
-        backgroundImage:
-          "radial-gradient(ellipse 70% 50% at 12% -10%, rgba(95, 161, 255, 0.05) 0%, transparent 65%)",
-      },
     },
     "*::placeholder": { color: "text.muted" },
   },

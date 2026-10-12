@@ -4,7 +4,7 @@ The web application — a React + Vite single-page app with a sidebar dashboard 
 
 **Design system:** `@boilerplate/theme` (`packages/theme`) — palettes, semantic tokens, text styles, radii, shadows and recipes. This app only composes it (`src/app/theme/index.ts` adds `globalCss` and nothing else).
 
-**Type:** Nunito Sans, bundled via `@fontsource/nunito-sans` — no Google Fonts request on first paint.
+**Type:** Geist (plus Geist Mono), bundled via `@fontsource-variable/geist` and `@fontsource/geist-mono` — no Google Fonts request on first paint.
 
 **Stack:** React 19 · Vite 7 · TypeScript 5.8 (strict) · Chakra UI v3 (+ `next-themes`) · `motion` · TanStack Query 5 · axios · react-hook-form + Zod · react-i18next (pt-BR / en / es) · lucide-react · Bugsnag · Vitest 3 (unit) · Playwright (e2e).
 

@@ -1,14 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#6366F1"/>
-      <stop offset="1" stop-color="#8B5CF6"/>
+    <linearGradient id="tile" x1="6" y1="2" x2="58" y2="62" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6b9bff"/>
+      <stop offset="0.5" stop-color="#3e6fef"/>
+      <stop offset="1" stop-color="#7a56e8"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="32" y1="0" x2="32" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <rect x="0" y="0" width="64" height="64" rx="14" fill="url(#g)"/>
-  <g fill="none" stroke="#fff" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round">
-    <polyline points="24.3,19.2 14.7,32 24.3,44.8"/>
-    <polyline points="39.7,19.2 49.3,32 39.7,44.8"/>
-    <line x1="35.5" y1="16.6" x2="28.5" y2="47.4"/>
+  <rect width="64" height="64" rx="16" fill="url(#tile)"/>
+  <rect width="64" height="64" rx="16" fill="url(#sheen)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 17.5v29"/>
+    <path d="M24 17.5h10.2a7.25 7.25 0 0 1 0 14.5H33"/>
+    <path d="M33 32h4.2a7.25 7.25 0 0 1 0 14.5H24"/>
   </g>
+  <circle cx="47.5" cy="18" r="3.4" fill="#ffffff" opacity="0.92"/>
 </svg>

@@ -1,4 +1,7 @@
+import { useId } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
+import { LayoutGroup } from "motion/react";
+import { SlidingIndicator } from "@/shared/components/animations/SlidingIndicator";
 import { Tooltip } from "@/components/ui/tooltip";
 import { toaster } from "@/components/ui/toaster";
 import { useTranslation } from "react-i18next";
@@ -28,6 +31,7 @@ export function LanguageSelector() {
   const { user, updateProfile } = useAuth();
   const { handleError } = useErrorHandler();
   const currentLanguage = i18n.language;
+  const layoutGroupId = useId();
 
   async function handleChange(language: string) {
     if (language === currentLanguage) return;
@@ -53,70 +57,81 @@ export function LanguageSelector() {
   }
 
   return (
-    <Flex
-      align="center"
-      bg="bg.sunken"
-      borderRadius="full"
-      border="1px solid"
-      borderColor="border.default"
-      p={0.5}
-      gap={0}
-    >
-      {LANGUAGES.map((lang) => {
-        const isActive = currentLanguage === lang.value;
-        const label = getNativeName(lang.value);
-        return (
-          <Tooltip
-            key={lang.value}
-            content={label}
-            showArrow
-            openDelay={300}
-            contentProps={{
-              fontSize: "xs",
-              fontWeight: "500",
-              bg: "neutral.800",
-              color: "white",
-              borderRadius: "md",
-              px: 2.5,
-              py: 1,
-            }}
-          >
-            <Flex
-              as="button"
-              data-cy={`language-${lang.value}`}
-              aria-label={label}
-              aria-pressed={isActive}
-              align="center"
-              justify="center"
-              gap={1.5}
-              px={isActive ? 3 : 2}
-              py={1}
-              borderRadius="full"
-              cursor="pointer"
-              bg={isActive ? "bg.surface" : "transparent"}
-              shadow={isActive ? "sm" : "none"}
-              border="1px solid"
-              borderColor={isActive ? "border.default" : "transparent"}
-              transition="all 0.2s cubic-bezier(0.22, 1, 0.36, 1)"
-              _hover={{
-                bg: isActive ? "bg.surface" : "bg.sunken",
+    <LayoutGroup id={layoutGroupId}>
+      <Flex
+        align="center"
+        bg="bg.sunken"
+        borderRadius="full"
+        borderWidth="1px"
+        borderStyle="solid"
+        borderColor="border.default"
+        p={0.5}
+        gap={0}
+      >
+        {LANGUAGES.map((lang) => {
+          const isActive = currentLanguage === lang.value;
+          const label = getNativeName(lang.value);
+          return (
+            <Tooltip
+              key={lang.value}
+              content={label}
+              showArrow
+              openDelay={300}
+              contentProps={{
+                fontSize: "xs",
+                fontWeight: "500",
+                bg: "neutral.800",
+                color: "white",
+                borderRadius: "md",
+                px: 2.5,
+                py: 1,
               }}
-              onClick={() => handleChange(lang.value)}
             >
-              <Text fontSize="sm" lineHeight="1">
-                {lang.flag}
-              </Text>
-              {isActive && (
-                <Box overflow="hidden">
-                  <Text fontSize="xs" fontWeight="600" color="text.primary" whiteSpace="nowrap">
-                    {label}
-                  </Text>
-                </Box>
-              )}
-            </Flex>
-          </Tooltip>
-        );
-      })}
-    </Flex>
+              <Flex
+                as="button"
+                data-cy={`language-${lang.value}`}
+                aria-label={label}
+                aria-pressed={isActive}
+                align="center"
+                justify="center"
+                gap={1.5}
+                position="relative"
+                px={isActive ? 3 : 2}
+                py={1}
+                borderRadius="full"
+                cursor="pointer"
+                borderWidth="1px"
+                borderStyle="solid"
+                borderColor="transparent"
+                onClick={() => handleChange(lang.value)}
+              >
+                {/* The raised pill glides to the chosen language. */}
+                {isActive ? (
+                  <SlidingIndicator
+                    layoutId="language-active"
+                    inset="-1px"
+                    bg="bg.surface"
+                    shadow="sm"
+                    borderWidth="1px"
+                    borderColor="border.default"
+                    borderRadius="full"
+                  />
+                ) : null}
+                <Text position="relative" fontSize="sm" lineHeight="1">
+                  {lang.flag}
+                </Text>
+                {isActive && (
+                  <Box position="relative" overflow="hidden">
+                    <Text fontSize="xs" fontWeight="600" color="text.primary" whiteSpace="nowrap">
+                      {label}
+                    </Text>
+                  </Box>
+                )}
+              </Flex>
+            </Tooltip>
+          );
+        })}
+      </Flex>
+    </LayoutGroup>
   );
 }

@@ -31,10 +31,27 @@ export const envObjectSchema = z.object({
 });
 
 /**
- * What `env.ts` parses. Identical to `envObjectSchema` today; cross-field
- * rules (`.superRefine(...)`) belong here so `envObjectSchema.shape` stays
+ * What `env.ts` parses: `envObjectSchema` plus the cross-field rules
+ * (`.superRefine(...)`), which live here so `envObjectSchema.shape` stays
  * introspectable for the template gate.
  */
-export const envSchema = envObjectSchema;
+/** Environments that serve real users — the dev quick login may not even be configured there. */
+const DEPLOYED_ENVS: readonly string[] = ["staging", "production"];
+
+export const envSchema = envObjectSchema.superRefine((value, ctx) => {
+  // The passwordless dev quick login only ever works with NODE_ENV=local —
+  // but a DEPLOY that carries the flag is a misconfiguration worth failing
+  // loudly on, instead of one silent condition away from an open door.
+  // (`test` / `development` are not rejected: the unit suite runs with
+  // NODE_ENV=test on top of a developer's own `.env`.)
+  if (value.DEV_QUICK_LOGIN_ENABLED && DEPLOYED_ENVS.includes(value.NODE_ENV)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["DEV_QUICK_LOGIN_ENABLED"],
+      message:
+        "DEV_QUICK_LOGIN_ENABLED=true is not allowed in staging/production",
+    });
+  }
+});
 
 export type Env = z.infer<typeof envSchema>;
