@@ -1,26 +1,17 @@
-import {
-  Box,
-  Button,
-  Container,
-  Flex,
-  HStack,
-  Heading,
-  Link,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
-import { motion } from "motion/react";
+import { Button, Flex, HStack, Link, Stack, Text } from "@chakra-ui/react";
 import { PinInput } from "@/components/ui/pin-input";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { ROUTE_PATHS } from "@/app/router/RoutePaths";
+import { AuthShell } from "@/shared/components/layout/AuthShell";
+import {
+  AuthIntro,
+  AuthScreen,
+} from "@/modules/auth/presentation/components/AuthCard";
 import { useAuth } from "@/modules/auth/presentation/context/useAuth";
 import { getPostAuthDestination } from "@/modules/auth/presentation/utils/postAuthDestination";
 import { useNotify } from "@/shared/hooks/useNotify";
-import { LanguageSelector } from "@/shared/components/ui/LanguageSelector";
-
-const MotionBox = motion.create(Box);
 
 const PIN_LENGTH = 6;
 /** Mirrors the backend resend cooldown (EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS). */
@@ -31,7 +22,12 @@ export function EmailVerificationPage() {
   const { t: tc } = useTranslation("common");
   const navigate = useNavigate();
   const location = useLocation();
-  const { sendVerificationPin, verifyEmailPin, discardEmailVerification, isSubmitting } = useAuth();
+  const {
+    sendVerificationPin,
+    verifyEmailPin,
+    discardEmailVerification,
+    isSubmitting,
+  } = useAuth();
   const { showError, showSuccess } = useNotify();
 
   const email = (location.state as { email?: string } | null)?.email ?? "";
@@ -63,7 +59,10 @@ export function EmailVerificationPage() {
   // Resend cooldown ticker.
   useEffect(() => {
     if (cooldown <= 0) return;
-    const id = setInterval(() => setCooldown((s) => (s <= 1 ? 0 : s - 1)), 1000);
+    const id = setInterval(
+      () => setCooldown((s) => (s <= 1 ? 0 : s - 1)),
+      1000,
+    );
     return () => clearInterval(id);
   }, [cooldown]);
 
@@ -81,7 +80,7 @@ export function EmailVerificationPage() {
         isVerifyingRef.current = false;
       }
     },
-    [verifyEmailPin, navigate, showError, t]
+    [verifyEmailPin, navigate, showError, t],
   );
 
   const handleResend = useCallback(async () => {
@@ -99,28 +98,7 @@ export function EmailVerificationPage() {
   }, [cooldown, isResending, sendVerificationPin, showSuccess, showError, t]);
 
   const card = (
-    <MotionBox
-      bg="bg.surface"
-      borderWidth="1px"
-      borderColor="border.subtle"
-      boxShadow="shadow.panel"
-      borderRadius="3xl"
-      p={{ base: 6, md: 8 }}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      w="full"
-    >
-      <Stack gap={2} mb={6}>
-        <Text fontWeight="700" color="text.brand" letterSpacing="wide" fontSize="sm">
-          {tc("platform.name")}
-        </Text>
-        <Heading size="lg">{t("verifyEmail.title")}</Heading>
-        <Text color="text.secondary">
-          {email ? t("verifyEmail.subtitleWithEmail", { email }) : t("verifyEmail.subtitle")}
-        </Text>
-      </Stack>
-
+    <>
       <Stack gap={6}>
         <HStack justify="center" gap={{ base: 2, md: 3 }}>
           <PinInput
@@ -175,21 +153,33 @@ export function EmailVerificationPage() {
             color="text.brand"
             fontWeight="600"
           >
-            <RouterLink to={ROUTE_PATHS.register}>{t("verifyEmail.backToRegister")}</RouterLink>
+            <RouterLink to={ROUTE_PATHS.register}>
+              {t("verifyEmail.backToRegister")}
+            </RouterLink>
           </Link>
         </Text>
       </Stack>
-    </MotionBox>
+    </>
   );
 
   return (
-    <Flex minH="100vh" align="center" justify="center" px={4} py={8}>
-      <Container maxW="md" px={0}>
-        <Flex justify="flex-end" mb={4}>
-          <LanguageSelector />
-        </Flex>
+    <AuthShell>
+      <AuthScreen
+        maxW="400px"
+        intro={
+          <AuthIntro
+            eyebrow={tc("platform.name")}
+            title={t("verifyEmail.title")}
+            subtitle={
+              email
+                ? t("verifyEmail.subtitleWithEmail", { email })
+                : t("verifyEmail.subtitle")
+            }
+          />
+        }
+      >
         {card}
-      </Container>
-    </Flex>
+      </AuthScreen>
+    </AuthShell>
   );
 }

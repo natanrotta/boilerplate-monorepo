@@ -186,7 +186,7 @@ describe("ConfirmDialog", () => {
     expect(css).not.toContain("background:var(--chakra-colors-bg-brand-solid)");
   });
 
-  it("keeps the brand solid variant when the action is not destructive", async () => {
+  it("keeps the primary solid variant when the action is not destructive", async () => {
     renderWithProviders(
       <ConfirmDialog
         isOpen
@@ -198,7 +198,7 @@ describe("ConfirmDialog", () => {
     );
 
     const css = injectedCssFor(await screen.findByRole("button", { name: "Confirmar" }));
-    expect(css).toContain("background:var(--chakra-colors-bg-brand-solid)");
+    expect(css).toContain("background:var(--chakra-colors-bg-primary)");
     expect(css).not.toContain("background:var(--chakra-colors-status-error-");
   });
 });

@@ -1,7 +1,8 @@
 import { memo } from "react";
-import { Flex, IconButton, Image, Text } from "@chakra-ui/react";
+import { Flex, IconButton, Text } from "@chakra-ui/react";
 import { Avatar } from "@/components/ui/avatar";
 import { FiMenu } from "@/shared/components/icons";
+import { BrandMark } from "@/shared/components/ui/BrandMark";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/modules/auth";
 
@@ -40,15 +41,7 @@ export const MobileHeader = memo(function MobileHeader({ onOpenSidebar }: Mobile
           <FiMenu />
         </IconButton>
         <Flex align="center" gap={2}>
-          <Image
-            src="/boilerplate-icon.png"
-            alt="Boilerplate"
-            w={7}
-            h={7}
-            borderRadius="22%"
-            objectFit="cover"
-            flexShrink={0}
-          />
+          <BrandMark size={28} />
           <Text fontSize="sm" fontWeight="700" color="text.primary" letterSpacing="-0.01em">
             Boilerplate
           </Text>

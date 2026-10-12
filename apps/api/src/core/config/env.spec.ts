@@ -13,6 +13,7 @@ describe("envSchema", () => {
     expect(result.success).toBe(true);
     expect(result.data).toMatchObject({
       NODE_ENV: "local",
+      DEV_QUICK_LOGIN_ENABLED: false,
       API_PORT: 3333,
       ALLOWED_ORIGIN: "*",
       LOG_LEVEL: "info",
@@ -40,6 +41,33 @@ describe("envSchema", () => {
       );
     },
   );
+
+  it("keeps the passwordless dev quick login OFF unless explicitly enabled", () => {
+    const enabled = envSchema.safeParse({
+      ...VALID_ENV,
+      DEV_QUICK_LOGIN_ENABLED: "true",
+    });
+    expect(enabled.data?.DEV_QUICK_LOGIN_ENABLED).toBe(true);
+    // Carrying the flag anywhere but a local machine refuses to boot.
+    expect(
+      envSchema.safeParse({
+        ...VALID_ENV,
+        NODE_ENV: "production",
+        DEV_QUICK_LOGIN_ENABLED: "true",
+      }).success,
+    ).toBe(false);
+    expect(
+      envSchema.safeParse({
+        ...VALID_ENV,
+        NODE_ENV: "staging",
+        DEV_QUICK_LOGIN_ENABLED: "true",
+      }).success,
+    ).toBe(false);
+    expect(
+      envSchema.safeParse({ ...VALID_ENV, DEV_QUICK_LOGIN_ENABLED: "yes" })
+        .success,
+    ).toBe(false);
+  });
 
   it("rejects an unknown NODE_ENV and an unknown LOG_LEVEL", () => {
     expect(

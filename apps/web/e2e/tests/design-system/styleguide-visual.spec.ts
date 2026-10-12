@@ -15,16 +15,26 @@ import type { Page } from "@playwright/test";
  */
 
 const STYLEGUIDE_PATH = "/dev/styleguide";
+// The ids of `STYLEGUIDE_SECTIONS` (modules/development/presentation/styleguide/
+// registry.ts), same order. `motion` is left out on purpose: it is a set of
+// entrance animations, and a still frame of one says nothing.
 const SECTIONS = [
   "typography",
   "colors",
   "shadows",
+  "radii",
+  "icons",
+  "animated-icons",
+  "shell",
   "buttons",
   "badges",
+  "controls",
+  "tabs",
   "fields",
   "cards",
-  "states",
-  "controls",
+  "empty",
+  "skeletons",
+  "guards",
   "overlays",
 ] as const;
 const SCHEMES = ["light", "dark"] as const;

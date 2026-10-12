@@ -43,7 +43,7 @@ Clone it, rename it, start shipping. The boring-but-critical parts — auth, sec
 |---|---|---|---|
 | **API** | `apps/api` | Node.js 22 · Express 4 · Prisma 7 (Postgres) · tsyringe DI · Zod · BullMQ + Redis · Vitest | `3333` |
 | **Web** | `apps/web` | React 19 · Vite 7 · Chakra UI 3 · TanStack Query 5 · react-hook-form + Zod · react-i18next · motion · Vitest + Playwright | `3000` |
-| **Site** | `apps/site` | React 19 · Vite 7 · Chakra UI 3 · GSAP · i18n (pt/en/es) | `3001` |
+| **Site** | `apps/site` | React 19 · Vite 7 · Chakra UI 3 · `@boilerplate/theme` · i18n (pt/en/es) | `3001` |
 | **Theme** | `packages/theme` | `@boilerplate/theme` — Chakra v3 tokens, semantic tokens, text styles and recipes | — |
 | **Shared types** | `packages/shared-types` | `@boilerplate/shared-types` — DTOs, the response envelope and the error-code catalog shared by API + web | — |
 
@@ -66,17 +66,19 @@ cp apps/api/.env.example apps/api/.env
 
 yarn services:up                  # Postgres + Redis in Docker
 yarn prisma:migrate               # create the database schema
-yarn seed                         # seed the demo user
+yarn seed                         # seed the demo users
 
 yarn dev                          # backend (detached) + web (:3000) + site (:3001)
 ```
 
-Then open **http://localhost:3000** and sign in with the seeded demo user:
+Then open **http://localhost:3000** and sign in with a seeded demo user (`qa@example.com` has the same password):
 
 ```
 email:    demo@example.com
 password: Demo1234!
 ```
+
+**Quick login (local only).** `apps/api/.env.example` ships `DEV_QUICK_LOGIN_ENABLED=true`, so the sign-in page shows a **DEV · Quick login** button that lists the users of your database and signs in as one with a click, no password. It exists only when the API runs with `NODE_ENV=local` **and** that flag: the API refuses to boot with the flag in staging/production, the routes answer 404 everywhere else — and to any request that does not come from your own machine (loopback peer, also behind the Vite proxy, + loopback `Host`), so it needs the API running on the host, not in a container — and a Vite plugin fails the production build if the panel reaches a chunk.
 
 ## Project structure
 
@@ -85,7 +87,7 @@ password: Demo1234!
 ├── apps/
 │   ├── api/          # Express + Prisma REST API — Clean Architecture + tsyringe DI
 │   ├── web/          # React app — auth, dashboard, settings (AppShell sidebar)
-│   └── site/         # Marketing landing — GSAP-driven, standalone Yarn project
+│   └── site/         # Marketing landing — standalone Yarn project, same design system
 ├── packages/
 │   ├── theme/        # @boilerplate/theme — the design system (Chakra v3 config fragment)
 │   └── shared-types/ # DTOs, response envelope and error codes shared by API and web
@@ -121,7 +123,7 @@ password: Demo1234!
 | `yarn prisma:deploy` | `prisma migrate deploy` — apply pending migrations |
 | `yarn prisma:reset` | Drop and re-migrate the database |
 | `yarn reset-seed` | Reset **and** re-seed |
-| `yarn seed` | Seed the demo user |
+| `yarn seed` | Seed the demo users |
 | `yarn prisma:studio` | Open Prisma Studio |
 | `yarn prisma:generate` | Regenerate the Prisma client |
 
@@ -148,19 +150,23 @@ password: Demo1234!
 
 - **API — module-first Clean Architecture.** `apps/api/src/modules/<domain>/{domain,application,infrastructure}` with a `tsyringe` DI container in `core/`. Two modules ship: **`auth`** (sign-in/up, tokens, password reset, e-mail verification) and **`user`** (the identity core: entity, value objects, repository). Single-user by design — a row belongs to its owner column; multi-tenant `account_id` is the documented upgrade path. The Prisma schema has 3 models (`user`, `password_reset_token`, `email_verification_pin`). Config is composed from per-concern Zod schemas (`core/config/schema/`), the process lifecycle is a staged graceful shutdown (`core/service/lifecycle/`), and Redis/BullMQ, S3 and e-mail are available for building on. See [`apps/api/readme.md`](./apps/api/readme.md).
 - **Web — feature modules over a sidebar shell.** `apps/web/src/modules/{auth,dashboard,settings,development}` on a shared `AppShell`; data flows action → module hook → DI repository → `httpClient` → TanStack Query → render. Chakra v3 compound components are consumed through the snippet layer in `src/components/ui/`. See [`apps/web/README.md`](./apps/web/README.md) and [`.claude/patterns/frontend.md`](./.claude/patterns/frontend.md).
-- **Site — a tech landing.** A sections-driven marketing page with GSAP animations and 3-locale copy. See [`apps/site/README.md`](./apps/site/README.md).
+- **Site — the landing page.** A sections-driven page (hero, how it works, what is included, closing call to action) painted with the same `@boilerplate/theme`, with 3-locale copy. See [`apps/site/README.md`](./apps/site/README.md).
 - **Shared contract.** `@boilerplate/shared-types` owns the wire contract: DTOs, the `{ ok, data }` / `{ ok, error }` envelope, the `ErrorCodes` catalog (locale parity enforced by a spec) and the upload allowlist. The API and the web branch on the same values — no hand-written mirror to drift.
 
 The canonical patterns for both layers live in [`.claude/patterns/`](./.claude/patterns) (`backend.md`, `backend-modules.md`, `frontend.md`, `code-review-checklist.md`) — the single source of truth for how a request flows and how new modules are structured.
 
 ## Design system
 
-The visual foundation is a package, not a file inside the app: **`packages/theme`** (`@boilerplate/theme`) exports a Chakra v3 config fragment with palettes, semantic tokens, the type scale, radii, shadows and component recipes. The app composes it (`createSystem(defaultConfig, boilerplateThemeConfig, appConfig)`) and adds nothing but its own `globalCss`.
+The visual foundation is a package, not a file inside the app: **`packages/theme`** (`@boilerplate/theme`) exports a Chakra v3 config fragment with palettes, semantic tokens, the type scale, radii, shadows, keyframes and component recipes. The web app and the site both compose it (`createSystem(defaultConfig, boilerplateThemeConfig, appConfig)`) and add nothing but their own `globalCss`.
+
+The look is monochrome with one accent: near-neutral surfaces, ink and hairlines, a blue-violet reserved for focus, selection and links, and a primary action that is the ink inverted (black on light, near-white on dark). Type is Geist, with Geist Mono for identifiers and eyebrows.
+
+Motion is part of the system, and it is quiet: navigation icons are `AnimatedIcon`s that play once when their row is pointed at or focused, and the selected mark of the sidebar, the mobile nav, the language selector, `UnderlineTabs` and `SegmentedControl` is a `SlidingIndicator` that glides to the new selection instead of blinking. Everything stays still under `prefers-reduced-motion`.
 
 Three guards keep it honest:
 
 - **`tokenContract.spec.ts`** fails the build when a semantic token loses its dark value, when a warm hue (yellow/orange/amber) enters the palette, or when a component references a token that does not exist.
-- **`/dev/styleguide`** — a DEV-only gallery of every shared primitive in every state. It never ships: a Vite plugin fails the production build if the module leaks into a chunk.
+- **`/dev/styleguide`** — a DEV-only reference of every shared component, grouped by category, with what each one is for, how to import and call it, and every variation and state. A registry spec fails when a component under `shared/components` has no entry. It never ships: a Vite plugin fails the production build if the module leaks into a chunk.
 - **Visual regression** — Playwright screenshots of every styleguide section in light and dark. A design change is expected to fail it; review the diff, then accept with `yarn workspace @boilerplate/web test:e2e --update-snapshots`.
 
 Components use semantic tokens only (`bg.*`, `text.*`, `border.*`, `status.*`) and `colorPalette` (never Chakra v2's `colorScheme`). A new visual need is a new token in the package, never a hex value in a component.

@@ -1,11 +1,11 @@
-import { FiHome, FiSettings } from "@/shared/components/icons";
-import type { IconType } from "@/shared/components/icons";
+import type { AnimatedIconName } from "@/shared/components/icons/animated";
 import { ROUTE_PATHS } from "@/app/router/RoutePaths";
 
 export interface NavigationItem {
   labelKey: string;
   to: string;
-  icon: IconType;
+  /** An `AnimatedIcon` glyph — plays while the row is hovered or focused. */
+  icon: AnimatedIconName;
 }
 
 export interface NavigationSection {
@@ -20,12 +20,12 @@ export const navigationSections: NavigationSection[] = [
       {
         labelKey: "nav.dashboard",
         to: ROUTE_PATHS.dashboard,
-        icon: FiHome,
+        icon: "dashboard",
       },
       {
         labelKey: "nav.settings",
         to: ROUTE_PATHS.settings,
-        icon: FiSettings,
+        icon: "settings",
       },
     ],
   },

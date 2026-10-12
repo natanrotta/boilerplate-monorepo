@@ -11,6 +11,7 @@ type MockOf<T> = {
 export function mockUserRepository(): MockOf<IUserRepository> {
   return {
     findById: vi.fn(),
+    findActive: vi.fn(),
     findByEmail: vi.fn(),
     findByGoogleId: vi.fn(),
     findByRefreshTokenHash: vi.fn(),

@@ -3,6 +3,7 @@ import { Box, Button, Text, VStack } from "@chakra-ui/react";
 import { motion } from "motion/react";
 import { FiInbox } from "@/shared/components/icons";
 import type { IconType } from "@/shared/components/icons";
+import { AnimatedIcon, type AnimatedIconName } from "@/shared/components/icons/animated";
 
 const MotionVStack = motion.create(VStack);
 const MotionBox = motion.create(Box);
@@ -19,15 +20,18 @@ interface EmptyStateProps {
   secondaryActionLabel?: string;
   onSecondaryAction?: () => void;
   icon?: IconType;
+  /** An `AnimatedIcon` glyph; plays once when the state appears. Wins over `icon`. */
+  animatedIcon?: AnimatedIconName;
   size?: "sm" | "md" | "lg";
 }
 
 const sizeStyles = {
-  sm: { py: { base: 6, md: 8 }, iconBox: 10, iconSize: 5, titleSize: "sm" as const, ringSize: 14 },
+  sm: { py: { base: 6, md: 8 }, iconBox: 10, iconSize: 5, iconPx: 20, titleSize: "sm" as const, ringSize: 14 },
   md: {
     py: { base: 10, md: 14 },
     iconBox: 14,
     iconSize: 6,
+    iconPx: 24,
     titleSize: "md" as const,
     ringSize: 20,
   },
@@ -35,6 +39,7 @@ const sizeStyles = {
     py: { base: 14, md: 20 },
     iconBox: 16,
     iconSize: 7,
+    iconPx: 28,
     titleSize: "lg" as const,
     ringSize: 24,
   },
@@ -48,6 +53,7 @@ function EmptyStateComponent({
   secondaryActionLabel,
   onSecondaryAction,
   icon: Icon = FiInbox,
+  animatedIcon,
   size = "md",
 }: EmptyStateProps) {
   const s = sizeStyles[size];
@@ -115,9 +121,13 @@ function EmptyStateComponent({
             },
           }}
         >
-          <Box asChild boxSize={s.iconSize}>
-            <Icon />
-          </Box>
+          {animatedIcon ? (
+            <AnimatedIcon name={animatedIcon} size={s.iconPx} playOnMount />
+          ) : (
+            <Box asChild boxSize={s.iconSize}>
+              <Icon />
+            </Box>
+          )}
         </MotionBox>
       </MotionBox>
 

@@ -11,5 +11,8 @@ export {
 export { userRateLimit } from "./user-rate-limit.middleware";
 export { authRateLimit } from "./auth-rate-limit.middleware";
 export { publicRateLimit } from "./public-rate-limit.middleware";
-export { csrfProtection } from "./csrf.middleware";
+export {
+  csrfProtection,
+  csrfProtectionWithDevQuickLogin,
+} from "./csrf.middleware";
 export { localeMiddleware } from "./locale.middleware";

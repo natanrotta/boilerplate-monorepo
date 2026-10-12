@@ -3,6 +3,21 @@
     "title": "Settings",
     "description": "Manage your profile, team and account"
   },
+  "tabs": {
+    "label": "Settings sections",
+    "profile": "Profile",
+    "preferences": "Preferences"
+  },
+  "preferences": {
+    "language": {
+      "title": "Language",
+      "description": "The language of the interface and of the emails you receive."
+    },
+    "theme": {
+      "title": "Theme",
+      "description": "Switch between the light and the dark theme."
+    }
+  },
   "account": {
     "title": "Account Details",
     "accountName": "Account Name",
