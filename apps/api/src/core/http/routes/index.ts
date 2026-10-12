@@ -3,7 +3,7 @@ import { authRoutes } from "@modules/auth/infrastructure/route/auth.routes";
 import { devRoutes } from "@modules/auth/infrastructure/route/dev.routes";
 import { userRateLimit } from "../middlewares";
 import { container, DI_TOKENS } from "@core/container";
-import { env, isDevQuickLoginEnabled } from "@core/config";
+import { devQuickLoginHint, env, isDevQuickLoginEnabled } from "@core/config";
 import { logger } from "../logger";
 
 const router = Router();
@@ -36,6 +36,13 @@ if (isDevQuickLoginEnabled(env)) {
   logger.warn(
     "[DEV] Quick-login routes enabled: GET /dev/users, POST /dev/impersonate",
   );
+}
+
+// A local `.env` that predates the flag leaves the sign-in page without its
+// quick-login button and with nothing explaining why — say it once, at boot.
+const quickLoginHint = devQuickLoginHint(env);
+if (quickLoginHint) {
+  logger.info(quickLoginHint);
 }
 
 // Per-user limiter for every authenticated surface mounted BELOW this line.
